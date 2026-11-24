@@ -165,5 +165,19 @@ backend/tests/test_track_e.py::test_nginx_configuration_file_exists PASSED [ 100
   - Increased bottom padding of Hero Carousel from `48px` to `118px` (+70px).
   - Applied `margin: 0 auto 70px auto` and `.hero-titles-wrapper { margin-bottom: 70px !important; }` to raise the location of the HERO titles and subtitles by exactly 70px across both apps.
 
+### ✅ Track J: Special Character (Mojibake) Elimination & DJ Mix Hydration Across EPKs
+- **Special Character (Mojibake) Cleanup**:
+  - Scanned and eliminated all Windows-1252 / double-encoded UTF-8 artifacts (`â€¢` -> `•`, `â€”` -> `—`, `ðŸŽµ` -> `🎵`, `ðŸ“¸` -> `📸`, `âœ•` -> `✕`, `â”€â”€` -> `──`, etc.) across `CreatorEpkView.jsx` in both `apps/tunestream` and `apps/portal`.
+  - Zero mojibake or corrupt encoding sequences remaining across all codebase components (verified by automated token scan).
+- **DJ Catalog Auto-Hydration on EPKs**:
+  - **Backend (`backend/routes/epk_router.py`)**: For DJ creators without traditional single release entries in `db.tracks`, automatically hydrate `tracks` and `albums` from their registered `dj_mixes`, standardizing format, preview URLs, and metadata.
+  - **Database Sync**: Synced all 4 DJ CJ Kenya mixes into `db.tracks` with `subdomain: "djcjkenya"`, `status: "published"`, and `is_dj_mix: true`.
+  - **Frontend Adaptation (`CreatorEpkView.jsx`)**:
+    - DJ mixes automatically populate `rawTracks` and `albums` fallback for DJ creators.
+    - Section headers dynamically adapt for DJs: *"Featured DJ Mixes & Sets"*, *"Official DJ Mixes & Live Master Sets (Lossless Stream & Download)"*.
+    - Purchase actions dynamically display *"Buy DJ Mix (500 Credits)"* instead of generic singles, routing seamlessly to credit and checkout workflows.
+    - Full discography view adapts seamlessly to DJ mix albums and compilation sets.
+
+
 
 

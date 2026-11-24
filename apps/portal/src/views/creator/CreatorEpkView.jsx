@@ -783,12 +783,20 @@ export function CreatorEpkView(props = {}) {
   const isNdufo = (effectiveArtistName || '').toLowerCase().includes('ndufo') || (artistSlug || '').toLowerCase().includes('ndufo');
   const rawTracks = (epkData?.tracks && Array.isArray(epkData.tracks) && epkData.tracks.length > 0)
     ? epkData.tracks
-    : (isNdufo ? defaultTracks : []);
+    : (creatorType === 'dj' && Array.isArray(epkData?.dj_mixes) && epkData.dj_mixes.length > 0
+        ? epkData.dj_mixes
+        : (isNdufo ? defaultTracks : []));
   const tracks = rawTracks.map((t, idx) => ({
     ...t,
-    id: t.id || idx + 1,
-    audioUrl: t.audioUrl || t.fileUrl || SAMPLE_TRACK_AUDIOS[idx % SAMPLE_TRACK_AUDIOS.length],
-    coverArt: t.coverArt || t.cover || `https://picsum.photos/seed/${encodeURIComponent(t.title || 'single')}/600/600`
+    id: t.id || t._id || idx + 1,
+    title: t.title || `Track #${idx + 1}`,
+    artist: t.artist || t.dj_name || effectiveArtistName,
+    dj_name: t.dj_name || t.artist || effectiveArtistName,
+    audioUrl: resolveAudioStreamUrl(t.audioUrl || t.audio_url || t.fileUrl || t.id || t.title),
+    coverArt: t.coverArt || t.artwork_url || t.cover || `https://picsum.photos/seed/${encodeURIComponent(t.title || 'single')}/600/600`,
+    priceCredits: t.priceCredits || t.price_credits || 500,
+    isrc: t.isrc || `KE-TM1-26-000${idx + 1}`,
+    is_dj_mix: Boolean(t.is_dj_mix || creatorType === 'dj')
   }))
 
   // Fan Playlists & Library State
@@ -1268,7 +1276,30 @@ export function CreatorEpkView(props = {}) {
       });
     }
 
-    // 3. Fallback default albums only for Ndufo if no albums configured
+    // 3. DJ Mix Compilations for DJs
+    if (list.length === 0 && creatorType === 'dj' && Array.isArray(djMixTracks)) {
+      djMixTracks.forEach((m, idx) => {
+        const titleKey = (m.title || '').toLowerCase().trim();
+        if (titleKey && !seenTitles.has(titleKey)) {
+          seenTitles.add(titleKey);
+          list.push({
+            id: m.id || `alb-mix-${idx + 1}`,
+            title: m.title,
+            year: '2026',
+            type: 'DJ MIX',
+            tracksCount: 1,
+            cover: m.coverArt || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800',
+            streams: '18.4K',
+            isrc: m.isrc || `MIX-DJ-${idx + 1}`,
+            isrcs: [m.isrc || `MIX-DJ-${idx + 1}`],
+            priceCredits: 500,
+            is_dj_mix: true
+          });
+        }
+      });
+    }
+
+    // 4. Fallback default albums only for Ndufo if no albums configured
     if (isNdufo) {
       defaultMockAlbums.forEach(defAlb => {
         const key = defAlb.title.toLowerCase().trim();
@@ -4375,15 +4406,15 @@ Direct Management Contact: mgmt@intermaven.io`
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
                     <div>
                       <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: effectiveAccent, margin: 0, fontFamily: effectiveFont }}>
-                        Featured Singles
+                        {creatorType === 'dj' ? 'Featured DJ Mixes & Sets' : 'Featured Singles'}
                       </h2>
                       <div style={{ fontSize: '0.85rem', color: isLight ? '#64748b' : '#94a3b8', marginTop: '2px' }}>
-                        Official MP3 Digital Singles & Audio Releases (2 Rows × 3 Columns)
+                        {creatorType === 'dj' ? 'Official DJ Mixes & Live Master Sets (Lossless Stream & Download)' : 'Official MP3 Digital Singles & Audio Releases (2 Rows × 3 Columns)'}
                       </div>
                     </div>
 
-                    <button onClick={() => { setActiveTab('discography'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: 'transparent', border: `1px solid ${effectiveAccent}`, color: effectiveAccent, padding: '8px 18px', borderRadius: '3px', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <RiDiscFill /> View All Albums <RiArrowRightLine />
+                    <button onClick={() => { setActiveTab(creatorType === 'dj' ? 'dj-sets' : 'discography'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: 'transparent', border: `1px solid ${effectiveAccent}`, color: effectiveAccent, padding: '8px 18px', borderRadius: '3px', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <RiDiscFill /> {creatorType === 'dj' ? 'View All Mixes' : 'View All Albums'} <RiArrowRightLine />
                     </button>
                   </div>
 
@@ -4536,15 +4567,15 @@ Direct Management Contact: mgmt@intermaven.io`
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
                   <div>
                     <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: effectiveAccent, margin: 0, fontFamily: effectiveFont }}>
-                      Featured Singles
+                      {creatorType === 'dj' ? 'Featured DJ Mixes & Sets' : 'Featured Singles'}
                     </h2>
                     <div style={{ fontSize: '0.85rem', color: isLight ? '#64748b' : '#94a3b8', marginTop: '2px' }}>
-                      Official MP3 Digital Singles & Audio Releases (2 Rows × 3 Columns) • Balance: <strong style={{ color: effectiveAccent }}>{userCredits} TM Credits</strong>
+                      {creatorType === 'dj' ? 'Official DJ Mixes & Live Master Sets (Lossless Stream & Download)' : 'Official MP3 Digital Singles & Audio Releases (2 Rows × 3 Columns)'} • Balance: <strong style={{ color: effectiveAccent }}>{userCredits} TM Credits</strong>
                     </div>
                   </div>
 
-                  <button onClick={() => { setActiveTab('discography'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: 'transparent', border: `1px solid ${effectiveAccent}`, color: effectiveAccent, padding: '8px 18px', borderRadius: '3px', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <RiDiscFill /> View Full Discography <RiArrowRightLine />
+                  <button onClick={() => { setActiveTab(creatorType === 'dj' ? 'dj-sets' : 'discography'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ background: 'transparent', border: `1px solid ${effectiveAccent}`, color: effectiveAccent, padding: '8px 18px', borderRadius: '3px', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <RiDiscFill /> {creatorType === 'dj' ? 'View All Mixes' : 'View Full Discography'} <RiArrowRightLine />
                   </button>
                 </div>
 
@@ -4591,7 +4622,7 @@ Direct Management Contact: mgmt@intermaven.io`
                             {isCurrent && isPlaying ? <><RiPauseFill /> Playing Master</> : <><RiPlayFill /> Stream on TuneStream</>}
                           </button>
                           <button onClick={() => handlePurchaseTrackWithCredits(t)} style={{ background: effectiveAccent, color: '#000', border: 'none', padding: '8px', borderRadius: '3px', fontWeight: 800, cursor: 'pointer', fontSize: '0.85rem' }}>
-                            Buy MP3 Single ({t.priceCredits} Credits)
+                            {creatorType === 'dj' ? 'Buy DJ Mix' : 'Buy MP3 Single'} ({t.priceCredits || 500} Credits)
                           </button>
                         </div>
                       </div>

@@ -362,11 +362,20 @@ def get_public_epk(subdomain: str, response: Response):
     if not tracks:
         cat_doc = db.catalog_tracks.find_one({"subdomain": clean_subdomain})
         tracks = cat_doc.get("tracks", []) if cat_doc else []
+    if not tracks and clean_subdomain in djcj_aliases:
+        cat_doc = db.catalog_tracks.find_one({"subdomain": "djcjkenya"})
+        tracks = cat_doc.get("tracks", []) if cat_doc else []
     if not tracks:
         artist_query = {"$or": [
             {"subdomain": clean_subdomain},
             {"artist": {"$regex": f"^{re.escape(merged.get('artist_name') or clean_subdomain)}$", "$options": "i"}}
         ]}
+        if clean_subdomain in djcj_aliases:
+            artist_query["$or"].extend([
+                {"subdomain": "djcjkenya"},
+                {"user_id": "6af1bc22b5f620b01734e203"},
+                {"artist": {"$regex": "DJ CJ", "$options": "i"}}
+            ])
         direct_tracks = list(db.tracks.find(artist_query))
         if direct_tracks:
             tracks = [{**t, "_id": str(t.get("_id"))} for t in direct_tracks]
@@ -448,6 +457,47 @@ def get_public_epk(subdomain: str, response: Response):
             "created_at": str(m.get("created_at", ""))
         })
     merged["dj_mixes"] = serialized_mixes
+
+    # If this creator is a DJ and has no single catalog tracks, serialize their mixes as tracks
+    if (not merged.get("tracks") or not len(merged["tracks"])) and serialized_mixes:
+        mix_tracks = []
+        for sm in serialized_mixes:
+            mix_tracks.append({
+                "id": sm["id"],
+                "_id": sm["id"],
+                "title": sm["title"],
+                "artist": sm["dj_name"],
+                "dj_name": sm["dj_name"],
+                "isrc": f"MIX-DJ-{sm['id'][-6:]}",
+                "duration": sm["duration"],
+                "streams": "18.4K",
+                "release": "DJ Mix 2026",
+                "priceCredits": sm["price_credits"],
+                "price_credits": sm["price_credits"],
+                "coverArt": sm["artwork_url"],
+                "audioUrl": sm["audio_url"],
+                "is_dj_mix": True,
+                "category": sm["genre"]
+            })
+        merged["tracks"] = mix_tracks
+
+    if (not merged.get("albums") or not len(merged["albums"])) and serialized_mixes:
+        merged["albums"] = [
+            {
+                "id": f"alb-mix-{sm['id']}",
+                "title": sm["title"],
+                "artist": sm["dj_name"],
+                "year": "2026",
+                "type": "DJ MIX",
+                "cover": sm["artwork_url"],
+                "tracksCount": len(sm.get("tracklist", [])) or 1,
+                "streams": "18.4K",
+                "priceCredits": sm["price_credits"],
+                "isrc": f"ALB-DJ-{sm['id'][-6:]}",
+                "is_dj_mix": True
+            }
+            for sm in serialized_mixes
+        ]
 
     # Fetch playlists strictly belonging to this creator
     creator_playlists = list(db.playlists.find({
