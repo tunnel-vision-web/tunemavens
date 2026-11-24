@@ -149,4 +149,21 @@ backend/tests/test_track_e.py::test_nginx_configuration_file_exists PASSED [ 100
 - **Flexible Creator Pricing**: Creators and DJs have full autonomy to customize commercial pricing and download rates, backed by recommended defaults ($4.99 / 500 Credits for commercial DJ mixes).
 - **Localization**: All prices, totals, and receipts are formatted dynamically via `useRegion().formatPrice` respecting detected or selected country/currency.
 
+### ✅ Track I: DJ CJ EPK Content Delivery, Dedicated Player Scoping & Hero Elevation
+- **Alias & Persona Resolution**:
+  - Bound all DJ CJ aliases (`djcj`, `dj-cj`, `dj_cj`, `djcjkenya`, `dj-cj-kenya`, `dj_cj_kenya`, `syukiyamukamba`) to canonical `"DJ CJ Kenya"` (`user_id: 6af1bc22b5f620b01734e203`) in `backend/routes/epk_router.py`.
+  - Updated MongoDB `db.users` and `db.epks` with `username: "djcjkenya"` and `subdomain: "djcjkenya"` to ensure authenticated session and public EPK parity.
+- **Robust DJ Mix Matching**:
+  - Replaced rigid whitespace-dependent matching in `PersonaEpkSections.jsx` (`isMatchForThisDj`) with alphanumeric token matching across `dj_name`, `dj_handle`, `subdomain`, and `user_id`.
+  - DJ CJ's 4 mixes (`AFRICAN RHUMBA VOL 20`, `JUSTICE 4 OUR MASHUJAA`, `AFRICAN UNDERGROUND VOL 20`, `BENGA DAIMA VOL 4`) now render immediately on any DJ CJ EPK path.
+- **Dedicated Player Scoping on EPK**:
+  - Removed initial hardcoded `Nairobi Cyberwave (Master)` fallback in `activeTrack`; initialized to `null` so `currentTrack` dynamically resolves to the creator's first mix/track on load.
+  - Reset `activeTrack` and `playlistIndex` upon switching creator profiles via `artistSlug`.
+  - Player controls (Play, Pause, Stop, Seek, Next, Prev, Shuffle) operate strictly within this creator's catalog.
+  - Eliminated all remaining hardcoded `/uploads/audio/enenda.wav` fallbacks across EPK sections.
+- **Hero Subtitle Elevation**:
+  - Increased bottom padding of Hero Carousel from `48px` to `118px` (+70px).
+  - Applied `margin: 0 auto 70px auto` and `.hero-titles-wrapper { margin-bottom: 70px !important; }` to raise the location of the HERO titles and subtitles by exactly 70px across both apps.
+
+
 

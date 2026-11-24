@@ -157,7 +157,11 @@ export function CreatorEpkView(props = {}) {
   const inferPersonaFromSlug = (slugVal) => {
     const s = (slugVal || '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
     if (!s) return null;
-    const djSlugs = ['khalid', 'khalidwaves', 'djksouldier', 'dj-k-souldier', 'djzinhlevibes', 'dj-zinhle-vibes', 'djmaphoria', 'dj-maphoria', 'selectorkofi', 'selector-kofi', 'djkalonje', 'dj-kalonje', 'dj_kalonje'];
+    const djSlugs = [
+      'khalid', 'khalidwaves', 'djksouldier', 'dj-k-souldier', 'djzinhlevibes', 'dj-zinhle-vibes',
+      'djmaphoria', 'dj-maphoria', 'selectorkofi', 'selector-kofi', 'djkalonje', 'dj-kalonje', 'dj_kalonje',
+      'djcj', 'dj-cj', 'dj_cj', 'djcjkenya', 'dj-cj-kenya', 'dj_cj_kenya', 'syukiyamukamba', 'djcjproductions'
+    ];
     if (djSlugs.includes(s) || s.startsWith('dj') || s.startsWith('selector') || s.includes('deejay') || s.includes('kalonje')) return 'dj';
     if (s.includes('pod') || s.includes('brief') || s.includes('wanjiru') || s.includes('otieno') || s.includes('amina') || s.includes('mutua')) return 'podcaster';
     if (s === 'brian-omondi' || s === 'brianomondi' || s.includes('producer') || s.includes('rivera') || s.includes('beats')) return 'producer';
@@ -219,7 +223,7 @@ export function CreatorEpkView(props = {}) {
 
   const personaNavLinks = getPersonaNavLinks(creatorType);
   const [isPlaying, setIsPlaying] = useState(false)
-  const [activeTrack, setActiveTrack] = useState({ id: 1, title: 'Nairobi Cyberwave (Master)', isrc: 'KE-TM1-26-00042', duration: '3:45', priceCredits: 50 })
+  const [activeTrack, setActiveTrack] = useState(null)
   const [openNavDropdown, setOpenNavDropdown] = useState(null)
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -802,13 +806,18 @@ export function CreatorEpkView(props = {}) {
       : (Array.isArray(epkData?.djMixes) && epkData.djMixes.length > 0)
         ? epkData.djMixes
         : [];
-    const cleanName = (effectiveArtistName || '').toLowerCase().trim();
-    const cleanSlug = (artistSlug || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cleanNameNorm = (effectiveArtistName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cleanSlugNorm = (artistSlug || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     return raw
       .filter(m => {
-        const mDj = (m.dj_name || m.artist || '').toLowerCase();
-        const mSub = (m.subdomain || m.user_id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-        return !mDj || mDj.includes(cleanName) || cleanName.includes(mDj) || mSub.includes(cleanSlug) || cleanSlug.includes(mSub);
+        const mDjNorm = (m.dj_name || m.artist || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const mSubNorm = (m.subdomain || m.user_id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const mHandleNorm = (m.dj_handle || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        return !mDjNorm ||
+          mDjNorm.includes(cleanNameNorm) || cleanNameNorm.includes(mDjNorm) ||
+          mDjNorm.includes(cleanSlugNorm) || cleanSlugNorm.includes(mDjNorm) ||
+          mSubNorm.includes(cleanSlugNorm) || cleanSlugNorm.includes(mSubNorm) ||
+          (mHandleNorm && (mHandleNorm.includes(cleanSlugNorm) || cleanSlugNorm.includes(mHandleNorm)));
       })
       .map((m, idx) => ({
         id: m.id || m._id || `dj-mix-${idx}`,
@@ -858,12 +867,18 @@ export function CreatorEpkView(props = {}) {
       duration: b.duration || '3:30',
       bpm: b.bpm || 120,
       key: b.key || 'C Minor',
-      audioUrl: b.audioUrl || b.audio_url || b.fileUrl || b.url || '/uploads/audio/enenda.wav',
+      audioUrl: resolveAudioStreamUrl(b.audioUrl || b.audio_url || b.fileUrl || b.url || b.id || b.title),
       coverArt: b.coverArt || b.artwork_url || b.cover || 'https://picsum.photos/seed/producer_beat/400',
       badge: `🎹 Producer Beat • ${b.bpm || 120} BPM`,
       category: 'Beat Store'
     }));
   }, [epkData?.beats, effectiveArtistName]);
+
+  // Reset active track when switching creator EPKs
+  useEffect(() => {
+    setActiveTrack(null);
+    setPlaylistIndex(0);
+  }, [artistSlug]);
 
   // Dynamic persona initial playlist assignment
   useEffect(() => {
@@ -901,7 +916,7 @@ export function CreatorEpkView(props = {}) {
   }, [selectedPlaylistId, tracks, djMixTracks, podcasterEpisodeTracks, producerBeatTracks, epkData?.playlists, creatorType]);
 
   // Active track resolved from activeTrack preference first, then current playlist selection
-  const currentTrack = activeTrack || currentPlaylistTracks[playlistIndex] || currentPlaylistTracks[0] || tracks[0];
+  const currentTrack = activeTrack || currentPlaylistTracks[playlistIndex] || currentPlaylistTracks[0] || (creatorType === 'dj' ? djMixTracks[0] : null) || (isNdufo ? tracks[0] : null);
 
   // Dynamic initial sync of activeTrack for current persona
   useEffect(() => {
@@ -912,11 +927,11 @@ export function CreatorEpkView(props = {}) {
         setActiveTrack(podcasterEpisodeTracks[0]);
       } else if (creatorType === 'producer' && producerBeatTracks.length > 0) {
         setActiveTrack(producerBeatTracks[0]);
-      } else if (tracks.length > 0) {
+      } else if (tracks.length > 0 && isNdufo) {
         setActiveTrack(tracks[0]);
       }
     }
-  }, [creatorType, djMixTracks, podcasterEpisodeTracks, producerBeatTracks, tracks]);
+  }, [creatorType, djMixTracks, podcasterEpisodeTracks, producerBeatTracks, tracks, isNdufo]);
 
   // Direct TunePlayer Controls for immediate responsive audio playback
   const handleTogglePlayPause = () => {
@@ -3069,6 +3084,7 @@ Direct Management Contact: mgmt@intermaven.io`
           gap: 6px;
           min-height: auto;
           text-align: center;
+          margin-bottom: 70px !important;
         }
 
         .hero-title-1 {
@@ -3973,7 +3989,7 @@ Direct Management Contact: mgmt@intermaven.io`
 
       {/* ================= 2. HERO CAROUSEL ================= */}
       {activeTab === 'home' && (
-        <section style={{ position: 'relative', minHeight: '660px', height: 'clamp(620px, 68vh, 800px)', backgroundImage: `url(${currentSlide?.img || heroSlide1})`, backgroundSize: 'cover', backgroundPosition: 'center 28%', backgroundRepeat: 'no-repeat', imageRendering: '-webkit-optimize-contrast', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', textAlign: 'center', padding: '90px 32px 48px', transition: 'background-image 0.8s ease-in-out', margin: 0 }}>
+        <section style={{ position: 'relative', minHeight: '660px', height: 'clamp(620px, 68vh, 800px)', backgroundImage: `url(${currentSlide?.img || heroSlide1})`, backgroundSize: 'cover', backgroundPosition: 'center 28%', backgroundRepeat: 'no-repeat', imageRendering: '-webkit-optimize-contrast', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', textAlign: 'center', padding: '90px 32px 118px', transition: 'background-image 0.8s ease-in-out', margin: 0 }}>
           <div style={{ position: 'absolute', inset: 0, background: isLight ? 'linear-gradient(to top, rgba(248,250,252,0.95) 0%, rgba(248,250,252,0.50) 60%, rgba(248,250,252,0.7) 100%)' : 'linear-gradient(to top, rgba(4,6,14,0.98) 0%, rgba(4,6,14,0.40) 60%, rgba(4,6,14,0.65) 100%)' }} />
 
           {/* HERO Arrows Constrained to Content Width (e.g. 1280px / 960px) */}
@@ -4042,7 +4058,7 @@ Direct Management Contact: mgmt@intermaven.io`
               <div
                 key={currentSlideIndex}
                 className={`hero-titles-wrapper ${animClass}`}
-                style={{ position: 'relative', zIndex: 10, maxWidth: maxContentWidth, margin: '0 auto', textAlign: 'center' }}
+                style={{ position: 'relative', zIndex: 10, maxWidth: maxContentWidth, margin: '0 auto 70px auto', textAlign: 'center' }}
               >
                 <div className="hero-title-1" style={{ color: isLight ? '#0f172a' : '#fff', fontFamily: effectiveFont }}>
                   {title1}
@@ -4178,7 +4194,7 @@ Direct Management Contact: mgmt@intermaven.io`
               <div style={{ display: 'flex', flexDirection: 'column', gap: '36px', marginBottom: '44px' }}>
                 <PodcasterEpisodesSection
                   episodes={epkData?.episodes || []}
-                  onPlayEpisode={(ep) => handleSelectAndPlayTrack({ ...ep, audioUrl: ep.audioUrl || ep.audio_url || '/uploads/audio/enenda.wav' })}
+                  onPlayEpisode={(ep) => handleSelectAndPlayTrack({ ...ep, audioUrl: resolveAudioStreamUrl(ep.audioUrl || ep.audio_url || ep.id || ep.title) })}
                   accentColor={effectiveAccent}
                 />
                 <PodcasterAdRatesSection
@@ -5611,7 +5627,7 @@ Direct Management Contact: mgmt@intermaven.io`
           <div className="container" style={{ maxWidth: maxContentWidth, margin: '0 auto', padding: '20px 0' }}>
             <PodcasterEpisodesSection
               episodes={epkData?.episodes || []}
-              onPlayEpisode={(ep) => handleSelectAndPlayTrack({ ...ep, audioUrl: ep.audioUrl || ep.audio_url || '/uploads/audio/enenda.wav' })}
+              onPlayEpisode={(ep) => handleSelectAndPlayTrack({ ...ep, audioUrl: resolveAudioStreamUrl(ep.audioUrl || ep.audio_url || ep.id || ep.title) })}
               accentColor={effectiveAccent}
             />
           </div>

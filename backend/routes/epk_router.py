@@ -186,13 +186,24 @@ def get_public_epk(subdomain: str, response: Response):
     clean_subdomain = subdomain.lower().strip().replace(" ", "")
     layout_id = f"epk_{clean_subdomain}"
 
+    djcj_aliases = {
+        "djcj", "dj-cj", "dj_cj", "djcjkenya", "dj-cj-kenya", "dj_cj_kenya",
+        "syukiyamukamba", "djcjproductions"
+    }
+
     # 1. Fetch from db.epks
     epk_doc = db.epks.find_one({"subdomain": clean_subdomain})
+    if not epk_doc and clean_subdomain in djcj_aliases:
+        epk_doc = db.epks.find_one({"subdomain": "djcjkenya"})
     if not epk_doc:
         epk_doc = db.epks.find_one({"artist_name": {"$regex": f"^{clean_subdomain}$", "$options": "i"}})
+    if not epk_doc:
+        epk_doc = db.epks.find_one({"user_id": clean_subdomain})
 
     # 2. Fetch from db.cms_layouts
     cms_doc = db.cms_layouts.find_one({"layout_id": layout_id})
+    if not cms_doc and clean_subdomain in djcj_aliases:
+        cms_doc = db.cms_layouts.find_one({"layout_id": "epk_djcjkenya"})
     cms_data = dict(cms_doc.get("data", {})) if cms_doc else {}
     cms_data.pop("_id", None)
 
@@ -203,7 +214,7 @@ def get_public_epk(subdomain: str, response: Response):
     dj_slugs = {
         "khalid", "khalidwaves", "djksouldier", "dj-k-souldier", "djzinhlevibes", "dj-zinhle-vibes",
         "djmaphoria", "dj-maphoria", "selectorkofi", "selector-kofi", "djkalonje", "dj-kalonje", "dj_kalonje",
-        "djcjkenya", "dj-cj-kenya"
+        "djcj", "dj-cj", "dj_cj", "djcjkenya", "dj-cj-kenya", "dj_cj_kenya", "syukiyamukamba", "djcjproductions"
     }
     dj_display_names = {
         "khalid": "Khalid Waves",
@@ -217,8 +228,14 @@ def get_public_epk(subdomain: str, response: Response):
         "selectorkofi": "Selector Kofi",
         "selector-kofi": "Selector Kofi",
         "djkalonje": "DJ Kalonje",
+        "djcj": "DJ CJ Kenya",
+        "dj-cj": "DJ CJ Kenya",
+        "dj_cj": "DJ CJ Kenya",
         "djcjkenya": "DJ CJ Kenya",
         "dj-cj-kenya": "DJ CJ Kenya",
+        "dj_cj_kenya": "DJ CJ Kenya",
+        "syukiyamukamba": "DJ CJ Kenya",
+        "djcjproductions": "DJ CJ Kenya",
     }
 
     merged = {}
@@ -389,15 +406,26 @@ def get_public_epk(subdomain: str, response: Response):
 
     # Fetch DJ mixes strictly belonging to this creator / DJ
     effective_name = merged.get("artist_name") or clean_subdomain
-    dj_query = {
-        "$or": [
-            {"subdomain": clean_subdomain},
-            {"dj_name": {"$regex": f"^{re.escape(effective_name)}$", "$options": "i"}},
-            {"dj_name": {"$regex": re.escape(clean_subdomain), "$options": "i"}},
-            {"dj_handle": {"$regex": re.escape(clean_subdomain), "$options": "i"}},
-            {"user_id": clean_subdomain},
-        ]
-    }
+    alphanumeric_sub = re.sub(r'[^a-zA-Z0-9]', '', clean_subdomain)
+    fuzzy_pat = r"[\s_-]*".join([re.escape(c) for c in alphanumeric_sub]) if alphanumeric_sub else clean_subdomain
+
+    dj_conditions = [
+        {"subdomain": clean_subdomain},
+        {"subdomain": {"$regex": f"^{re.escape(clean_subdomain)}$", "$options": "i"}},
+        {"dj_name": {"$regex": f"^{re.escape(effective_name)}$", "$options": "i"}},
+        {"dj_name": {"$regex": fuzzy_pat, "$options": "i"}},
+        {"dj_handle": {"$regex": fuzzy_pat, "$options": "i"}},
+        {"user_id": clean_subdomain},
+    ]
+    if merged.get("user_id"):
+        dj_conditions.append({"user_id": str(merged["user_id"])})
+    if clean_subdomain in djcj_aliases:
+        dj_conditions.extend([
+            {"subdomain": "djcjkenya"},
+            {"user_id": "6af1bc22b5f620b01734e203"},
+            {"dj_name": {"$regex": "DJ CJ", "$options": "i"}}
+        ])
+    dj_query = {"$or": dj_conditions}
     creator_mixes = list(db.dj_mixes.find(dj_query))
     serialized_mixes = []
     for m in creator_mixes:

@@ -162,7 +162,7 @@ export const DEFAULT_DJ_EPK_MIXES = [
     status: 'published_for_sale',
     streams: '14.8K',
     artwork_url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80',
-    audio_url: '/uploads/audio/enenda.wav',
+    audio_url: resolveAudioStreamUrl('mix_kilifi_baobab'),
     description: 'Recorded live at Beneath The Baobabs in Kilifi. Deep hypnotic Afro-Tech grooves with 100% cleared East African synthesizer stems.',
     tracklist: [
       { id: 't1', title: 'Nairobi Cyberwave (Master)', artist: 'Ndufo', timestamp: '00:00', royalty_share_pct: 16.67, clearance_status: 'cleared' },
@@ -275,7 +275,7 @@ export const CANONICAL_DJ_TECH_RIDER = {
 };
 
 export const CANONICAL_PRODUCER_BEATS = [
-  { id: 'b1', title: 'Nairobi Cyberpulse (Afro-Tech Master)', bpm: 124, key: 'F# Minor', leaseUsd: 45, stemsUsd: 180, buyoutUsd: 750, audioUrl: '/uploads/audio/enenda.wav' },
+  { id: 'b1', title: 'Nairobi Cyberpulse (Afro-Tech Master)', bpm: 124, key: 'F# Minor', leaseUsd: 45, stemsUsd: 180, buyoutUsd: 750, audioUrl: resolveAudioStreamUrl('b1') },
   { id: 'b2', title: 'Swahili Sunset (Intimate Neo-Soul)', bpm: 92, key: 'C Minor', leaseUsd: 40, stemsUsd: 160, buyoutUsd: 650, audioUrl: '/uploads/audio/running.wav' },
   { id: 'b3', title: 'Eastlands Drill Anthem (24-Bit 808s)', bpm: 142, key: 'D Minor', leaseUsd: 50, stemsUsd: 200, buyoutUsd: 900, audioUrl: '/uploads/audio/pray_tell.wav' }
 ];
@@ -601,7 +601,7 @@ export const DEFAULT_PODCASTER_EPISODES = [
     duration: '42:18',
     publishedAt: '2 days ago',
     streams: '48.2K',
-    audioUrl: '/uploads/audio/enenda.wav',
+    audioUrl: resolveAudioStreamUrl('ep-sample-1'),
     summary: 'Deep-dive conversation on independent music ownership, direct-to-fan tipping, and building a sustainable creator career without major-label debt.',
     transcript: 'Host: Today we sit down with top independent producers to dissect how automated Split Cascade royalties pay creators 4x more than standard DSP streams...',
     chapters: [
@@ -618,7 +618,7 @@ export const DEFAULT_PODCASTER_EPISODES = [
     duration: '38:40',
     publishedAt: '1 week ago',
     streams: '52.1K',
-    audioUrl: '/uploads/audio/enenda.wav',
+    audioUrl: resolveAudioStreamUrl('ep-sample-2'),
     summary: 'Music supervisors break down the metadata requirements, instrumental stem deliverables, and 24-hour turnaround needed to win film placements.',
     transcript: 'Host: When a sync brief lands on your desk with a 48-hour deadline, having one-stop pre-cleared master and publishing splits is the single factor that decides...',
     chapters: [
@@ -969,6 +969,26 @@ export function DjMixesAndSetsSection({
 
   const cleanDjSlug = (djSlug || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const cleanDjName = (djName || '').toLowerCase().trim();
+  const normDjName = cleanDjName.replace(/[^a-z0-9]/g, '');
+
+  const isMatchForThisDj = (m) => {
+    if (!m) return false;
+    if (customMixesCount > 0 && Array.isArray(mixes) && mixes.some((x) => String(x.id || x._id) === String(m.id || m._id))) {
+      return true;
+    }
+    const mDj = (m.dj_name || m.artist || '').toLowerCase();
+    const mDjNorm = mDj.replace(/[^a-z0-9]/g, '');
+    const mHandle = (m.dj_handle || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const mSub = (m.subdomain || m.user_id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    return (
+      mDj.includes(cleanDjName) || cleanDjName.includes(mDj) ||
+      (normDjName && (mDjNorm.includes(normDjName) || normDjName.includes(mDjNorm))) ||
+      (cleanDjSlug && (mDjNorm.includes(cleanDjSlug) || cleanDjSlug.includes(mDjNorm))) ||
+      (mHandle && cleanDjSlug && (mHandle.includes(cleanDjSlug) || cleanDjSlug.includes(mHandle))) ||
+      (mSub && cleanDjSlug && (mSub.includes(cleanDjSlug) || cleanDjSlug.includes(mSub)))
+    );
+  };
 
   useEffect(() => {
     if (Array.isArray(mixes) && mixes.length > 0) {
@@ -983,23 +1003,18 @@ export function DjMixesAndSetsSection({
         const arr = Array.isArray(data) ? data : data?.data;
         if (Array.isArray(arr) && arr.length > 0) {
           const clearedOnly = arr.filter((m) => m.status === 'published_for_sale' || m.status === 'published' || m.is_original_ip_only);
-          const thisDjOnly = clearedOnly.filter((m) => {
-            const mDj = (m.dj_name || '').toLowerCase();
-            const mHandle = (m.dj_handle || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-            const mSub = (m.subdomain || m.user_id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-            return mDj.includes(cleanDjName) || cleanDjName.includes(mDj) || mHandle.includes(cleanDjSlug) || cleanDjSlug.includes(mHandle) || mSub.includes(cleanDjSlug);
-          });
+          const thisDjOnly = clearedOnly.filter((m) => isMatchForThisDj(m));
           setLiveMixes(thisDjOnly);
         }
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [customMixesCount, customMixesKey, cleanDjName, cleanDjSlug]);
+  }, [customMixesCount, customMixesKey, cleanDjName, cleanDjSlug, normDjName]);
 
   // Sort mixes so the current DJ's mixes appear first
   const sortedMixes = [...liveMixes].sort((a, b) => {
-    const aMatch = (a.dj_name || '').toLowerCase().includes(cleanDjName) || (a.dj_handle || '').toLowerCase().replace(/[^a-z0-9]/g, '').includes(cleanDjSlug);
-    const bMatch = (b.dj_name || '').toLowerCase().includes(cleanDjName) || (b.dj_handle || '').toLowerCase().replace(/[^a-z0-9]/g, '').includes(cleanDjSlug);
+    const aMatch = isMatchForThisDj(a);
+    const bMatch = isMatchForThisDj(b);
     if (aMatch && !bMatch) return -1;
     if (!aMatch && bMatch) return 1;
     return 0;
@@ -1007,8 +1022,7 @@ export function DjMixesAndSetsSection({
 
   const filteredMixes = sortedMixes.filter((m) => {
     if (filterScope === 'dj') {
-      const match = (m.dj_name || '').toLowerCase().includes(cleanDjName) || (m.dj_handle || '').toLowerCase().replace(/[^a-z0-9]/g, '').includes(cleanDjSlug);
-      if (!match) return false;
+      if (!isMatchForThisDj(m)) return false;
     }
     if (selectedGenre !== 'All') {
       if (!(m.genre || '').toLowerCase().replace('-', ' ').includes(selectedGenre.toLowerCase().replace('-', ' '))) {
@@ -1205,7 +1219,7 @@ export function DjMixesAndSetsSection({
 
                   {isPurchased ? (
                     <a
-                      href={mix.audio_url || '/uploads/audio/enenda.wav'}
+                      href={mix.audio_url || resolveAudioStreamUrl(mix.id || mix.title)}
                       download={`${(mix.title || 'DJ_Mix').replace(/[^a-zA-Z0-9_-]/g, '_')}.wav`}
                       style={{
                         flex: 1,
@@ -1317,7 +1331,7 @@ export function DjMixesAndSetsSection({
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <a
-                    href={checkoutMix.audio_url || '/uploads/audio/enenda.wav'}
+                    href={checkoutMix.audio_url || resolveAudioStreamUrl(checkoutMix.id || checkoutMix.title)}
                     download={`${(checkoutMix.title || 'DJ_Mix').replace(/[^a-zA-Z0-9_-]/g, '_')}.wav`}
                     style={{ flex: 1, padding: '11px', background: '#10b981', color: '#060813', borderRadius: '3px', fontWeight: 900, fontSize: '13px', textDecoration: 'none', textAlign: 'center' }}
                   >
@@ -1989,7 +2003,7 @@ export function ProducerBeatStoreSection({ formatPrice = (v) => `$${v}`, onPlayB
                   title: b.title,
                   bpm: b.bpm,
                   key: b.key,
-                  audioUrl: b.audioUrl || '/uploads/audio/enenda.wav',
+                  audioUrl: b.audioUrl || resolveAudioStreamUrl(b.id || b.title),
                   isrc: `KE-PRD-26-00${b.id}`,
                   badge: `🎹 Producer Beat • ${b.bpm || 120} BPM`
                 })}
