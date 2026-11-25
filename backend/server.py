@@ -59,14 +59,14 @@ if not uploads_dir:
         uploads_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
 os.makedirs(uploads_dir, exist_ok=True)
 
-# Audio streaming fallback route: handles static audio requests (/uploads/audio/... and /api/uploads/audio/...) with range support and preview synthesis
+# Audio streaming route: serves static audio file from local disk or S3/R2, else delegates to stream router (returns 404 if missing)
 @app.api_route("/uploads/audio/{filename:path}", methods=["GET", "HEAD"])
 @app.api_route("/api/uploads/audio/{filename:path}", methods=["GET", "HEAD"])
 def stream_upload_audio_file(filename: str, request: Request):
-    """Serves static audio file if on disk, else delegates to stream router for preview synthesis."""
+    """Serves static audio file if on disk or S3/R2, else delegates to stream router."""
     import re as _re
     from routes.stream_router import stream_catalog_track
-    from fastapi.responses import FileResponse
+    from fastapi.responses import FileResponse, RedirectResponse
     from pathlib import Path
     safe_name = os.path.basename(filename)
     for sdir in [uploads_dir, os.path.join(uploads_dir, "audio"), "uploads/audio", "backend/uploads/audio"]:
@@ -75,6 +75,13 @@ def stream_upload_audio_file(filename: str, request: Request):
             ext = Path(p).suffix.lower()
             media_type = "audio/wav" if ext == ".wav" else ("audio/flac" if ext == ".flac" else "audio/mpeg")
             return FileResponse(p, media_type=media_type)
+    try:
+        from services.s3_storage import storage as _s3_storage
+        s3_url = _s3_storage.get_stream_url(f"audio/{safe_name}")
+        if s3_url:
+            return RedirectResponse(url=s3_url)
+    except Exception:
+        pass
     clean_name = _re.sub(r"\.(wav|mp3|flac|ogg|m4a|aac|aiff)$", "", filename, flags=_re.IGNORECASE)
     return stream_catalog_track(clean_name, request=request)
 

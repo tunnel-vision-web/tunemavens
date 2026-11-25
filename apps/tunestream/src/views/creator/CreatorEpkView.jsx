@@ -3030,12 +3030,12 @@ Direct Management Contact: mgmt@intermaven.io`
         onPause={() => setIsPlaying(false)}
         onEnded={handleTrackAdvance}
         onError={(e) => {
-          console.warn('Audio playback error, attempting fallback to stream synthesizer', e)
-          const fallback = resolveAudioStreamUrl(currentTrack?.id || currentTrack?.title || 'preview')
-          if (epkAudioRef.current && epkAudioRef.current.src && !epkAudioRef.current.src.includes('/api/stream/track/')) {
-            epkAudioRef.current.src = fallback
-            epkAudioRef.current.load()
-            epkAudioRef.current.play().catch(err => console.warn('Fallback play failed:', err))
+          const mediaErr = epkAudioRef.current?.error
+          if (mediaErr && mediaErr.code === 1) return
+          console.warn('Audio master file unavailable:', currentTrack?.title, mediaErr)
+          setIsPlaying(false)
+          if (typeof showToast === 'function' && currentTrack?.title) {
+            showToast(`Audio master file for "${currentTrack.title}" is not yet uploaded to storage. Please re-upload or configure S3/R2.`, 'warning')
           }
         }}
         style={{ display: 'none' }}

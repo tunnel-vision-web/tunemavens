@@ -42,6 +42,12 @@ class Base64UploadRequest(BaseModel):
     title: Optional[str] = None
 
 
+@router.get("/status")
+def get_storage_status():
+    """Returns active object storage configuration (S3/R2 vs local disk fallback)."""
+    return storage.get_status()
+
+
 @router.post("/presigned-upload")
 def request_presigned_upload(
     payload: PresignedUploadRequest,

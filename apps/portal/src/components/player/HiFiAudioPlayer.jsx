@@ -160,6 +160,7 @@ export default function HiFiAudioPlayer({
     y: Math.max(70, (typeof window !== 'undefined' ? window.innerHeight - 430 : 420))
   }));
 
+  const [audioMissingError, setAudioMissingError] = useState('');
   const audioRef = useRef(null);
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef({ mouseX: 0, mouseY: 0, posX: 0, posY: 0 });
@@ -213,6 +214,7 @@ export default function HiFiAudioPlayer({
       setPlaybackProgress(0);
       setPreviewLimitReached(false);
       setIsMutedForAutoplay(false);
+      setAudioMissingError('');
       if (!isPlayerMuted) {
         audio.muted = false;
         audio.volume = playerVolume || 0.85;
@@ -463,19 +465,51 @@ export default function HiFiAudioPlayer({
           const mediaErr = audioRef.current?.error;
           // Ignore aborted requests (code 1 = MEDIA_ERR_ABORTED) triggered by user track changes
           if (mediaErr && mediaErr.code === 1) return;
-          const apiBase = getApiBase();
-          const fallbackId = currentTrack?.id || currentTrack?.isrc || (currentTrack?.title ? encodeURIComponent(currentTrack.title) : 'preview');
-          const fallback = `${apiBase || ''}/api/stream/track/${encodeURIComponent(fallbackId)}`;
-          if (audioRef.current && audioRef.current.src !== fallback && !audioRef.current.src.includes('/api/stream/track/')) {
-            console.warn('Primary stream unreachable; switching to resilient synthesizer fallback', mediaErr ? `(Code ${mediaErr.code})` : '');
-            audioRef.current.src = fallback;
-            if (isPlaying) {
-              audioRef.current.play().catch(() => {});
-            }
-          }
+          console.warn('Audio master file unavailable:', currentTrack?.title, mediaErr ? `(Code ${mediaErr.code})` : '');
+          setAudioMissingError(`Audio master file for "${currentTrack?.title || 'this track'}" was not found on storage. Please re-upload or configure S3/R2.`);
+          if (onTogglePlay) onTogglePlay(false);
         }}
         style={{ display: 'none' }}
       />
+
+      {/* Missing Audio Master Notice */}
+      {audioMissingError && (
+        <div
+          data-testid="audio-missing-banner"
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            left: '24px',
+            zIndex: 100001,
+            maxWidth: '420px',
+            background: 'rgba(15, 23, 42, 0.96)',
+            border: '1px solid #f59e0b',
+            color: '#fef3c7',
+            padding: '12px 16px',
+            borderRadius: '4px',
+            fontSize: '12.5px',
+            lineHeight: 1.45,
+            boxShadow: '0 10px 30px rgba(0,0,0,0.65)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '10px'
+          }}
+        >
+          <span style={{ fontSize: '16px', lineHeight: 1 }}>⚠️</span>
+          <div style={{ flex: 1 }}>
+            <strong style={{ color: '#fbbf24', display: 'block', marginBottom: '2px' }}>Master Audio Unavailable</strong>
+            <span>{audioMissingError}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAudioMissingError('')}
+            style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '14px', padding: '0 4px' }}
+            aria-label="Dismiss audio notice"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Floating Unmute Banner if playing in muted autoplay mode */}
       {isMutedForAutoplay && (

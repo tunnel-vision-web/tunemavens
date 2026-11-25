@@ -108,12 +108,8 @@ def generate_synthesized_preview(seed_text: str = "track", duration_sec: float =
     return result
 
 
-# Pre-warm synthesized audio cache for all 5 chord roots
-try:
-    for _k in range(5):
-        generate_synthesized_preview(seed_text=f"key_{_k}", duration_sec=30.0)
-except Exception:
-    pass
+# Synthesized preview pre-warming disabled: missing audio masters return HTTP 404 (AUDIO_FILE_MISSING)
+# rather than playing an artificial sine-wave tone.
 
 
 @router.api_route("/track/{identifier}", methods=["GET", "HEAD"])
@@ -194,74 +190,45 @@ def stream_catalog_track(
                     elif ext == ".ogg":
                         media_type = "audio/ogg"
                     return FileResponse(local_path, media_type=media_type)
+            # Check S3/R2 cloud storage if configured
+            try:
+                from services.s3_storage import storage as _s3_storage
+                s3_stream_url = _s3_storage.get_stream_url(rel_path)
+                if s3_stream_url:
+                    return RedirectResponse(url=s3_stream_url)
+            except Exception as _s3_err:
+                logger.warning("S3/R2 stream lookup failed for %s: %s", rel_path, _s3_err)
         elif audio_url.startswith("http://") or audio_url.startswith("https://"):
             if "soundhelix.com" not in audio_url and "localhost" not in audio_url and "127.0.0.1" not in audio_url:
                 return RedirectResponse(url=audio_url)
 
-    # 3. Dedicated synthesized high-fidelity preview generator for the specific requested track/mix
-    # (Never randomly pick unrelated studio tracks like Enenda for different releases)
+    # Also check S3/R2 directly for common audio extensions by clean_id
+    try:
+        from services.s3_storage import storage as _s3_storage
+        if _s3_storage.use_s3:
+            for ext in ("", ".mp3", ".MP3", ".wav", ".WAV", ".flac", ".m4a"):
+                candidate_key = f"audio/{clean_id}{ext}"
+                s3_stream_url = _s3_storage.get_stream_url(candidate_key)
+                if s3_stream_url:
+                    return RedirectResponse(url=s3_stream_url)
+    except Exception:
+        pass
+
+    # 3. Missing master audio file — return clean HTTP 404 instead of playing a synthesized ringing tone
     title = (target_track.get("title") if target_track else None) or clean_id
-    wav_bytes = generate_synthesized_preview(seed_text=title, duration_sec=45.0)
-    total_len = len(wav_bytes)
+    try:
+        from services.s3_storage import storage as _s3_storage
+        storage_mode = _s3_storage.get_status().get("mode", "local_disk")
+    except Exception:
+        storage_mode = "local_disk"
 
-    # Handle HTTP Range requests for scrubbing / seeking
-    range_header = request.headers.get("range") if request else None
-    if range_header and range_header.startswith("bytes="):
-        parts = range_header.replace("bytes=", "").split("-")
-        start = int(parts[0]) if parts[0] else 0
-        end = int(parts[1]) if len(parts) > 1 and parts[1] else total_len - 1
-        end = min(end, total_len - 1)
-        length = end - start + 1
-
-        if request and request.method == "HEAD":
-            return Response(
-                content=b"",
-                status_code=206,
-                media_type="audio/wav",
-                headers={
-                    "Content-Range": f"bytes {start}-{end}/{total_len}",
-                    "Accept-Ranges": "bytes",
-                    "Content-Length": str(length),
-                    "Cache-Control": "public, max-age=3600",
-                    "X-Stream-Source": "TuneStream-Audio-Engine"
-                }
-            )
-
-        return Response(
-            content=wav_bytes[start:end + 1],
-            status_code=206,
-            media_type="audio/wav",
-            headers={
-                "Content-Range": f"bytes {start}-{end}/{total_len}",
-                "Accept-Ranges": "bytes",
-                "Content-Length": str(length),
-                "Cache-Control": "public, max-age=3600",
-                "X-Stream-Source": "TuneStream-Audio-Engine"
-            }
-        )
-
-    if request and request.method == "HEAD":
-        return Response(
-            content=b"",
-            status_code=200,
-            media_type="audio/wav",
-            headers={
-                "Content-Length": str(total_len),
-                "Accept-Ranges": "bytes",
-                "Cache-Control": "public, max-age=3600",
-                "X-Stream-Source": "TuneStream-Audio-Engine"
-            }
-        )
-
-    return Response(
-        content=wav_bytes,
-        media_type="audio/wav",
-        headers={
-            "Content-Length": str(total_len),
-            "Accept-Ranges": "bytes",
-            "Cache-Control": "public, max-age=3600",
-            "X-Stream-Source": "TuneStream-Audio-Engine"
-        }
+    raise HTTPException(
+        status_code=404,
+        detail={
+            "error": "AUDIO_FILE_MISSING",
+            "message": f"Audio master file for '{title}' was not found on {storage_mode} storage. Please re-upload this track/mix or configure S3/R2 cloud storage.",
+            "storage_mode": storage_mode,
+        },
     )
 
 

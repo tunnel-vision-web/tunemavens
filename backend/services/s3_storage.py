@@ -12,6 +12,12 @@ import uuid
 from typing import Optional
 
 try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+try:
     import boto3
     from botocore.exceptions import ClientError
     BOTO3_AVAILABLE = True
@@ -27,8 +33,9 @@ AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "tunemaven-assets")
 S3_PUBLIC_URL_PREFIX = os.environ.get("S3_PUBLIC_URL_PREFIX")  # Optional Custom CDN/Domain prefix
 
-# Local fallback settings
-LOCAL_UPLOADS_DIR = Path(os.environ.get("LOCAL_UPLOADS_DIR", "uploads"))
+# Local fallback settings — align with backend/server.py upload directory preference
+_default_local_dir = "backend/uploads" if os.path.exists("backend/uploads") else "uploads"
+LOCAL_UPLOADS_DIR = Path(os.environ.get("LOCAL_UPLOADS_DIR", _default_local_dir))
 LOCAL_UPLOADS_URL_PREFIX = os.environ.get("LOCAL_UPLOADS_URL_PREFIX", "/api/uploads")
 
 
@@ -184,6 +191,39 @@ class StorageManager:
 
         safe_key = file_key.replace("\\", "/")
         return f"{LOCAL_UPLOADS_URL_PREFIX.rstrip('/')}/{safe_key}"
+
+    def file_exists_in_s3(self, file_key: str) -> bool:
+        """Checks whether an object exists in S3/R2."""
+        if not self.use_s3 or not self.s3_client:
+            return False
+        try:
+            self.s3_client.head_object(Bucket=S3_BUCKET_NAME, Key=file_key)
+            return True
+        except Exception:
+            return False
+
+    def get_stream_url(self, file_key: str, expires_in: int = 3600) -> Optional[str]:
+        """Returns a direct CDN or presigned S3/R2 stream URL if the object exists in cloud storage."""
+        if not self.use_s3 or not self.s3_client:
+            return None
+        clean_key = file_key.lstrip("/")
+        if not self.file_exists_in_s3(clean_key):
+            return None
+        if S3_PUBLIC_URL_PREFIX:
+            return f"{S3_PUBLIC_URL_PREFIX.rstrip('/')}/{clean_key}"
+        return self.generate_presigned_download_url(clean_key, expires_in=expires_in)
+
+    def get_status(self) -> dict:
+        """Returns current object storage mode and configuration summary (no secrets)."""
+        return {
+            "mode": "s3_r2" if self.use_s3 else "local_disk",
+            "s3_enabled": self.use_s3,
+            "boto3_available": BOTO3_AVAILABLE,
+            "bucket": S3_BUCKET_NAME if self.use_s3 else None,
+            "endpoint_configured": bool(S3_ENDPOINT_URL),
+            "public_cdn_configured": bool(S3_PUBLIC_URL_PREFIX),
+            "local_uploads_dir": str(LOCAL_UPLOADS_DIR),
+        }
 
 
 # Global single instance export
