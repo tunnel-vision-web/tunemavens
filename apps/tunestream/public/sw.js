@@ -1,5 +1,5 @@
 // TuneStream Native Service Worker — Offline Audio & App Installation
-const CACHE_NAME = 'tunestream-cache-v3';
+const CACHE_NAME = 'tunestream-cache-v4';
 const OFFLINE_URLS = [
   '/',
   '/manifest.json',
@@ -32,12 +32,16 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
 
-  // Network-first for navigations, HTML documents, manifest, and API calls
+  // Never cache API or audio stream requests — always hit live network
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/uploads/audio/')) {
+    return;
+  }
+
+  // Network-first for navigations, HTML documents, and manifest
   if (
     event.request.mode === 'navigate' ||
     url.pathname.endsWith('.html') ||
     url.pathname.endsWith('.json') ||
-    url.pathname.startsWith('/api/') ||
     url.pathname === '/' ||
     url.pathname === '/privacy' ||
     url.pathname === '/terms' ||

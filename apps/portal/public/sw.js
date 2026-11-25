@@ -1,5 +1,5 @@
 // TuneStream & TuneMavens Service Worker — PWA & Offline Support
-const CACHE_NAME = 'tunemavens-cache-v2';
+const CACHE_NAME = 'tunemavens-cache-v3';
 const OFFLINE_URLS = [
   '/',
   '/native',
@@ -35,7 +35,12 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
 
-  // Network-first for manifest, html navigation, and api
+  // Never cache API or audio stream requests — always hit live network
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/uploads/audio/')) {
+    return;
+  }
+
+  // Network-first for manifest and html navigation
   if (url.pathname.endsWith('.json') || url.pathname.endsWith('.html') || event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)

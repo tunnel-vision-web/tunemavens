@@ -287,10 +287,16 @@ export function CreatorEpkView(props = {}) {
         if (cmsRes.ok) {
           const cmsLayout = await cmsRes.json()
           const cmsData = cmsLayout?.data || cmsLayout
-          if (cmsData && typeof cmsData === 'object') {
+          const isSyntheticDraft = cmsLayout?.status === 'draft' && freshData
+          if (cmsData && typeof cmsData === 'object' && !isSyntheticDraft) {
             freshData = {
               ...(freshData || {}),
               ...cmsData,
+              // Preserve authoritative catalog arrays from /api/epk/public whenever CMS lacks them
+              tracks: (Array.isArray(freshData?.tracks) && freshData.tracks.length > 0) ? freshData.tracks : cmsData.tracks,
+              dj_mixes: (Array.isArray(freshData?.dj_mixes) && freshData.dj_mixes.length > 0) ? freshData.dj_mixes : cmsData.dj_mixes,
+              albums: (Array.isArray(freshData?.albums) && freshData.albums.length > 0) ? freshData.albums : cmsData.albums,
+              playlists: (Array.isArray(freshData?.playlists) && freshData.playlists.length > 0) ? freshData.playlists : cmsData.playlists,
               // Ensure hero & header properties are prioritized from whichever source has them
               heroSlides: cmsData.heroSlides || freshData?.heroSlides,
               heroImages: cmsData.heroImages || freshData?.heroImages,
@@ -9952,7 +9958,7 @@ Direct Management Contact: mgmt@intermaven.io`
       )}
 
       {/* Floating Overlay Card */}
-      {isPlayerVisible && (
+      {isPlayerVisible && currentTrack && (
         <div
           style={{
             position: 'fixed',
@@ -10054,16 +10060,16 @@ Direct Management Contact: mgmt@intermaven.io`
           {isPlayerMinimized ? (
             <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <img
-                src={currentTrack.coverArt || 'https://picsum.photos/seed/track_art/400'}
-                alt={currentTrack.title}
+                src={currentTrack?.coverArt || 'https://picsum.photos/seed/track_art/400'}
+                alt={currentTrack?.title}
                 style={{ width: '36px', height: '36px', borderRadius: '3px', objectFit: 'cover', border: `1px solid ${effectiveAccent}44` }}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 800, fontSize: '0.82rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {currentTrack.title}
+                  {currentTrack?.title}
                 </div>
                 <div style={{ fontSize: '0.7rem', color: effectiveAccent, fontWeight: 700 }}>
-                  {Math.floor(playbackProgress / 60)}:{('0' + (playbackProgress % 60)).slice(-2)} / {currentTrack.duration || '3:45'}
+                  {Math.floor(playbackProgress / 60)}:{('0' + (playbackProgress % 60)).slice(-2)} / {currentTrack?.duration || '3:45'}
                 </div>
               </div>
               <button
@@ -10177,8 +10183,8 @@ Direct Management Contact: mgmt@intermaven.io`
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', padding: '10px 12px' }}>
                 <div style={{ position: 'relative' }}>
                   <img
-                    src={currentTrack.coverArt || 'https://picsum.photos/seed/track_art/400'}
-                    alt={currentTrack.title}
+                    src={currentTrack?.coverArt || 'https://picsum.photos/seed/track_art/400'}
+                    alt={currentTrack?.title}
                     style={{
                       width: '52px',
                       height: '52px',
@@ -10196,19 +10202,19 @@ Direct Management Contact: mgmt@intermaven.io`
 
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 900, fontSize: '0.92rem', color: isLight ? '#0f172a' : '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {currentTrack.title}
+                    {currentTrack?.title}
                   </div>
                   <div style={{ fontSize: '0.72rem', color: effectiveAccent, marginTop: '2px', fontWeight: 700, display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <span>{currentTrack.artist || currentTrack.dj_name || currentTrack.host || currentTrack.producer || effectiveArtistName}</span>
+                    <span>{currentTrack?.artist || currentTrack?.dj_name || currentTrack?.host || currentTrack?.producer || effectiveArtistName}</span>
                     <span>•</span>
-                    <span>ISRC: {currentTrack.isrc || 'KE-TM1-26-00042'}</span>
+                    <span>ISRC: {currentTrack?.isrc || 'KE-TM1-26-00042'}</span>
                   </div>
                   <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', padding: '1px 6px', borderRadius: '3px', fontSize: '0.62rem', fontWeight: 800 }}>
-                      {currentTrack.badge || (
+                      {currentTrack?.badge || (
                         creatorType === 'dj' ? '🎧 DJ Mix • Lossless Master' :
                         creatorType === 'podcaster' ? '🎙️ Podcast Episode • Stereo Master' :
-                        creatorType === 'producer' ? `🎹 Producer Beat • ${currentTrack.bpm || '120'} BPM` :
+                        creatorType === 'producer' ? `🎹 Producer Beat • ${currentTrack?.bpm || '120'} BPM` :
                         'Lossless MP3 • 320kbps'
                       )}
                     </span>
@@ -10252,7 +10258,7 @@ Direct Management Contact: mgmt@intermaven.io`
                     style={{ flex: 1, accentColor: effectiveAccent, cursor: 'pointer', height: '4px' }}
                   />
                   <span style={{ fontSize: '0.72rem', color: isLight ? '#64748b' : '#94a3b8', fontFamily: 'monospace', minWidth: '32px', textAlign: 'right' }}>
-                    {currentTrack.duration || '3:45'}
+                    {currentTrack?.duration || '3:45'}
                   </span>
                 </div>
               </div>

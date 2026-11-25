@@ -4424,7 +4424,7 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
     setCurrentTime(0);
 
     if (typeof onPlayGlobalTrack === 'function') {
-      onPlayGlobalTrack(track, catalogTracks);
+      onPlayGlobalTrack(resolvedTrack, catalogTracks);
     }
 
     // Record listening history to TuneStream backend
@@ -5705,8 +5705,8 @@ function PlayerDashboard({ sessionUser, initialTab, onLogout, onPlayGlobalTrack 
         </div>
       </main>
 
-      {/* EPK-Style Floating Hi-Fi Audio Player Overlay */}
-      {isPlayerOpen && currentTrack && (
+      {/* EPK-Style Floating Hi-Fi Audio Player Overlay (only when no global player is provided) */}
+      {!onPlayGlobalTrack && isPlayerOpen && currentTrack && (
         <HiFiAudioPlayer
           track={currentTrack}
           tracks={catalogTracks}

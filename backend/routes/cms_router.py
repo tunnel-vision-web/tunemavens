@@ -216,6 +216,11 @@ def get_epk_cms(subdomain: str, response: Response):
     response.headers["Expires"] = "0"
 
     clean_subdomain = subdomain.lower().strip().replace(" ", "")
+    # Canonicalize known creator aliases (e.g. DJ CJ Kenya) so CMS lookup matches live EPK
+    djcj_aliases = {"djcj", "dj-cj", "dj_cj", "djcjkenya", "dj-cj-kenya", "dj_cj_kenya", "syukiyamukamba"}
+    if clean_subdomain in djcj_aliases:
+        clean_subdomain = "djcjkenya"
+
     layout_id = f"epk_{clean_subdomain}"
 
     doc = db.cms_layouts.find_one({"layout_id": layout_id})
@@ -281,6 +286,11 @@ def get_epk_cms(subdomain: str, response: Response):
 def save_epk_cms(subdomain: str, payload: Dict[str, Any]):
     """Save full EPK layout from Mother-CMS Studio, updating layout history snapshot."""
     clean_subdomain = subdomain.lower().strip().replace(" ", "")
+    # Canonicalize known creator aliases (e.g. DJ CJ Kenya) so CMS lookup matches live EPK
+    djcj_aliases = {"djcj", "dj-cj", "dj_cj", "djcjkenya", "dj-cj-kenya", "dj_cj_kenya", "syukiyamukamba"}
+    if clean_subdomain in djcj_aliases:
+        clean_subdomain = "djcjkenya"
+
     layout_id = f"epk_{clean_subdomain}"
     raw_data = payload.get("data", payload)
     data = dict(raw_data)
@@ -342,6 +352,11 @@ def save_epk_cms(subdomain: str, payload: Dict[str, Any]):
 def update_epk_cms_section(subdomain: str, section_id: str, payload: Dict[str, Any]):
     """Update a specific section within the EPK CMS layout."""
     clean_subdomain = subdomain.lower().strip().replace(" ", "")
+    # Canonicalize known creator aliases (e.g. DJ CJ Kenya) so CMS lookup matches live EPK
+    djcj_aliases = {"djcj", "dj-cj", "dj_cj", "djcjkenya", "dj-cj-kenya", "dj_cj_kenya", "syukiyamukamba"}
+    if clean_subdomain in djcj_aliases:
+        clean_subdomain = "djcjkenya"
+
     layout_id = f"epk_{clean_subdomain}"
 
     existing = db.cms_layouts.find_one({"layout_id": layout_id})
@@ -391,6 +406,11 @@ def update_epk_cms_section(subdomain: str, section_id: str, payload: Dict[str, A
 def get_epk_cms_history(subdomain: str):
     """Retrieve audit history snapshots for this EPK from Mother-CMS."""
     clean_subdomain = subdomain.lower().strip().replace(" ", "")
+    # Canonicalize known creator aliases (e.g. DJ CJ Kenya) so CMS lookup matches live EPK
+    djcj_aliases = {"djcj", "dj-cj", "dj_cj", "djcjkenya", "dj-cj-kenya", "dj_cj_kenya", "syukiyamukamba"}
+    if clean_subdomain in djcj_aliases:
+        clean_subdomain = "djcjkenya"
+
     layout_id = f"epk_{clean_subdomain}"
 
     cursor = db.cms_layout_history.find({"layout_id": layout_id}).sort("version", -1).limit(20)
@@ -405,6 +425,11 @@ def get_epk_cms_history(subdomain: str):
 def rollback_epk_cms(subdomain: str, version: int):
     """Roll back EPK layout to a previous Mother-CMS version snapshot."""
     clean_subdomain = subdomain.lower().strip().replace(" ", "")
+    # Canonicalize known creator aliases (e.g. DJ CJ Kenya) so CMS lookup matches live EPK
+    djcj_aliases = {"djcj", "dj-cj", "dj_cj", "djcjkenya", "dj-cj-kenya", "dj_cj_kenya", "syukiyamukamba"}
+    if clean_subdomain in djcj_aliases:
+        clean_subdomain = "djcjkenya"
+
     layout_id = f"epk_{clean_subdomain}"
 
     snapshot_doc = db.cms_layout_history.find_one({

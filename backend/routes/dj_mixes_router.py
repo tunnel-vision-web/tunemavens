@@ -1326,6 +1326,7 @@ def list_dj_mixes(
     else:
         or_conditions = [
             {"status": "published"},
+            {"status": "published_for_sale"},
             {"status": "clearance_pending"},
             {"status": "draft"},
         ]

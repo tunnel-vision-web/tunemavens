@@ -3029,9 +3029,17 @@ export default function NativeAppLandingView({
                             const firstEp = item.data?.show?.episodes?.[0];
                             if (firstEp) handlePlaySong(firstEp);
                           } else if (item.kind === 'dj') {
-                            const djMix = popularDjMixes.find(m => (m.artist || '').toLowerCase().includes((item.title || '').toLowerCase()));
-                            if (djMix) handlePlaySong(djMix);
-                            else handlePlaySong(tracks[0]);
+                            const normTarget = (item.title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                            const djMix = popularDjMixes.find(m => {
+                              const normArtist = (m.artist || m.dj_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                              return normTarget && normArtist && (normArtist.includes(normTarget) || normTarget.includes(normArtist));
+                            });
+                            if (djMix) {
+                              handlePlaySong(djMix);
+                            } else {
+                              const sub = item.data?.subdomain || normTarget || 'djcjkenya';
+                              navigate(`/epk/${sub}?persona=dj`);
+                            }
                           } else {
                             handlePlaySong(item.data);
                           }
