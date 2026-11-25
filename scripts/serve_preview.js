@@ -46,7 +46,8 @@ function proxyRequest(req, res, targetPort) {
     method: req.method,
     headers: {
       ...req.headers,
-      host: `127.0.0.1:${targetPort}`
+      host: `127.0.0.1:${targetPort}`,
+      connection: 'close'
     }
   };
 

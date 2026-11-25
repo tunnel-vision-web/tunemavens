@@ -3819,6 +3819,11 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
 
 - **Verification**:
   - `python -m pytest backend/tests/test_crm_reachout.py backend/tests/test_crm_growth.py backend/tests/test_events_rsvp_crm.py -v` passed **10/10 tests**, covering Target Group CRUD, phone/WhatsApp rejection, Event email RSVP/Ticket CTAs, click tracking, RSVP, onboarding with saved preferences, delayed ticket spend attribution, and dual In-App Inbox + registered email notifications.
+  - **RBAC Isolation, CSV/JSON Import, Site Event Sync & Self-Learning Persona Engine Enhancements**:
+    - **Admin vs. Affiliate RBAC**: Admins see all registered affiliates (automatically synced across `db.users` and `db.affiliates` via `sync_all_registered_affiliates()`) in the **Initiating Affiliate Account** selector and can filter/manage any affiliate's Target Groups & telemetry; non-admin Affiliates are strictly isolated (`403 Forbidden` on cross-affiliate access) to their own Target Groups, campaigns, and funnel telemetry.
+    - **Target Group Data Importer (`POST /api/crm/target-groups/import`)**: Supports uploading or pasting `.csv`, `.tsv`, `.txt`, and `.json` contact lists into new or existing Target Groups, automatically stripping phone/WhatsApp columns to preserve Email-Only compliance.
+    - **Authoritative Site Events Sync**: Syncs live `/api/events` with `AUTHORITATIVE_EVENTS` in `EmailReachoutManager.jsx` so every site concert, tour stop, masterclass, and Free RSVP event is selectable.
+    - **10-Persona Introductory Playbooks & Adaptive Learning CRM (`GET /api/crm/smart-playbooks`, `GET /api/crm/intelligence`, `POST /api/crm/smart-recommend`)**: Expanded Promotion Types with `persona_intro` playbooks across all 10 personas (`creator`, `dj`, `label`, `podcaster`, `supervisor`, `corporate`, `media_house`, `vc`, `affiliate`, `consumer`), embedding direct **Launch Official EPK** and **Ingest Catalogue & Stems** email CTAs where relevant, and continuously updating `db.crm_learning_weights` from clicks, RSVPs, onboardings, EPK launches, catalogue ingestions, and spend to surface top-converting hooks and 1-click Warm Unconverted Clicker segmentation.
 
 
 

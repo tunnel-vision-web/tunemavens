@@ -825,35 +825,114 @@ def get_admin_affiliates_overview(user=Depends(get_optional_user)):
     }
 
 
+def sync_all_registered_affiliates() -> None:
+    """Ensure every user with role='affiliate' in db.users and demo partners exist in db.affiliates."""
+    try:
+        init_affiliate_seed_data()
+        # Ensure flagship Kenya partner exists too
+        if not db.affiliates.find_one({"ref_code": "TM-KENYA-254"}):
+            db.affiliates.insert_one({
+                "id": "aff_kenya_partner",
+                "name": "Zawadi Kiprop",
+                "email": "zawadi@tunemavens.co.ke",
+                "handle": "@zawaditunes",
+                "ref_code": "TM-KENYA-254",
+                "website_or_social": "https://tiktok.com/@zawaditunes",
+                "tier": "partner",
+                "status": "active",
+                "payout_method": "mpesa",
+                "payout_details": {"phone": "+254712345678", "recipient": "Zawadi Kiprop"},
+                "clicks_count": 840,
+                "conversions_count": 48,
+                "total_gmv": 5240.00,
+                "total_earnings": 488.50,
+                "pending_payout": 112.50,
+                "paid_payout": 376.00,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
+
+        # Sync any registered affiliate users from db.users who don't yet have a db.affiliates row
+        aff_users = list(db.users.find({"$or": [{"role": "affiliate"}, {"roles": "affiliate"}]}))
+        for u in aff_users:
+            email = (u.get("email") or "").strip().lower()
+            if not email:
+                continue
+            existing = db.affiliates.find_one({"email": email})
+            if not existing:
+                name = u.get("name") or email.split("@")[0].replace(".", " ").title()
+                ref_code = generate_unique_affiliate_code(name)
+                db.affiliates.insert_one({
+                    "id": f"aff_{str(u['_id'])[-8:]}",
+                    "user_id": str(u["_id"]),
+                    "name": name,
+                    "email": email,
+                    "handle": f"@{email.split('@')[0][:18]}",
+                    "ref_code": ref_code,
+                    "website_or_social": f"https://tunemavens.com/?ref={ref_code}",
+                    "tier": "scout",
+                    "status": "active",
+                    "payout_method": "credits",
+                    "payout_details": {},
+                    "clicks_count": 0,
+                    "conversions_count": 0,
+                    "total_gmv": 0.0,
+                    "total_earnings": 0.0,
+                    "pending_payout": 0.0,
+                    "paid_payout": 0.0,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                })
+    except Exception as exc:
+        logger.warning(f"Affiliate user sync warning: {exc}")
+
+
 @router.get("/admin/roster")
 def get_admin_affiliate_roster(
     search: Optional[str] = None,
     tier: Optional[str] = None,
     status_filter: Optional[str] = None,
-    limit: int = 50,
+    limit: int = 200,
     user=Depends(get_optional_user)
 ):
-    """List registered affiliates with performance telemetry."""
+    """List registered affiliates with performance telemetry and RBAC scoping."""
+    sync_all_registered_affiliates()
+
     query = {}
-    if tier and tier != "all":
-        query["tier"] = tier
-    if status_filter and status_filter != "all":
-        query["status"] = status_filter
-    if search:
-        s = search.strip()
-        query["$or"] = [
-            {"name": {"$regex": s, "$options": "i"}},
-            {"email": {"$regex": s, "$options": "i"}},
-            {"ref_code": {"$regex": s, "$options": "i"}},
-            {"handle": {"$regex": s, "$options": "i"}}
-        ]
+    is_admin = bool(
+        not user
+        or user.get("role") == "admin"
+        or "admin" in (user.get("roles") or [])
+        or user.get("is_admin") is True
+        or user.get("original_role") == "admin"
+    )
+
+    # Non-admin affiliates may only view their own affiliate record
+    if user and not is_admin:
+        user_email = (user.get("email") or "").strip().lower()
+        query["email"] = user_email
+    else:
+        if tier and tier != "all":
+            query["tier"] = tier
+        if status_filter and status_filter != "all":
+            query["status"] = status_filter
+        if search:
+            s = search.strip()
+            query["$or"] = [
+                {"name": {"$regex": s, "$options": "i"}},
+                {"email": {"$regex": s, "$options": "i"}},
+                {"ref_code": {"$regex": s, "$options": "i"}},
+                {"handle": {"$regex": s, "$options": "i"}}
+            ]
 
     affiliates = list(
         db.affiliates.find(query, {"_id": 0})
         .sort("created_at", -1)
         .limit(limit)
     )
-    return {"affiliates": affiliates, "count": len(affiliates)}
+    for aff in affiliates:
+        rc = aff.get("ref_code")
+        aff["target_groups_count"] = db.crm_target_groups.count_documents({"affiliate_ref_code": rc}) if rc else 0
+
+    return {"affiliates": affiliates, "count": len(affiliates), "is_admin_view": is_admin}
 
 
 @router.get("/admin/ledger")

@@ -31,7 +31,12 @@ Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
 Start-Sleep -Seconds 2
 
 function Start-FastApiBackend {
-    Start-Process -FilePath "python" -ArgumentList "-m", "uvicorn", "server:app", "--app-dir", "backend", "--port", "8001", "--host", "0.0.0.0", "--reload", "--reload-dir", "backend" -WorkingDirectory $root -RedirectStandardOutput "$logDir\backend.log" -RedirectStandardError "$logDir\backend_err.log" -WindowStyle Hidden
+    $existing = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+        $_.Name -eq 'python.exe' -and $_.CommandLine -like '*uvicorn*server:app*'
+    }
+    if (-not $existing) {
+        Start-Process -FilePath "python" -ArgumentList "-m", "uvicorn", "server:app", "--app-dir", "backend", "--port", "8001", "--host", "0.0.0.0" -WorkingDirectory $root -RedirectStandardOutput "$logDir\backend.log" -RedirectStandardError "$logDir\backend_err.log" -WindowStyle Hidden
+    }
 }
 
 function Start-ExpressApi {

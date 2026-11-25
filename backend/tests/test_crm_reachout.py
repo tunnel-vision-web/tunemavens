@@ -251,6 +251,9 @@ def test_event_reachout_full_affiliate_funnel_and_dual_notifications():
     )
     assert book_res.status_code == 200
 
+    # Clear consumer session cookie before querying admin telemetry endpoints
+    client.cookies.clear()
+
     # 7. Verify Affiliate Account Telemetry & Conversions
     aff_after = db.affiliates.find_one({"ref_code": aff_ref})
     assert aff_after["clicks_count"] >= 1
@@ -296,3 +299,152 @@ def test_event_reachout_full_affiliate_funnel_and_dual_notifications():
     db.user_inbox.delete_many({"affiliate_ref_code": aff_ref})
     db.crm_reachout_links.delete_many({"affiliate_ref_code": aff_ref})
     db.crm_reachout_activity.delete_many({"affiliate_ref_code": aff_ref})
+
+
+def test_admin_vs_affiliate_rbac_and_csv_import():
+    """Verify:
+    - Admin sees all registered affiliates (including role='affiliate' users synced from db.users)
+      and can filter target groups by any affiliate.
+    - Non-admin Affiliates ONLY see and access their own Target Groups (403 on other affiliates' groups).
+    - Target Group CSV/JSON Import strips phone columns automatically while importing valid Name+Email rows.
+    """
+    uid = uuid.uuid4().hex[:6]
+    aff_a_email = f"aff.alpha.{uid}@example.com"
+    aff_b_email = f"aff.beta.{uid}@example.com"
+
+    # Register two distinct affiliate accounts via /api/auth/register
+    res_a = client.post(
+        "/api/auth/register",
+        json={"email": aff_a_email, "password": "Password123!", "name": f"Alpha Partner {uid}", "role": "affiliate", "sandbox": True},
+    )
+    res_b = client.post(
+        "/api/auth/register",
+        json={"email": aff_b_email, "password": "Password123!", "name": f"Beta Partner {uid}", "role": "affiliate", "sandbox": True},
+    )
+    assert res_a.status_code == 200
+    assert res_b.status_code == 200
+    tok_a = res_a.json()["access_token"]
+    tok_b = res_b.json()["access_token"]
+    client.cookies.clear()
+
+    # 1. Admin calls /api/affiliates/admin/roster (unauthenticated test client acts as internal admin console)
+    roster_res = client.get("/api/affiliates/admin/roster")
+    assert roster_res.status_code == 200
+    roster_emails = {a.get("email") for a in roster_res.json()["affiliates"]}
+    assert aff_a_email in roster_emails
+    assert aff_b_email in roster_emails
+
+    # Non-admin Affiliate A calling /api/affiliates/admin/roster only sees their own record
+    aff_a_roster = client.get("/api/affiliates/admin/roster", headers={"Authorization": f"Bearer {tok_a}"})
+    assert aff_a_roster.status_code == 200
+    assert len(aff_a_roster.json()["affiliates"]) == 1
+    assert aff_a_roster.json()["affiliates"][0]["email"] == aff_a_email
+    ref_a = aff_a_roster.json()["affiliates"][0]["ref_code"]
+
+    # 2. Affiliate A imports a CSV containing a Phone column -> phone stripped, Name+Email imported
+    csv_payload = "Name,Email,Phone,Notes\nNairobi Creator,creator1@example.com,+254711223344,Artist\nLagos DJ,dj1@example.com,+234800000000,Curator\n"
+    imp_res = client.post(
+        "/api/crm/target-groups/import",
+        headers={"Authorization": f"Bearer {tok_a}"},
+        json={"name": f"Alpha Imported List {uid}", "raw_content": csv_payload},
+    )
+    assert imp_res.status_code == 201
+    imp_data = imp_res.json()
+    assert imp_data["report"]["imported"] == 2
+    assert imp_data["report"]["stripped_phone_fields"] == 2
+    group_a_id = imp_data["group"]["id"]
+    assert imp_data["group"]["affiliate_ref_code"] == ref_a
+
+    # 3. Affiliate B cannot view or delete Affiliate A's target group (403 Forbidden)
+    b_list = client.get("/api/crm/target-groups", headers={"Authorization": f"Bearer {tok_b}"})
+    assert b_list.status_code == 200
+    assert all(g["id"] != group_a_id for g in b_list.json()["groups"])
+
+    b_get = client.get(f"/api/crm/target-groups/{group_a_id}", headers={"Authorization": f"Bearer {tok_b}"})
+    assert b_get.status_code == 403
+
+    b_del = client.delete(f"/api/crm/target-groups/{group_a_id}", headers={"Authorization": f"Bearer {tok_b}"})
+    assert b_del.status_code == 403
+
+    # 4. Admin CAN filter and access Affiliate A's target group
+    adm_list = client.get(f"/api/crm/target-groups?affiliate_ref_code={ref_a}")
+    assert adm_list.status_code == 200
+    assert any(g["id"] == group_a_id for g in adm_list.json()["groups"])
+
+    # Cleanup
+    client.delete(f"/api/crm/target-groups/{group_a_id}")
+    db.users.delete_many({"email": {"$in": [aff_a_email, aff_b_email]}})
+    db.affiliates.delete_many({"email": {"$in": [aff_a_email, aff_b_email]}})
+
+
+def test_persona_intro_epk_catalog_and_self_learning_crm():
+    """Verify Persona Introductory playbooks (EPK + Catalogue CTAs) and adaptive CRM learning engine."""
+    uid = uuid.uuid4().hex[:6]
+
+    # 1. Verify all 10 persona playbooks exist
+    pb_res = client.get("/api/crm/smart-playbooks")
+    assert pb_res.status_code == 200
+    personas = pb_res.json()["personas"]
+    for expected in ("creator", "dj", "label", "podcaster", "supervisor", "corporate", "media_house", "vc", "affiliate", "consumer"):
+        assert expected in personas
+
+    # 2. Create group & dispatch Creator Persona Introductory Reachout with EPK & Catalogue CTAs
+    tg_res = client.post(
+        "/api/crm/target-groups",
+        json={
+            "name": f"Creator Onboarding Cohort {uid}",
+            "affiliate_ref_code": "TM-ADMIN",
+            "entries": [{"name": "Zuri Producer", "email": f"zuri.{uid}@example.com"}],
+        },
+    )
+    assert tg_res.status_code == 201
+    gid = tg_res.json()["id"]
+
+    rec_res = client.post("/api/crm/smart-recommend", json={"promotion_type": "persona_intro", "persona": "creator"})
+    assert rec_res.status_code == 200
+    rec = rec_res.json()
+
+    camp_res = client.post(
+        "/api/crm/campaigns",
+        json={
+            "title": f"Creator EPK & Catalogue Invite {uid}",
+            "target_group_id": gid,
+            "affiliate_ref_code": "TM-ADMIN",
+            "promotion_type": "persona_intro",
+            "target_persona": "creator",
+            "include_epk_cta": True,
+            "include_catalog_cta": True,
+            "subject": rec["subject"],
+            "body": rec["body"],
+            "cta_label": rec["cta_label"],
+            "channels": ["email"],
+            "dispatch_now": True,
+        },
+    )
+    assert camp_res.status_code == 200
+    camp = camp_res.json()
+    token = camp["reachout_tokens"][0]["token"]
+
+    # Verify email HTML includes direct EPK & Catalogue Ingestion buttons
+    outbox = db.email_outbox.find_one({"metadata.reachout_token": token})
+    assert outbox is not None
+    assert "Launch Official EPK" in outbox["html"]
+    assert "Ingest Catalogue" in outbox["html"]
+
+    # 3. Click link -> verify resolve returns persona_playbook + intelligence registers warm clicker & learned weights
+    res_click = client.get(f"/api/crm/reachout/resolve/{token}")
+    assert res_click.status_code == 200
+    assert res_click.json()["target_persona"] == "creator"
+    assert res_click.json()["persona_playbook"]["supports_epk"] is True
+    assert res_click.json()["persona_playbook"]["supports_catalog"] is True
+
+    intel_res = client.get("/api/crm/intelligence?persona=creator&affiliate_ref_code=TM-ADMIN")
+    assert intel_res.status_code == 200
+    intel = intel_res.json()
+    assert intel["metrics"]["unique_clicked"] >= 1
+    assert len(intel["top_learned_patterns"]) >= 1
+
+    # Cleanup
+    client.delete(f"/api/crm/campaigns/{camp['id']}")
+    client.delete(f"/api/crm/target-groups/{gid}")
+    db.crm_reachout_links.delete_one({"token": token})

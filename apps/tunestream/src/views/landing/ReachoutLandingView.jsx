@@ -26,10 +26,15 @@ const GENRE_OPTIONS = [
 
 const ROLE_OPTIONS = [
   { key: 'consumer', label: 'Listener & Event Fan' },
-  { key: 'creator', label: 'Artist / Producer' },
-  { key: 'dj', label: 'DJ & Curator' },
-  { key: 'label', label: 'Record Label / Manager' },
-  { key: 'supervisor', label: 'Music Supervisor' },
+  { key: 'creator', label: 'Recording Artist / Producer' },
+  { key: 'dj', label: 'DJ & Mix Curator' },
+  { key: 'label', label: 'Record Label / Distributor' },
+  { key: 'podcaster', label: 'Podcaster & Show Host' },
+  { key: 'supervisor', label: 'Music Supervisor & Sync Buyer' },
+  { key: 'corporate', label: 'Corporate Brand / Agency' },
+  { key: 'media_house', label: 'Broadcast Media House' },
+  { key: 'vc', label: 'Tour VC & Catalogue Investor' },
+  { key: 'affiliate', label: 'Affiliate Partner & Influencer' },
 ];
 
 export default function ReachoutLandingView({ sessionUser, onLogin }) {
@@ -103,6 +108,11 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
         setRsvpEmail(recEmail);
         setOnbName(recName);
         setOnbEmail(recEmail);
+
+        const invitedRole = payload.target_persona || searchParams.get('role');
+        if (invitedRole && ROLE_OPTIONS.some((r) => r.key === invitedRole)) {
+          setOnbRole(invitedRole);
+        }
 
         if (payload.event) {
           const tiers = payload.event.tiers || [];
@@ -496,15 +506,35 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
                   Account Active &amp; Preferences Saved!
                 </div>
                 <p style={{ margin: '0 0 12px', fontSize: '13px', color: '#e2e8f0' }}>
-                  Welcome aboard, {onbResult?.user?.name || sessionUser?.name || onbName}. Your genres, city, and passes are saved for instant access next time.
+                  Welcome aboard, {onbResult?.user?.name || sessionUser?.name || onbName}. Your preferences and role workspace are saved for instant access next time.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => navigate('/dashboard')}
-                  style={{ padding: '10px 18px', background: '#22d3ee', color: '#04141a', fontWeight: 800, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
-                >
-                  Go to My Dashboard →
-                </button>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/dashboard')}
+                    style={{ padding: '10px 16px', background: '#22d3ee', color: '#04141a', fontWeight: 800, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
+                  >
+                    Go to My Dashboard →
+                  </button>
+                  {data?.persona_playbook?.supports_epk && (
+                    <button
+                      type="button"
+                      onClick={() => navigate('/dashboard?tab=epk-builder')}
+                      style={{ padding: '10px 16px', background: '#10b981', color: '#04141a', fontWeight: 800, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
+                    >
+                      Launch Official EPK Builder →
+                    </button>
+                  )}
+                  {data?.persona_playbook?.supports_catalog && (
+                    <button
+                      type="button"
+                      onClick={() => navigate('/dashboard?tab=catalog')}
+                      style={{ padding: '10px 16px', background: '#a855f7', color: '#ffffff', fontWeight: 800, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
+                    >
+                      Ingest Your Catalogue →
+                    </button>
+                  )}
+                </div>
               </div>
             ) : (
               <form onSubmit={handleQuickOnboard} style={{ borderTop: '1px solid #1e293b', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
