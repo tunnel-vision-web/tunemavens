@@ -56,6 +56,7 @@ import LabelTeamRosterPanel from './components/label/LabelTeamRosterPanel.jsx';
 import TuneLedgerSplitCascadePanel from './components/splits/TuneLedgerSplitCascadePanel.jsx';
 import SupportTicketsPanel from './components/community/SupportTicketsPanel.jsx';
 import LegalPoliciesView from './views/landing/LegalPoliciesView.jsx';
+import ReachoutLandingView from './views/landing/ReachoutLandingView.jsx';
 import TuneCompanionApp from './components/companion/TuneCompanionApp.jsx';
 import MyContractsPanel from './components/contracts/MyContractsPanel.jsx';
 import { 
@@ -534,6 +535,7 @@ function AppContent() {
           <Route path="/community/forum" element={<Navigate to="/?view=forum" replace />} />
           <Route path="/plans" element={<Navigate to="/?view=plans" replace />} />
           <Route path="/pricing" element={<Navigate to="/?view=plans" replace />} />
+          <Route path="/reachout/:token" element={<ReachoutLandingView sessionUser={sessionUser} onLogin={handleLogin} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

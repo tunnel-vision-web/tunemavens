@@ -3787,4 +3787,38 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - `python -m pytest backend/tests/test_dj_mixes_engine.py -q` passed **8/8 tests** (including `test_flexible_pricing_credit_policy_and_download_gate`).
   - Production frontend builds (`npm run build:portal`, `npm run build:tunestream`, `npm run build:syncmavens`) completed with zero errors and zero `onrender.com` references.
 
+---
+
+### Smart CRM Email-Only Campaign Reachout, Direct Event CTAs, Affiliate Attribution & Dual Notifications (2026-11-25)
+
+- **Objectives**:
+  1. **Email-Only Target Groups**: Allow creating, editing, and deleting target groups with **Names and Email addresses only** (strictly prohibiting phone numbers, SMS, and WhatsApp to avoid messaging costs and WhatsApp flagging).
+  2. **Product/Service & Event Promotional Reachouts**: Enable crafting and dispatching targeted email reachout campaigns for any platform product/service or live event.
+  3. **Direct Event CTAs in Email**: For event reachouts, embed direct **"RSVP Now"** and/or **"Buy Ticket Now"** action buttons inside the dispatched email alongside a new-user onboarding CTA.
+  4. **Initiating Affiliate Tracking & Dual Notifications**: Track the affiliate account that initiated each reachout across clicks, event RSVPs, user onboarding, and downstream platform spending (ticket purchases, credit reloads, storefront orders), notifying the affiliate in **both** their **In-App Inbox** and their **registered email address on file**.
+  5. **New User Platform Introduction & Preference-Saving Onboarding**: Introduce TuneMavens to recipients when they click any reachout link and prompt them to onboard and save their music/event preferences for faster access next time.
+
+- **Architectural Solutions & Changes**:
+  - **1. Reachout & Attribution Engine (`backend/services/reachout_service.py`)**:
+    - Enforces email validation and rejects `sms`/`text`/`whatsapp`/`phone` channels (`assert_email_only_channels`).
+    - Resolves the initiating affiliate account (`resolve_initiator_affiliate`) and generates per-recipient tracked tokens (`db.crm_reachout_links`) with rich dark-theme HTML emails (`build_reachout_email_html`) embedding direct RSVP, Buy Ticket, and Onboarding CTA links (`/#/reachout/{token}?action=...`).
+    - Implements `record_reachout_click`, `record_reachout_rsvp`, `record_reachout_onboarding`, and `record_reachout_spend` (which falls back to the user's stored `referred_by_ref_code` so future spending by an onboarded user is always attributed).
+    - Implements `notify_affiliate_of_action` to deliver real-time alerts to **both** `db.user_inbox` (In-App Inbox) and the affiliate's registered email (`account_setup.send_email`).
+  - **2. Smart CRM Target Groups, Reachout Resolver & Funnel Telemetry (`backend/routes/crm_router.py`, `backend/models.py`)**:
+    - Added Email-Only Target Groups CRUD endpoints (`/api/crm/target-groups`, `/api/crm/target-groups/{group_id}`, `/api/crm/target-groups/{group_id}/entries`, `/api/crm/target-groups/{group_id}/entries/{entry_id}`) that reject phone/WhatsApp fields with `400 Bad Request`.
+    - Extended `/api/crm/campaigns` and `/api/crm/campaigns/{id}/dispatch` with `target_group_id`, `promotion_type` (`product_service` | `event`), `event_id`, `event_ctas`, and `affiliate_ref_code`.
+    - Added public `GET /api/crm/reachout/resolve/{token}` (records click, sets 90-day `tm_aff_ref` & `tm_reachout_token` cookies, returns event/product/recipient/platform intro payload) and `GET /api/crm/reachout/activity` (affiliate funnel telemetry).
+    - Extended `User`, `UserPublic`, and `RegisterRequest` in `backend/models.py` with `referred_by_ref_code`, `referred_by_affiliate_id`, `reachout_token`, `reachout_campaign_id`, and `preferences`, and enhanced `GET /api/inbox` to match affiliate inbox notifications by `affiliate_ref_code` and registered email.
+  - **3. Cross-Router Attribution Hooks (`backend/routes/auth_router.py`, `backend/routes/events_router.py`, `backend/routes/payments_router.py`)**:
+    - `POST /api/auth/register` persists affiliate attribution and user preferences and triggers `record_reachout_onboarding`.
+    - `POST /api/events/rsvp` and `POST /api/events/{event_id}/rsvp` trigger `record_reachout_rsvp`.
+    - `POST /api/events/tickets/book`, card credit reloads, and storefront checkout fulfillment trigger `record_reachout_spend`.
+  - **4. Smart CRM Admin Console & Frontend Reachout Landing (`backend/admin_app/index.html`, `apps/portal/src/views/landing/ReachoutLandingView.jsx`, `apps/tunestream/src/views/landing/ReachoutLandingView.jsx`, `apps/portal/src/App.jsx`, `apps/tunestream/src/App.jsx`, `apps/tunestream/src/views/auth/RegisterView.jsx`)**:
+    - Added the **Email-Only Target Groups Manager**, enhanced **Create Smart CRM Campaign / Reachout** modal (Target Group, Affiliate selector, Product vs. Event with direct RSVP/Ticket CTAs), and **Affiliate Reachout Funnel & Attribution Telemetry** panel in `backend/admin_app/index.html`.
+    - Added `/#/reachout/:token` (`ReachoutLandingView.jsx`) across both Portal and TuneStream with pre-filled 1-click RSVP & Ticket checkout, TuneMavens platform introduction, and inline Quick Onboarding to save genres, role, and city preferences.
+
+- **Verification**:
+  - `python -m pytest backend/tests/test_crm_reachout.py backend/tests/test_crm_growth.py backend/tests/test_events_rsvp_crm.py -v` passed **10/10 tests**, covering Target Group CRUD, phone/WhatsApp rejection, Event email RSVP/Ticket CTAs, click tracking, RSVP, onboarding with saved preferences, delayed ticket spend attribution, and dual In-App Inbox + registered email notifications.
+
+
 

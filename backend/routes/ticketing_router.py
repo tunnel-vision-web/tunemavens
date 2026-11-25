@@ -23,10 +23,15 @@ router = APIRouter(prefix="/api/tickets", tags=["ticketing"])
 class EventCreateRequest(BaseModel):
     title: str
     description: Optional[str] = None
-    price: float
+    payment_mode: str = "paid"  # 'paid' | 'free_rsvp'
+    price: float = 0.0
     date: datetime
     location: str
     capacity: int
+    seating_capacity: Optional[int] = None
+    standing_capacity: Optional[int] = None
+    guest_limit_policy: str = "open"  # 'open' | 'strict_plus_1' | 'strict_plus_2'
+    max_additional_guests: Optional[int] = None
 
 
 class ScanRequest(BaseModel):
@@ -47,14 +52,33 @@ def create_event(
             detail="Restricted to Creators and Execs"
         )
 
+    seating_cap = payload.seating_capacity if payload.seating_capacity is not None else payload.capacity
+    standing_cap = payload.standing_capacity if payload.standing_capacity is not None else 0
+    total_cap = (
+        seating_cap + standing_cap
+        if (payload.seating_capacity is not None or payload.standing_capacity is not None)
+        else payload.capacity
+    )
+    policy = payload.guest_limit_policy or "open"
+    max_guests = payload.max_additional_guests
+    if policy == "strict_plus_1":
+        max_guests = 1
+    elif policy == "strict_plus_2":
+        max_guests = 2
+
     event_doc = Event(
         creator_id=str(current_user["_id"]),
         title=payload.title,
         description=payload.description,
-        price=payload.price,
+        payment_mode="free_rsvp" if payload.payment_mode == "free_rsvp" else "paid",
+        price=0.0 if payload.payment_mode == "free_rsvp" else payload.price,
         date=payload.date,
         location=payload.location,
-        capacity=payload.capacity,
+        capacity=total_cap,
+        seating_capacity=seating_cap,
+        standing_capacity=standing_cap,
+        guest_limit_policy=policy,
+        max_additional_guests=max_guests,
         tickets_sold=0,
     ).to_mongo()
 

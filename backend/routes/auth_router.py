@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from bson import ObjectId
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, Response, status
 
 from auth import create_access_token, get_optional_user, get_current_user, hash_password, verify_password
 from config import (
@@ -165,6 +165,8 @@ def _to_public(user: dict) -> UserPublic:
         dashboard_layout=user.get("dashboard_layout"),
         signup_page=user.get("signup_page"),
         signup_source=user.get("signup_source"),
+        referred_by_ref_code=user.get("referred_by_ref_code"),
+        preferences=user.get("preferences"),
     )
 
 
@@ -182,7 +184,12 @@ def _set_cookie(response: Response, token: str) -> None:
 
 
 @router.post("/register", response_model=AuthResponse)
-def register(payload: RegisterRequest, response: Response, background_tasks: BackgroundTasks):
+def register(
+    payload: RegisterRequest,
+    request: Request,
+    response: Response,
+    background_tasks: BackgroundTasks,
+):
     if db.users.find_one({"email": payload.email}):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
@@ -200,6 +207,10 @@ def register(payload: RegisterRequest, response: Response, background_tasks: Bac
     primary_role = roles_list[0]
     default_apps = DEFAULT_APPS_BY_ROLE.get(primary_role, DEFAULT_APPS_BY_ROLE["creator"])
 
+    # Resolve affiliate / Smart CRM reachout attribution from payload or 90-day tracking cookies
+    resolved_ref = (payload.ref_code or request.cookies.get("tm_aff_ref") or "").strip().upper() or None
+    resolved_reachout_token = (payload.reachout_token or request.cookies.get("tm_reachout_token") or "").strip() or None
+
     user_doc = User(
         email=payload.email,
         password_hash=hash_password(payload.password),
@@ -211,15 +222,34 @@ def register(payload: RegisterRequest, response: Response, background_tasks: Bac
         brand_name=payload.brand_name,
         country=payload.country,
         signup_page=payload.signup_page,
-        signup_source=payload.signup_source,
+        signup_source=payload.signup_source or ("smart_crm_reachout" if resolved_reachout_token else None),
         utm_medium=payload.utm_medium,
         utm_campaign=payload.utm_campaign,
+        referred_by_ref_code=resolved_ref,
+        reachout_token=resolved_reachout_token,
+        preferences=payload.preferences,
         credits=600,  # default sandbox credit grant
         apps=default_apps,
     ).to_mongo()
 
     result = db.users.insert_one(user_doc)
     user_doc["_id"] = result.inserted_id
+
+    # Attribute onboarding to initiating affiliate & notify in-app inbox + registered email
+    if resolved_ref or resolved_reachout_token:
+        try:
+            from services.reachout_service import record_reachout_onboarding
+            record_reachout_onboarding(
+                user_doc=user_doc,
+                reachout_token=resolved_reachout_token,
+                ref_code=resolved_ref,
+            )
+            # Refresh user_doc in case record_reachout_onboarding resolved ref_code from reachout_token
+            refreshed = db.users.find_one({"_id": result.inserted_id})
+            if refreshed:
+                user_doc = refreshed
+        except Exception:
+            pass
 
     # Welcome + confirm-email message (skipped for sandbox/test sign-ups). Sent in the background.
     if not payload.sandbox:

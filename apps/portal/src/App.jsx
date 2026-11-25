@@ -114,6 +114,7 @@ import PricingView from './views/landing/PricingView.jsx'
 import AboutView from './views/landing/AboutView.jsx'
 import HelpView from './views/landing/HelpView.jsx'
 import LegalPoliciesView from './views/landing/LegalPoliciesView.jsx'
+import ReachoutLandingView from './views/landing/ReachoutLandingView.jsx'
 import SupportPageView from './views/community/SupportPageView.jsx'
 import BlogPageView from './views/community/BlogPageView.jsx'
 import CommunityView from './views/community/CommunityView.jsx'
@@ -11162,6 +11163,7 @@ function AppContent({
           <Route path="/community/network" element={<CommunityView sessionUser={sessionUser} initialTab="network" />} />
           <Route path="/community/inbox" element={<InboxView sessionUser={sessionUser} />} />
           <Route path="/inbox" element={<InboxView sessionUser={sessionUser} />} />
+          <Route path="/reachout/:token" element={<ReachoutLandingView sessionUser={sessionUser} onLogin={handleLogin} />} />
           <Route path="/wall-of-fame/claim/:token" element={<WallOfFameClaimView sessionUser={sessionUser} />} />
           <Route path="/community/claim/:token" element={<WallOfFameClaimView sessionUser={sessionUser} />} />
           <Route path="/admin" element={<BackendAdminBridge />} />

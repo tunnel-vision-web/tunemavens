@@ -835,6 +835,9 @@
         <li class="sidebar-nav-item" onclick="switchTab('crm-growth')" id="nav-crm-growth">
           <span>🚀</span> CRM &amp; Growth Engine
         </li>
+        <li class="sidebar-nav-item" onclick="switchTab('events-rsvp')" id="nav-events-rsvp">
+          <span>🎟️</span> Events &amp; RSVP Manager
+        </li>
         <li class="sidebar-nav-item" onclick="switchTab('system-telemetry')" id="nav-system-telemetry">
           <span>⚡</span> System Telemetry & Health
         </li>
@@ -1185,6 +1188,42 @@
           </div>
         </div>
 
+        <!-- Email-Only Target Groups Manager (Smart CRM Reachout) -->
+        <div style="background: var(--bg-panel); border: 1px solid rgba(34, 211, 238, 0.25); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+            <div>
+              <div style="font-size: 14px; font-weight: 800; color: #fff;">
+                📧 Smart CRM Reachout — Email-Only Target Groups
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Create target groups with <strong>Names &amp; Email addresses only</strong> (no phone numbers, SMS, or WhatsApp to avoid messaging costs &amp; WhatsApp flagging).
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn" onclick="loadTargetGroups()">↻ Refresh Groups</button>
+              <button type="button" class="btn btn-primary" onclick="openCreateTargetGroupModal()">+ New Target Group</button>
+            </div>
+          </div>
+          <div class="table-container" style="margin-bottom: 0;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Target Group</th>
+                  <th>Contacts (Email-Only)</th>
+                  <th>Initiating Affiliate</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="targetGroupsTableBody">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">Loading target groups...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- Audience Segments Cohort Bar -->
         <div style="background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 24px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -1221,6 +1260,59 @@
             <tbody id="growthCampaignsTableBody">
               <tr>
                 <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 28px;">Loading campaigns...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Affiliate Reachout Attribution & Funnel Activity -->
+        <div class="section-header" style="margin-top: 24px;">
+          <div>
+            <div class="section-title" style="font-size: 1.1rem;">
+              🔗 Affiliate Reachout Funnel &amp; Attribution Telemetry
+            </div>
+            <div style="color: var(--text-muted); font-size: 12px; margin-top: 2px;">
+              Tracks every click, event RSVP, user onboarding, and platform spend initiated via Smart CRM reachouts. Affiliates are notified in both their In-App Inbox and registered email.
+            </div>
+          </div>
+          <button class="btn" onclick="loadReachoutActivity()">↻ Refresh Funnel</button>
+        </div>
+        <div class="stats-grid" style="margin-bottom: 16px;">
+          <div class="stat-card">
+            <div class="stat-label">Reachout Clicks</div>
+            <div class="stat-value" id="statReachoutClicks" style="color: var(--cyan);">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Event RSVPs</div>
+            <div class="stat-value" id="statReachoutRsvps" style="color: var(--emerald);">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Onboarded Users</div>
+            <div class="stat-value" id="statReachoutOnboarded" style="color: #a855f7;">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Attributed Spend</div>
+            <div class="stat-value" id="statReachoutSpend" style="color: #f59e0b;">$0.00</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Affiliate Commissions</div>
+            <div class="stat-value" id="statReachoutCommission" style="color: #34d399;">$0.00</div>
+          </div>
+        </div>
+        <div class="table-container" style="margin-bottom: 28px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Affiliate Ref</th>
+                <th>Recipient / User</th>
+                <th>Spend &amp; Commission</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="reachoutActivityTableBody">
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">Loading affiliate funnel telemetry...</td>
               </tr>
             </tbody>
           </table>
@@ -1331,6 +1423,143 @@
             </div>
           </div>
           <iframe id="broadcastOpsIframe" src="http://localhost:3000/?tab=media-house&role=admin" style="width: 100%; height: 820px; border: none; background: #060813;" title="TuneMavens Broadcast Operations"></iframe>
+        </div>
+      </section>
+
+      <!-- TAB 8: EVENTS & RSVP MANAGER -->
+      <section id="view-events-rsvp" style="display: none;">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Events, Capacity &amp; Free RSVP Manager (Smart CRM Routed)</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+              Configure Paid vs. Free with RSVP payment modes, Seating &amp; Standing capacities, strict +1/+2 guest limits, and Smart CRM guest lists.
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn" onclick="loadAdminEvents()">↻ Refresh Events</button>
+            <button class="btn btn-primary" onclick="openEventModal(null)">+ Create Event</button>
+          </div>
+        </div>
+
+        <div class="stats-grid" style="margin-bottom: 20px;">
+          <div class="stat-card">
+            <div class="stat-label">Total Events</div>
+            <div class="stat-value" id="evStatTotal">--</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Free with RSVP</div>
+            <div class="stat-value" id="evStatFreeRsvp" style="color: var(--cyan);">--</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Paid Ticketed</div>
+            <div class="stat-value" id="evStatPaid" style="color: var(--emerald);">--</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Capacity (Seat + Stand)</div>
+            <div class="stat-value" id="evStatCapacity" style="color: #f59e0b;">--</div>
+          </div>
+        </div>
+
+        <div class="table-container" style="margin-bottom: 24px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Event &amp; Artist</th>
+                <th>Payment Mode</th>
+                <th>Seating / Standing</th>
+                <th>Guest Limit Policy</th>
+                <th>Booked / Confirmed</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminEventsTableBody">
+              <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 28px;">Loading events...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Inline Event Create/Config Editor Card -->
+        <div id="eventConfigPanel" style="display: none; background: #0d1527; border: 1px solid rgba(56,189,248,0.35); border-radius: var(--radius); padding: 20px; margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <strong id="eventConfigTitle" style="color: #fff; font-size: 15px;">Configure Event</strong>
+            <button class="btn" onclick="closeEventModal()" style="padding: 3px 8px;">✕</button>
+          </div>
+          <input type="hidden" id="evEditId" />
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 14px;">
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Event Title</label>
+              <input id="evInputTitle" type="text" placeholder="Event Title" style="width: 100%; padding: 8px; background: #060813; border: 1px solid var(--border-color); color: #fff; border-radius: 3px;" />
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Artist / Host</label>
+              <input id="evInputArtist" type="text" placeholder="Artist Name" style="width: 100%; padding: 8px; background: #060813; border: 1px solid var(--border-color); color: #fff; border-radius: 3px;" />
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Venue</label>
+              <input id="evInputVenue" type="text" placeholder="Venue" style="width: 100%; padding: 8px; background: #060813; border: 1px solid var(--border-color); color: #fff; border-radius: 3px;" />
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">City</label>
+              <input id="evInputCity" type="text" placeholder="Nairobi" style="width: 100%; padding: 8px; background: #060813; border: 1px solid var(--border-color); color: #fff; border-radius: 3px;" />
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Payment Mode</label>
+              <select id="evInputPaymentMode" style="width: 100%; padding: 8px; background: #060813; border: 1px solid var(--border-color); color: #fff; border-radius: 3px;">
+                <option value="free_rsvp">FREE with RSVP (Smart CRM Guest List)</option>
+                <option value="paid">PAID (Ticketed Checkout)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Seating Capacity</label>
+              <input id="evInputSeating" type="number" min="0" value="60" style="width: 100%; padding: 8px; background: #060813; border: 1px solid var(--border-color); color: #fff; border-radius: 3px;" />
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Standing Capacity</label>
+              <input id="evInputStanding" type="number" min="0" value="40" style="width: 100%; padding: 8px; background: #060813; border: 1px solid var(--border-color); color: #fff; border-radius: 3px;" />
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Guest / Plus-One Limit</label>
+              <select id="evInputGuestLimit" style="width: 100%; padding: 8px; background: #060813; border: 1px solid var(--border-color); color: #fff; border-radius: 3px;">
+                <option value="open">Open (Attendee indicates guest count)</option>
+                <option value="strict_plus_1">Strict +1 Limit (Max 1 guest)</option>
+                <option value="strict_plus_2">Strict +2 Limit (Max 2 guests)</option>
+              </select>
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="btn" onclick="closeEventModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveAdminEvent()">Save Event Configuration</button>
+          </div>
+        </div>
+
+        <!-- Inline Smart CRM Guest List & Invite Panel -->
+        <div id="eventGuestListPanel" style="display: none; background: #0d1527; border: 1px solid rgba(16,185,129,0.35); border-radius: var(--radius); padding: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <strong id="glPanelTitle" style="color: #fff; font-size: 15px;">Smart CRM Guest List</strong>
+              <div id="glPanelMeta" style="font-size: 12px; color: var(--cyan); margin-top: 2px;"></div>
+            </div>
+            <button class="btn" onclick="document.getElementById('eventGuestListPanel').style.display='none'" style="padding: 3px 8px;">✕ Close</button>
+          </div>
+
+          <!-- Quick Invite Guest via Smart CRM -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; padding: 12px; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 3px; margin-bottom: 16px;">
+            <input id="glInviteName" type="text" placeholder="Guest Full Name" style="padding: 7px 10px; background: #060813; border: 1px solid var(--border-color); color: #fff; border-radius: 3px;" />
+            <input id="glInviteEmail" type="email" placeholder="guest@email.com" style="padding: 7px 10px; background: #060813; border: 1px solid var(--border-color); color: #fff; border-radius: 3px;" />
+            <input id="glInviteTag" type="text" placeholder="Role / Tag (e.g. VIP, Press)" value="VIP Guest" style="padding: 7px 10px; background: #060813; border: 1px solid var(--border-color); color: #fff; border-radius: 3px;" />
+            <button class="btn btn-emerald" onclick="inviteGuestFromAdmin()">+ Invite via Smart CRM</button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+            <div>
+              <div style="font-size: 12px; font-weight: 700; color: #f59e0b; margin-bottom: 8px;">INVITED GUESTS (SMART CRM)</div>
+              <div id="glInvitedList" style="display: flex; flex-direction: column; gap: 6px; font-size: 12.5px;"></div>
+            </div>
+            <div>
+              <div style="font-size: 12px; font-weight: 700; color: var(--emerald); margin-bottom: 8px;">CONFIRMED ATTENDANCE VIA RSVP</div>
+              <div id="glConfirmedList" style="display: flex; flex-direction: column; gap: 6px; font-size: 12.5px;"></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1598,11 +1827,11 @@
     </div>
   </div>
 
-  <!-- Modal: Create Multi-Channel Campaign -->
+  <!-- Modal: Create Multi-Channel Campaign / Smart CRM Reachout -->
   <div class="modal-backdrop" id="modalCreateCampaign" style="display: none;">
-    <div class="modal-box" style="max-width: 720px;">
+    <div class="modal-box" style="max-width: 760px;">
       <div class="modal-header">
-        <div class="modal-title">🚀 Create Multi-Channel Growth Campaign</div>
+        <div class="modal-title">🚀 Create Smart CRM Campaign / Reachout</div>
         <button class="btn" style="padding: 4px 8px;" onclick="closeCreateCampaignModal()">✕</button>
       </div>
       <div class="modal-body">
@@ -1620,13 +1849,68 @@
         </div>
 
         <div class="form-group">
-          <label>Campaign Title *</label>
-          <input type="text" id="campTitle" placeholder="e.g. Q4 Creator EPK Onboarding Blitz" />
+          <label>Campaign / Reachout Title *</label>
+          <input type="text" id="campTitle" placeholder="e.g. Nairobi Live Showcase VIP Reachout" />
+        </div>
+
+        <!-- Target Mode + Initiating Affiliate -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label>Target Email Group (Email-Only Reachout)</label>
+            <select id="campTargetGroup" onchange="onTargetGroupSelectChange()">
+              <option value="">-- Use Platform Segment Below --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Initiating Affiliate Account (Tracks Attribution) *</label>
+            <select id="campAffiliateRef">
+              <option value="">-- Select Affiliate Partner --</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Promotion Type: Product/Service vs Event -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label>Promotion Type *</label>
+            <select id="campPromoType" onchange="toggleReachoutPromoType()">
+              <option value="product_service">Product / Service Promotion</option>
+              <option value="event">Live Event (Direct Email RSVP &amp; Ticket CTAs)</option>
+            </select>
+          </div>
+          <div class="form-group" id="campEventSelectWrap" style="display: none;">
+            <label>Select Live Event *</label>
+            <select id="campEventId">
+              <option value="">-- Loading Events --</option>
+            </select>
+          </div>
+          <div class="form-group" id="campProductNameWrap">
+            <label>Product / Service Name</label>
+            <input type="text" id="campProductName" placeholder="e.g. TuneStream Hi-Fi, SyncMavens, Creator EPK" />
+          </div>
+        </div>
+
+        <!-- Event Direct CTAs -->
+        <div id="campEventCtasWrap" style="display: none; background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: var(--radius); padding: 12px; margin-bottom: 12px;">
+          <div style="font-size: 11px; font-weight: 700; color: #34d399; text-transform: uppercase; margin-bottom: 8px;">
+            Direct Action CTAs Embedded Inside Event Email:
+          </div>
+          <div style="display: flex; gap: 18px; flex-wrap: wrap;">
+            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
+              <input type="checkbox" id="campCtaRsvp" checked /> 🎟️ Direct "RSVP Now" Button
+            </label>
+            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
+              <input type="checkbox" id="campCtaTicket" checked /> 💳 Direct "Buy Ticket" Button
+            </label>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">
+            Each recipient receives a personalized link that pre-fills their details, introduces TuneMavens, encourages onboarding to save preferences, and attributes all actions to the initiating affiliate.
+          </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div class="form-group">
-            <label>Target Audience Segment *</label>
+          <div class="form-group" id="campSegmentWrap">
+            <label>Platform Audience Segment (if no Target Group selected)</label>
             <select id="campSegment">
               <option value="all_creators">All Creators (Active &amp; Onboarded)</option>
               <option value="unclaimed_icons">Unclaimed Wall of Fame Luminary Icons</option>
@@ -1643,52 +1927,129 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Channels to Dispatch *</label>
+            <label>Channels (Email-Only for Target Groups — No SMS/WhatsApp) *</label>
             <div style="display: flex; gap: 12px; margin-top: 8px;">
               <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
                 <input type="checkbox" id="campChanEmail" checked /> Email (Resend)
               </label>
-              <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
+              <label id="campChanInAppWrap" style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
                 <input type="checkbox" id="campChanInApp" checked /> In-App Inbox
               </label>
-              <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
-                <input type="checkbox" id="campChanSocial" checked /> Social DM Copy
+              <label id="campChanSocialWrap" style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
+                <input type="checkbox" id="campChanSocial" /> Social DM Copy
               </label>
             </div>
           </div>
         </div>
 
         <div class="form-group">
-          <label>Subject Line * (Dynamic: {{name}}, {{role}})</label>
-          <input type="text" id="campSubject" placeholder="Welcome {{name}} - Your TuneMavens Creator EPK is Live" />
+          <label>Subject Line * (Dynamic: {{name}}, {{event_title}})</label>
+          <input type="text" id="campSubject" placeholder="You're Invited {{name}} — Exclusive TuneMavens Access" />
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;" id="campCustomCtaWrap">
           <div class="form-group">
             <label>CTA Button Label</label>
-            <input type="text" id="campCtaLabel" placeholder="e.g. Open Your EPK Studio" />
+            <input type="text" id="campCtaLabel" placeholder="e.g. Explore TuneStream" />
           </div>
           <div class="form-group">
             <label>CTA Target URL / Route</label>
-            <input type="text" id="campCtaUrl" placeholder="e.g. /#/epk or /#/sync" />
+            <input type="text" id="campCtaUrl" placeholder="e.g. /stream or /events" />
           </div>
         </div>
 
         <div class="form-group">
-          <label>Campaign Message Body * (Markdown &amp; placeholders: {{name}}, {{role}}, {{cta_url}}, {{credits}})</label>
-          <textarea id="campBody" rows="5" style="font-family: inherit; font-size: 13px; background: rgba(0,0,0,0.4); color: #fff; border: 1px solid var(--border-color); border-radius: var(--radius); padding: 8px 10px;" placeholder="Hey {{name}},&#10;&#10;We're excited to invite you to collaborate on TuneMavens..."></textarea>
+          <label>Campaign Message Body * (Placeholders: {{name}}, {{event_title}}, {{event_date}}, {{event_venue}})</label>
+          <textarea id="campBody" rows="5" style="font-family: inherit; font-size: 13px; background: rgba(0,0,0,0.4); color: #fff; border: 1px solid var(--border-color); border-radius: var(--radius); padding: 8px 10px;" placeholder="Hey {{name}},&#10;&#10;We're excited to invite you to experience TuneMavens..."></textarea>
         </div>
 
         <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
           <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-color); cursor: pointer;">
             <input type="checkbox" id="campDispatchNow" checked />
-            <strong>Dispatch Immediately</strong> (Sends emails, creates in-app inbox items, and generates social DM buffer)
+            <strong>Dispatch Immediately via Email</strong> (Generates unique affiliate-tracked links &amp; direct CTAs per recipient)
           </label>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn" onclick="closeCreateCampaignModal()">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="submitCreateCampaign()">Launch Campaign 🚀</button>
+        <button type="button" class="btn btn-primary" onclick="submitCreateCampaign()">Launch Reachout 🚀</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Create Email-Only Target Group -->
+  <div class="modal-backdrop" id="modalTargetGroup" style="display: none;">
+    <div class="modal-box" style="max-width: 620px;">
+      <div class="modal-header">
+        <div class="modal-title">📧 New Email-Only Target Group</div>
+        <button class="btn" style="padding: 4px 8px;" onclick="closeCreateTargetGroupModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: rgba(34, 211, 238, 0.06); border: 1px solid rgba(34, 211, 238, 0.2); border-radius: var(--radius); padding: 10px 12px; font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+          <strong style="color: var(--cyan);">Email-Only Policy:</strong> Enter Names and Email addresses only. Phone numbers, SMS, and WhatsApp are disabled to avoid texting costs and WhatsApp flagging.
+        </div>
+        <div class="form-group">
+          <label>Target Group Name *</label>
+          <input type="text" id="tgName" placeholder="e.g. Nairobi VIP Music Lovers Q4" />
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" id="tgDesc" placeholder="e.g. Event outreach list for Afrobeats showcase" />
+        </div>
+        <div class="form-group">
+          <label>Owner / Initiating Affiliate Account</label>
+          <select id="tgAffiliateRef">
+            <option value="">-- Select Affiliate Partner --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Initial Contacts — One per line as <code>Name, email@domain.com</code></label>
+          <textarea id="tgBulkEntries" rows="6" style="font-family: monospace; font-size: 12px; background: rgba(0,0,0,0.4); color: #fff; border: 1px solid var(--border-color); border-radius: var(--radius); padding: 8px 10px;" placeholder="Wanjiku Mwangi, wanjiku@example.com&#10;Brian Otieno, brian.otieno@gmail.com&#10;Aisha Kamau, aisha@nairobi.co.ke"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" onclick="closeCreateTargetGroupModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="submitCreateTargetGroup()">Save Target Group</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Manage Target Group Entries (Add / Edit / Delete) -->
+  <div class="modal-backdrop" id="modalManageGroupEntries" style="display: none;">
+    <div class="modal-box" style="max-width: 720px;">
+      <div class="modal-header">
+        <div class="modal-title" id="manageGroupTitle">Manage Target Group Contacts</div>
+        <button class="btn" style="padding: 4px 8px;" onclick="closeManageGroupModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="manageGroupId" />
+        <!-- Quick Add Contact Form (Name & Email only) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-bottom: 16px; align-items: end;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label>Contact Name *</label>
+            <input type="text" id="newEntryName" placeholder="Full Name" />
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label>Email Address * (No phone numbers)</label>
+            <input type="email" id="newEntryEmail" placeholder="name@domain.com" />
+          </div>
+          <button type="button" class="btn btn-emerald" onclick="addEntryToGroup()">+ Add Contact</button>
+        </div>
+        <div class="table-container" style="max-height: 320px; overflow-y: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email Address</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="manageGroupEntriesBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" onclick="closeManageGroupModal()">Done</button>
       </div>
     </div>
   </div>
@@ -1827,7 +2188,7 @@
 
     function switchTab(tabId) {
       currentActiveTab = tabId;
-      const tabs = ['wall-of-fame', 'persona-rbac', 'domain-routing', 'crm-queue', 'crm-growth', 'system-telemetry', 'broadcast-ops'];
+      const tabs = ['wall-of-fame', 'persona-rbac', 'domain-routing', 'crm-queue', 'crm-growth', 'events-rsvp', 'system-telemetry', 'broadcast-ops'];
       tabs.forEach(t => {
         const el = document.getElementById(`view-${t}`);
         const navEl = document.getElementById(`nav-${t}`);
@@ -1843,8 +2204,184 @@
       if (tabId === 'domain-routing') loadDomainMappings();
       if (tabId === 'crm-queue') loadCrmLeads();
       if (tabId === 'crm-growth') loadCrmGrowth();
+      if (tabId === 'events-rsvp') loadAdminEvents();
       if (tabId === 'system-telemetry') loadTelemetry();
       if (tabId === 'broadcast-ops') loadBroadcastOps();
+    }
+
+    let adminEventsCache = [];
+    let activeGuestListEventId = null;
+
+    async function loadAdminEvents() {
+      try {
+        const res = await fetch('/api/events');
+        if (!res.ok) return;
+        const data = await res.json();
+        adminEventsCache = data.events || [];
+        const freeCount = adminEventsCache.filter(e => e.payment_mode === 'free_rsvp').length;
+        const paidCount = adminEventsCache.length - freeCount;
+        const totalCap = adminEventsCache.reduce((sum, e) => sum + (e.capacity || 0), 0);
+        document.getElementById('evStatTotal').innerText = adminEventsCache.length;
+        document.getElementById('evStatFreeRsvp').innerText = freeCount;
+        document.getElementById('evStatPaid').innerText = paidCount;
+        document.getElementById('evStatCapacity').innerText = totalCap.toLocaleString();
+
+        const tbody = document.getElementById('adminEventsTableBody');
+        if (!adminEventsCache.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">No events found.</td></tr>';
+          return;
+        }
+        const policyLabel = (p) => p === 'strict_plus_1' ? 'Strict +1' : (p === 'strict_plus_2' ? 'Strict +2' : 'Open Guest Count');
+        tbody.innerHTML = adminEventsCache.map(e => {
+          const isFree = e.payment_mode === 'free_rsvp';
+          const badge = isFree
+            ? '<span style="background:rgba(0,242,254,0.15);color:#00f2fe;padding:3px 8px;border-radius:3px;font-size:11px;font-weight:700;">FREE · RSVP</span>'
+            : '<span style="background:rgba(16,185,129,0.15);color:#10b981;padding:3px 8px;border-radius:3px;font-size:11px;font-weight:700;">PAID TICKETS</span>';
+          return `
+            <tr>
+              <td><strong style="color:#fff;">${e.title}</strong><div style="font-size:11px;color:var(--text-muted);">${e.artist} · ${e.venue}, ${e.city}</div></td>
+              <td>${badge}</td>
+              <td>${e.seating_capacity || 0} Seat / ${e.standing_capacity || 0} Stand <div style="font-size:11px;color:var(--text-muted);">Total: ${e.capacity || 0}</div></td>
+              <td><span style="font-size:11.5px;color:#e2e8f0;font-weight:600;">${policyLabel(e.guest_limit_policy)}</span></td>
+              <td>${e.tickets_sold || 0} / ${e.capacity || 0} (${e.sold_percentage || 0}%)</td>
+              <td>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <button class="btn" style="padding:4px 9px;font-size:11.5px;" onclick="openEventModal('${e.id}')">Configure</button>
+                  <button class="btn btn-emerald" style="padding:4px 9px;font-size:11.5px;" onclick="openGuestListPanel('${e.id}')">Guest List</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        console.warn('Error loading events:', err);
+      }
+    }
+
+    function openEventModal(eventId) {
+      const panel = document.getElementById('eventConfigPanel');
+      panel.style.display = 'block';
+      if (!eventId) {
+        document.getElementById('eventConfigTitle').innerText = 'Create New Event (Paid or Free with RSVP)';
+        document.getElementById('evEditId').value = '';
+        document.getElementById('evInputTitle').value = '';
+        document.getElementById('evInputArtist').value = '';
+        document.getElementById('evInputVenue').value = '';
+        document.getElementById('evInputCity').value = 'Nairobi';
+        document.getElementById('evInputPaymentMode').value = 'free_rsvp';
+        document.getElementById('evInputSeating').value = 60;
+        document.getElementById('evInputStanding').value = 40;
+        document.getElementById('evInputGuestLimit').value = 'strict_plus_1';
+        return;
+      }
+      const ev = adminEventsCache.find(x => x.id === eventId);
+      if (!ev) return;
+      document.getElementById('eventConfigTitle').innerText = `Configure: ${ev.title}`;
+      document.getElementById('evEditId').value = ev.id;
+      document.getElementById('evInputTitle').value = ev.title || '';
+      document.getElementById('evInputArtist').value = ev.artist || '';
+      document.getElementById('evInputVenue').value = ev.venue || '';
+      document.getElementById('evInputCity').value = ev.city || '';
+      document.getElementById('evInputPaymentMode').value = ev.payment_mode || 'paid';
+      document.getElementById('evInputSeating').value = ev.seating_capacity ?? ev.capacity ?? 0;
+      document.getElementById('evInputStanding').value = ev.standing_capacity ?? 0;
+      document.getElementById('evInputGuestLimit').value = ev.guest_limit_policy || 'open';
+    }
+
+    function closeEventModal() {
+      document.getElementById('eventConfigPanel').style.display = 'none';
+    }
+
+    async function saveAdminEvent() {
+      const editId = document.getElementById('evEditId').value;
+      const body = {
+        title: document.getElementById('evInputTitle').value.trim(),
+        artist: document.getElementById('evInputArtist').value.trim() || 'TuneMavens Artist',
+        venue: document.getElementById('evInputVenue').value.trim() || 'Main Stage',
+        city: document.getElementById('evInputCity').value.trim() || 'Nairobi',
+        payment_mode: document.getElementById('evInputPaymentMode').value,
+        seating_capacity: Number(document.getElementById('evInputSeating').value) || 0,
+        standing_capacity: Number(document.getElementById('evInputStanding').value) || 0,
+        guest_limit_policy: document.getElementById('evInputGuestLimit').value,
+      };
+      const url = editId ? `/api/events/${editId}` : '/api/events';
+      const method = editId ? 'PATCH' : 'POST';
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (res.ok) {
+        closeEventModal();
+        loadAdminEvents();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || 'Failed to save event');
+      }
+    }
+
+    async function openGuestListPanel(eventId) {
+      activeGuestListEventId = eventId;
+      const panel = document.getElementById('eventGuestListPanel');
+      panel.style.display = 'block';
+      const res = await fetch(`/api/events/${eventId}/guest-list`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const s = data.rsvp_summary || {};
+      document.getElementById('glPanelTitle').innerText = `Smart CRM Guest List · ${data.event_title}`;
+      document.getElementById('glPanelMeta').innerText =
+        `Seating: ${s.seating_confirmed}/${s.seating_capacity} · Standing: ${s.standing_confirmed}/${s.standing_capacity} · Limit: ${s.guest_limit_policy} · Invited: ${s.invited_count} · Confirmed RSVPs: ${s.confirmed_rsvp_count} (${s.total_confirmed_headcount} total headcount)`;
+
+      const invEl = document.getElementById('glInvitedList');
+      const invited = data.invited_guests || [];
+      invEl.innerHTML = invited.length ? invited.map(g => `
+        <div style="padding:8px 10px;background:rgba(255,255,255,0.03);border:1px solid var(--border-color);border-radius:3px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <strong style="color:#fff;">${g.name}</strong> <span style="color:var(--text-muted);">(${g.role_tag || 'Guest'})</span>
+            <div style="font-size:11px;color:var(--text-muted);">${g.email} · CRM: ${g.crm_contact_id || 'Synced'}</div>
+          </div>
+          <span style="padding:2px 7px;border-radius:3px;font-size:10.5px;font-weight:700;background:${g.status === 'confirmed' ? 'rgba(16,185,129,0.18)' : 'rgba(245,158,11,0.18)'};color:${g.status === 'confirmed' ? '#10b981' : '#f59e0b'};">
+            ${g.status === 'confirmed' ? 'CONFIRMED' : 'INVITED'}
+          </span>
+        </div>
+      `).join('') : '<div style="color:var(--text-muted);">No invited guests yet.</div>';
+
+      const confEl = document.getElementById('glConfirmedList');
+      const confirmed = data.confirmed_guests || [];
+      confEl.innerHTML = confirmed.length ? confirmed.map(g => `
+        <div style="padding:8px 10px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.25);border-radius:3px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <strong style="color:#fff;">${g.name}</strong> <span style="color:#00f2fe;font-size:11px;">${g.additional_guests > 0 ? `+${g.additional_guests} Guest${g.additional_guests > 1 ? 's' : ''}` : 'Solo'}</span>
+            <div style="font-size:11px;color:var(--text-muted);">${g.email} · ${(g.attendance_type || 'seating').toUpperCase()} · Party of ${g.party_size}</div>
+          </div>
+          <span style="font-size:10.5px;color:#10b981;font-weight:700;">✓ Smart CRM</span>
+        </div>
+      `).join('') : '<div style="color:var(--text-muted);">No confirmed RSVPs yet.</div>';
+    }
+
+    async function inviteGuestFromAdmin() {
+      if (!activeGuestListEventId) return;
+      const guest_name = document.getElementById('glInviteName').value.trim();
+      const guest_email = document.getElementById('glInviteEmail').value.trim();
+      const role_tag = document.getElementById('glInviteTag').value.trim() || 'Invited Guest';
+      if (!guest_name || !guest_email) {
+        alert('Guest name and email are required.');
+        return;
+      }
+      const res = await fetch(`/api/events/${activeGuestListEventId}/invitations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ guests: [{ guest_name, guest_email, role_tag, crm_channel: 'email' }] })
+      });
+      if (res.ok) {
+        document.getElementById('glInviteName').value = '';
+        document.getElementById('glInviteEmail').value = '';
+        openGuestListPanel(activeGuestListEventId);
+        loadAdminEvents();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || 'Failed to invite guest');
+      }
     }
 
     async function loadBroadcastOps() {
@@ -2687,7 +3224,328 @@
       }
     };
 
+    let crmTargetGroupsData = [];
+    let crmAffiliatesData = [];
+    let crmEventsData = [];
+
+    async function loadTargetGroups() {
+      try {
+        const res = await fetch('/api/crm/target-groups');
+        const data = await res.json();
+        crmTargetGroupsData = data.groups || [];
+        renderTargetGroups();
+        populateTargetGroupSelect();
+      } catch (err) {
+        console.error('Error loading target groups:', err);
+      }
+    }
+
+    async function loadAffiliatesAndEventsForReachout() {
+      try {
+        const [affRes, evRes] = await Promise.all([
+          fetch('/api/affiliates/admin/roster').then(r => r.json()).catch(() => ({ affiliates: [] })),
+          fetch('/api/events').then(r => r.json()).catch(() => ({ events: [] }))
+        ]);
+        crmAffiliatesData = affRes.affiliates || [];
+        crmEventsData = Array.isArray(evRes) ? evRes : (evRes.events || []);
+
+        const affOptions = `<option value="">-- Select Affiliate Account --</option>` +
+          crmAffiliatesData.map(a => `<option value="${escapeHtml(a.ref_code)}">${escapeHtml(a.name)} (${escapeHtml(a.ref_code)} · ${escapeHtml(a.email || '')})</option>`).join('');
+        const campAffSel = document.getElementById('campAffiliateRef');
+        const tgAffSel = document.getElementById('tgAffiliateRef');
+        if (campAffSel) campAffSel.innerHTML = affOptions;
+        if (tgAffSel) tgAffSel.innerHTML = affOptions;
+
+        const evSel = document.getElementById('campEventId');
+        if (evSel) {
+          evSel.innerHTML = `<option value="">-- Select Live Event --</option>` +
+            crmEventsData.map(ev => `<option value="${escapeHtml(ev.id)}">${escapeHtml(ev.title)} — ${escapeHtml(ev.artist || '')} (${escapeHtml(ev.payment_mode || 'paid')})</option>`).join('');
+        }
+      } catch (err) {
+        console.error('Error loading affiliates/events for reachout:', err);
+      }
+    }
+
+    function populateTargetGroupSelect() {
+      const sel = document.getElementById('campTargetGroup');
+      if (!sel) return;
+      sel.innerHTML = `<option value="">-- Use Platform Segment Below --</option>` +
+        crmTargetGroupsData.map(g => `<option value="${escapeHtml(g.id)}">📧 ${escapeHtml(g.name)} (${g.member_count || 0} emails)</option>`).join('');
+    }
+
+    function renderTargetGroups() {
+      const tbody = document.getElementById('targetGroupsTableBody');
+      if (!tbody) return;
+      if (!crmTargetGroupsData.length) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">No email-only target groups yet. Click "+ New Target Group" to add Names &amp; Emails.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = crmTargetGroupsData.map(g => `
+        <tr>
+          <td>
+            <div style="font-weight: 700; color: #fff;">${escapeHtml(g.name)}</div>
+            <div style="font-size: 11px; color: var(--text-muted);">${escapeHtml(g.description || 'Email-only reachout group')}</div>
+          </td>
+          <td><span class="badge" style="background: rgba(34,211,238,0.15); color: var(--cyan);">${g.member_count || 0} emails</span></td>
+          <td><span style="font-family: monospace; font-size: 11px; color: #34d399;">${escapeHtml(g.affiliate_ref_code || 'Unassigned')}</span></td>
+          <td style="font-size: 11px; color: var(--text-muted);">${g.created_at ? new Date(g.created_at).toLocaleDateString() : ''}</td>
+          <td>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="openManageGroupModal('${g.id}')">✏️ Contacts</button>
+              <button class="btn btn-primary" style="padding: 4px 8px; font-size: 11px;" onclick="launchReachoutForGroup('${g.id}', '${escapeHtml(g.affiliate_ref_code || '')}')">🚀 Reachout</button>
+              <button class="btn btn-danger" style="padding: 4px 8px; font-size: 11px;" onclick="deleteTargetGroup('${g.id}')">✕</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openCreateTargetGroupModal() {
+      document.getElementById('tgName').value = '';
+      document.getElementById('tgDesc').value = '';
+      document.getElementById('tgBulkEntries').value = '';
+      document.getElementById('modalTargetGroup').style.display = 'flex';
+    }
+
+    function closeCreateTargetGroupModal() {
+      document.getElementById('modalTargetGroup').style.display = 'none';
+    }
+
+    async function submitCreateTargetGroup() {
+      const name = document.getElementById('tgName').value.trim();
+      const description = document.getElementById('tgDesc').value.trim();
+      const affiliate_ref_code = document.getElementById('tgAffiliateRef').value || undefined;
+      const rawLines = document.getElementById('tgBulkEntries').value.split('\n').map(l => l.trim()).filter(Boolean);
+
+      if (!name) {
+        showToast('Please enter a Target Group name', 'error');
+        return;
+      }
+
+      const entries = [];
+      for (const line of rawLines) {
+        const parts = line.split(',').map(p => p.trim());
+        if (parts.length >= 2) {
+          entries.push({ name: parts[0], email: parts[1] });
+        } else if (line.includes('@')) {
+          entries.push({ name: line.split('@')[0], email: line });
+        }
+      }
+
+      try {
+        const res = await fetch('/api/crm/target-groups', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, description, affiliate_ref_code, entries })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Failed to create target group');
+        }
+        showToast(`Email-only Target Group "${name}" created!`, 'success');
+        closeCreateTargetGroupModal();
+        loadTargetGroups();
+      } catch (err) {
+        showToast(err.message || 'Error creating target group', 'error');
+      }
+    }
+
+    async function openManageGroupModal(groupId) {
+      try {
+        const res = await fetch(`/api/crm/target-groups/${groupId}`);
+        if (!res.ok) throw new Error('Failed to load group');
+        const g = await res.json();
+        document.getElementById('manageGroupId').value = g.id;
+        document.getElementById('manageGroupTitle').innerText = `Contacts: ${g.name} (${g.member_count || 0} Email-Only)`;
+        document.getElementById('newEntryName').value = '';
+        document.getElementById('newEntryEmail').value = '';
+        renderManageGroupEntries(g);
+        document.getElementById('modalManageGroupEntries').style.display = 'flex';
+      } catch (err) {
+        showToast('Error loading target group contacts', 'error');
+      }
+    }
+
+    function closeManageGroupModal() {
+      document.getElementById('modalManageGroupEntries').style.display = 'none';
+      loadTargetGroups();
+    }
+
+    function renderManageGroupEntries(group) {
+      const tbody = document.getElementById('manageGroupEntriesBody');
+      const entries = group.entries || [];
+      if (!entries.length) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 16px;">No contacts yet. Add a Name and Email above.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = entries.map(e => `
+        <tr>
+          <td style="font-weight: 600; color: #fff;">${escapeHtml(e.name)}</td>
+          <td style="color: var(--cyan); font-size: 12px;">${escapeHtml(e.email)}</td>
+          <td>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn" style="padding: 2px 8px; font-size: 11px;" onclick="editGroupEntry('${group.id}', '${e.id}', '${escapeHtml(e.name)}', '${escapeHtml(e.email)}')">Edit</button>
+              <button class="btn btn-danger" style="padding: 2px 8px; font-size: 11px;" onclick="deleteGroupEntry('${group.id}', '${e.id}')">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function addEntryToGroup() {
+      const groupId = document.getElementById('manageGroupId').value;
+      const name = document.getElementById('newEntryName').value.trim();
+      const email = document.getElementById('newEntryEmail').value.trim();
+      if (!name || !email) {
+        showToast('Name and Email address are required', 'error');
+        return;
+      }
+      try {
+        const res = await fetch(`/api/crm/target-groups/${groupId}/entries`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Failed to add contact');
+        }
+        const data = await res.json();
+        document.getElementById('newEntryName').value = '';
+        document.getElementById('newEntryEmail').value = '';
+        renderManageGroupEntries(data.group);
+        showToast('Contact added to target group', 'success');
+      } catch (err) {
+        showToast(err.message || 'Error adding contact', 'error');
+      }
+    }
+
+    async function editGroupEntry(groupId, entryId, currentName, currentEmail) {
+      const name = prompt('Edit Contact Name:', currentName);
+      if (name === null) return;
+      const email = prompt('Edit Contact Email (Email-only):', currentEmail);
+      if (email === null) return;
+      try {
+        const res = await fetch(`/api/crm/target-groups/${groupId}/entries/${entryId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name.trim(), email: email.trim() })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Failed to update contact');
+        }
+        const data = await res.json();
+        renderManageGroupEntries(data.group);
+        showToast('Contact updated', 'success');
+      } catch (err) {
+        showToast(err.message || 'Error updating contact', 'error');
+      }
+    }
+
+    async function deleteGroupEntry(groupId, entryId) {
+      if (!confirm('Remove this contact from the target group?')) return;
+      try {
+        const res = await fetch(`/api/crm/target-groups/${groupId}/entries/${entryId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed to remove contact');
+        const data = await res.json();
+        renderManageGroupEntries(data.group);
+        showToast('Contact removed', 'info');
+      } catch (err) {
+        showToast('Error removing contact', 'error');
+      }
+    }
+
+    async function deleteTargetGroup(groupId) {
+      if (!confirm('Delete this Target Group and all its contacts?')) return;
+      try {
+        const res = await fetch(`/api/crm/target-groups/${groupId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed to delete group');
+        showToast('Target group deleted', 'info');
+        loadTargetGroups();
+      } catch (err) {
+        showToast('Error deleting group', 'error');
+      }
+    }
+
+    function launchReachoutForGroup(groupId, affiliateRef) {
+      openCreateCampaignModal();
+      const sel = document.getElementById('campTargetGroup');
+      if (sel) sel.value = groupId;
+      if (affiliateRef) {
+        const affSel = document.getElementById('campAffiliateRef');
+        if (affSel) affSel.value = affiliateRef;
+      }
+      onTargetGroupSelectChange();
+    }
+
+    function onTargetGroupSelectChange() {
+      const hasGroup = Boolean(document.getElementById('campTargetGroup')?.value);
+      const inAppCb = document.getElementById('campChanInApp');
+      const socialCb = document.getElementById('campChanSocial');
+      const emailCb = document.getElementById('campChanEmail');
+      if (hasGroup) {
+        if (emailCb) emailCb.checked = true;
+        if (inAppCb) inAppCb.checked = false;
+        if (socialCb) socialCb.checked = false;
+      }
+    }
+
+    function toggleReachoutPromoType() {
+      const promoType = document.getElementById('campPromoType')?.value || 'product_service';
+      const isEvent = promoType === 'event';
+      const evWrap = document.getElementById('campEventSelectWrap');
+      const prodWrap = document.getElementById('campProductNameWrap');
+      const ctasWrap = document.getElementById('campEventCtasWrap');
+      if (evWrap) evWrap.style.display = isEvent ? 'block' : 'none';
+      if (prodWrap) prodWrap.style.display = isEvent ? 'none' : 'block';
+      if (ctasWrap) ctasWrap.style.display = isEvent ? 'block' : 'none';
+    }
+
+    async function loadReachoutActivity() {
+      try {
+        const res = await fetch('/api/crm/reachout/activity');
+        const data = await res.json();
+        const s = data.summary || {};
+        const elClicks = document.getElementById('statReachoutClicks');
+        const elRsvps = document.getElementById('statReachoutRsvps');
+        const elOnb = document.getElementById('statReachoutOnboarded');
+        const elSpend = document.getElementById('statReachoutSpend');
+        const elComm = document.getElementById('statReachoutCommission');
+        if (elClicks) elClicks.innerText = s.clicks || 0;
+        if (elRsvps) elRsvps.innerText = s.rsvps || 0;
+        if (elOnb) elOnb.innerText = s.onboardings || 0;
+        if (elSpend) elSpend.innerText = `$${(s.total_spend_usd || 0).toFixed(2)}`;
+        if (elComm) elComm.innerText = `$${(s.total_commission_usd || 0).toFixed(2)}`;
+
+        const tbody = document.getElementById('reachoutActivityTableBody');
+        if (!tbody) return;
+        const rows = data.activities || [];
+        if (!rows.length) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">No reachout activity recorded yet. Launch an email reachout to track clicks, RSVPs, onboardings, and commissions.</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = rows.map(a => `
+          <tr>
+            <td><span class="badge" style="background: rgba(34,211,238,0.15); color: var(--cyan);">${escapeHtml((a.action_type || '').toUpperCase())}</span></td>
+            <td style="font-family: monospace; color: #34d399; font-size: 12px;">${escapeHtml(a.affiliate_ref_code || '--')}</td>
+            <td>
+              <div style="font-weight: 600; color: #fff; font-size: 12px;">${escapeHtml(a.actor_name || 'Guest')}</div>
+              <div style="font-size: 11px; color: var(--text-muted);">${escapeHtml(a.actor_email || '')}</div>
+            </td>
+            <td style="font-size: 12px;">${a.amount_usd > 0 ? `$${a.amount_usd.toFixed(2)} <span style="color:#34d399;">(+$${(a.commission_usd || 0).toFixed(2)} comm)</span>` : '--'}</td>
+            <td style="font-size: 11px; color: var(--text-muted);">${a.created_at ? new Date(a.created_at).toLocaleString() : ''}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Error loading reachout activity:', err);
+      }
+    }
+
     async function loadCrmGrowth() {
+      loadTargetGroups();
+      loadAffiliatesAndEventsForReachout();
+      loadReachoutActivity();
       try {
         const [segRes, campRes, sendRes] = await Promise.all([
           fetch('/api/crm/segments').then(r => r.json()).catch(() => ({ segments: [] })),
@@ -2888,6 +3746,11 @@
 
     async function submitCreateCampaign() {
       const title = document.getElementById('campTitle').value.trim();
+      const target_group_id = document.getElementById('campTargetGroup')?.value || undefined;
+      const affiliate_ref_code = document.getElementById('campAffiliateRef')?.value || undefined;
+      const promotion_type = document.getElementById('campPromoType')?.value || 'product_service';
+      const event_id = document.getElementById('campEventId')?.value || undefined;
+      const product_name = document.getElementById('campProductName')?.value.trim() || undefined;
       const segment = document.getElementById('campSegment').value;
       const subject = document.getElementById('campSubject').value.trim();
       const cta_label = document.getElementById('campCtaLabel').value.trim();
@@ -2895,10 +3758,28 @@
       const body = document.getElementById('campBody').value.trim();
       const dispatch_now = document.getElementById('campDispatchNow').checked;
 
+      const event_ctas = [];
+      if (promotion_type === 'event') {
+        if (!event_id) {
+          showToast('Please select a Live Event for an Event Reachout', 'error');
+          return;
+        }
+        if (document.getElementById('campCtaRsvp')?.checked) event_ctas.push('rsvp');
+        if (document.getElementById('campCtaTicket')?.checked) event_ctas.push('ticket');
+        if (event_ctas.length === 0) {
+          showToast('Select at least one Event CTA (RSVP or Buy Ticket)', 'error');
+          return;
+        }
+      }
+
       const channels = [];
-      if (document.getElementById('campChanEmail').checked) channels.push('email');
-      if (document.getElementById('campChanInApp').checked) channels.push('in_app');
-      if (document.getElementById('campChanSocial').checked) channels.push('social_dm');
+      if (target_group_id) {
+        channels.push('email');
+      } else {
+        if (document.getElementById('campChanEmail').checked) channels.push('email');
+        if (document.getElementById('campChanInApp').checked) channels.push('in_app');
+        if (document.getElementById('campChanSocial').checked) channels.push('social_dm');
+      }
 
       if (!title || !subject || !body) {
         showToast('Please provide Title, Subject, and Message Body', 'error');
@@ -2917,6 +3798,12 @@
           body: JSON.stringify({
             title,
             segment,
+            target_group_id,
+            affiliate_ref_code,
+            promotion_type,
+            product_name,
+            event_id,
+            event_ctas,
             subject,
             body,
             channels,

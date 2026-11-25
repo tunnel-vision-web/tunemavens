@@ -6,17 +6,25 @@ managing the user-facing In-App Inbox.
 """
 import logging
 import os
+import secrets
 import uuid
 from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 from bson import ObjectId
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from pydantic import BaseModel, ConfigDict, Field
 
 from auth import get_current_user, get_optional_user
 from config import db
 from models import CrmCampaign
+from services.reachout_service import (
+    assert_email_only_channels,
+    build_reachout_email_html,
+    record_reachout_click,
+    resolve_initiator_affiliate,
+    validate_email_address,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -115,16 +123,53 @@ SEGMENT_ALIASES = {
 }
 
 
+class TargetGroupEntryInput(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    name: str
+    email: str
+    notes: Optional[str] = None
+    tags: Optional[List[str]] = None
+
+
+class TargetGroupCreateRequest(BaseModel):
+    name: str
+    description: Optional[str] = ""
+    entries: Optional[List[TargetGroupEntryInput]] = Field(default_factory=list)
+    affiliate_ref_code: Optional[str] = None
+    initiator_email: Optional[str] = None
+    initiator_name: Optional[str] = None
+
+
+class TargetGroupUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
+class TargetGroupEntriesAddRequest(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    notes: Optional[str] = None
+    entries: Optional[List[TargetGroupEntryInput]] = None
+
+
 class CampaignCreateRequest(BaseModel):
     name: Optional[str] = None
     title: Optional[str] = None
     subject: str
     body: str
     segment: Optional[str] = "all"
+    target_group_id: Optional[str] = None
     target_roles: Optional[List[str]] = None
-    channels: Optional[List[str]] = Field(default_factory=lambda: ["email", "in_app"])
+    channels: Optional[List[str]] = Field(default_factory=lambda: ["email"])
+    promotion_type: Optional[str] = "product_service"  # 'product_service' | 'event'
+    product_name: Optional[str] = None
+    event_id: Optional[str] = None
+    event_ctas: Optional[List[str]] = None  # ['rsvp'], ['ticket'], or ['rsvp', 'ticket']
     cta_label: Optional[str] = "Explore Now"
     cta_url: Optional[str] = None
+    affiliate_ref_code: Optional[str] = None
+    initiator_email: Optional[str] = None
+    initiator_name: Optional[str] = None
     dispatch_now: Optional[bool] = False
 
 
@@ -258,10 +303,267 @@ def list_campaigns():
     return {"campaigns": campaigns, "total": len(campaigns)}
 
 
+def _validate_target_group_entry(entry: TargetGroupEntryInput) -> Dict[str, Any]:
+    """Validate an email-only Target Group contact entry (rejects phone/WhatsApp/SMS)."""
+    extra = entry.model_extra or {}
+    forbidden_keys = {"phone", "phone_number", "mobile", "whatsapp", "whatsapp_number", "sms", "number"}
+    found_forbidden = [k for k in extra.keys() if k.lower() in forbidden_keys and extra.get(k)]
+    if found_forbidden:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                "Phone/SMS/WhatsApp numbers are not permitted in Smart CRM target groups. "
+                "Only Name and Email addresses are supported to avoid SMS costs and WhatsApp flagging."
+            ),
+        )
+
+    clean_name = (entry.name or "").strip()
+    if not clean_name:
+        raise HTTPException(status_code=400, detail="Contact name is required.")
+    try:
+        clean_email = validate_email_address(entry.email)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    return {
+        "id": f"ent_{uuid.uuid4().hex[:8]}",
+        "name": clean_name,
+        "email": clean_email,
+        "notes": (entry.notes or "").strip(),
+        "tags": [t.strip() for t in (entry.tags or []) if t and t.strip()],
+        "added_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def _serialize_target_group(doc: Dict[str, Any]) -> Dict[str, Any]:
+    out = dict(doc)
+    out["id"] = str(out.pop("_id"))
+    if isinstance(out.get("created_at"), datetime):
+        out["created_at"] = out["created_at"].isoformat()
+    if isinstance(out.get("updated_at"), datetime):
+        out["updated_at"] = out["updated_at"].isoformat()
+    entries = out.get("entries") or []
+    out["member_count"] = len(entries)
+    return out
+
+
+# ======================================================================
+# Smart CRM Email-Only Target Groups CRUD
+# ======================================================================
+@router.get("/api/crm/target-groups")
+@router.get("/api/admin/console/crm-target-groups")
+def list_target_groups(affiliate_ref_code: Optional[str] = None):
+    """List all email-only Smart CRM target groups."""
+    query: Dict[str, Any] = {}
+    if affiliate_ref_code:
+        query["affiliate_ref_code"] = affiliate_ref_code.strip().upper()
+    docs = list(db.crm_target_groups.find(query).sort("created_at", -1))
+    groups = [_serialize_target_group(d) for d in docs]
+    return {"groups": groups, "total": len(groups)}
+
+
+@router.post("/api/crm/target-groups", status_code=status.HTTP_201_CREATED)
+@router.post("/api/admin/console/crm-target-groups", status_code=status.HTTP_201_CREATED)
+def create_target_group(
+    payload: TargetGroupCreateRequest,
+    current_user: Optional[dict] = Depends(get_optional_user),
+):
+    """Create a new email-only target group with Names and Email addresses (no phone numbers)."""
+    clean_name = (payload.name or "").strip()
+    if not clean_name:
+        raise HTTPException(status_code=400, detail="Target group name is required.")
+
+    validated_entries: List[Dict[str, Any]] = []
+    seen_emails = set()
+    for raw_entry in payload.entries or []:
+        ent = _validate_target_group_entry(raw_entry)
+        if ent["email"] in seen_emails:
+            continue
+        seen_emails.add(ent["email"])
+        validated_entries.append(ent)
+
+    initiator = resolve_initiator_affiliate(
+        current_user=current_user,
+        affiliate_ref_code=payload.affiliate_ref_code,
+        initiator_email=payload.initiator_email,
+        initiator_name=payload.initiator_name,
+    )
+
+    now = datetime.now(timezone.utc)
+    doc = {
+        "name": clean_name,
+        "description": (payload.description or "").strip(),
+        "channel_policy": "email_only",
+        "entries": validated_entries,
+        "affiliate_ref_code": initiator.get("ref_code"),
+        "affiliate_id": initiator.get("affiliate_id"),
+        "created_by_name": initiator.get("name"),
+        "created_by_email": initiator.get("email"),
+        "created_at": now,
+        "updated_at": now,
+    }
+    res = db.crm_target_groups.insert_one(doc)
+    doc["_id"] = res.inserted_id
+    return _serialize_target_group(doc)
+
+
+@router.get("/api/crm/target-groups/{group_id}")
+@router.get("/api/admin/console/crm-target-groups/{group_id}")
+def get_target_group(group_id: str):
+    """Retrieve a single target group and all its email entries."""
+    try:
+        oid = ObjectId(group_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid target group ID")
+    doc = db.crm_target_groups.find_one({"_id": oid})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Target group not found")
+    return _serialize_target_group(doc)
+
+
+@router.put("/api/crm/target-groups/{group_id}")
+@router.put("/api/admin/console/crm-target-groups/{group_id}")
+def update_target_group(group_id: str, payload: TargetGroupUpdateRequest):
+    """Edit target group name or description."""
+    try:
+        oid = ObjectId(group_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid target group ID")
+    updates: Dict[str, Any] = {"updated_at": datetime.now(timezone.utc)}
+    if payload.name is not None:
+        if not payload.name.strip():
+            raise HTTPException(status_code=400, detail="Target group name cannot be empty.")
+        updates["name"] = payload.name.strip()
+    if payload.description is not None:
+        updates["description"] = payload.description.strip()
+
+    res = db.crm_target_groups.update_one({"_id": oid}, {"$set": updates})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Target group not found")
+    return _serialize_target_group(db.crm_target_groups.find_one({"_id": oid}))
+
+
+@router.delete("/api/crm/target-groups/{group_id}")
+@router.delete("/api/admin/console/crm-target-groups/{group_id}")
+def delete_target_group(group_id: str):
+    """Delete a target group."""
+    try:
+        oid = ObjectId(group_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid target group ID")
+    res = db.crm_target_groups.delete_one({"_id": oid})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Target group not found")
+    return {"status": "success", "deleted_id": group_id}
+
+
+@router.post("/api/crm/target-groups/{group_id}/entries", status_code=status.HTTP_201_CREATED)
+@router.post("/api/admin/console/crm-target-groups/{group_id}/entries", status_code=status.HTTP_201_CREATED)
+def add_target_group_entries(group_id: str, payload: TargetGroupEntriesAddRequest):
+    """Add one or more email-only contact entries to an existing target group."""
+    try:
+        oid = ObjectId(group_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid target group ID")
+
+    group = db.crm_target_groups.find_one({"_id": oid})
+    if not group:
+        raise HTTPException(status_code=404, detail="Target group not found")
+
+    raw_list: List[TargetGroupEntryInput] = []
+    if payload.entries:
+        raw_list.extend(payload.entries)
+    elif payload.name or payload.email:
+        raw_list.append(TargetGroupEntryInput(name=payload.name or "", email=payload.email or "", notes=payload.notes))
+
+    if not raw_list:
+        raise HTTPException(status_code=400, detail="Provide at least one contact entry (name and email).")
+
+    existing_emails = {e.get("email", "").lower() for e in (group.get("entries") or [])}
+    added: List[Dict[str, Any]] = []
+    for raw in raw_list:
+        ent = _validate_target_group_entry(raw)
+        if ent["email"] in existing_emails:
+            continue
+        existing_emails.add(ent["email"])
+        added.append(ent)
+
+    if added:
+        db.crm_target_groups.update_one(
+            {"_id": oid},
+            {"$push": {"entries": {"$each": added}}, "$set": {"updated_at": datetime.now(timezone.utc)}},
+        )
+
+    updated = db.crm_target_groups.find_one({"_id": oid})
+    return {
+        "status": "success",
+        "added_count": len(added),
+        "added": added,
+        "group": _serialize_target_group(updated),
+    }
+
+
+@router.put("/api/crm/target-groups/{group_id}/entries/{entry_id}")
+@router.put("/api/admin/console/crm-target-groups/{group_id}/entries/{entry_id}")
+def update_target_group_entry(group_id: str, entry_id: str, payload: TargetGroupEntryInput):
+    """Edit an existing contact entry's name, email, or notes inside a target group."""
+    try:
+        oid = ObjectId(group_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid target group ID")
+
+    group = db.crm_target_groups.find_one({"_id": oid})
+    if not group:
+        raise HTTPException(status_code=404, detail="Target group not found")
+
+    validated = _validate_target_group_entry(payload)
+    entries = list(group.get("entries") or [])
+    idx = next((i for i, e in enumerate(entries) if e.get("id") == entry_id), None)
+    if idx is None:
+        raise HTTPException(status_code=404, detail="Contact entry not found in target group")
+
+    # Prevent duplicate email collision with another entry
+    for i, e in enumerate(entries):
+        if i != idx and e.get("email", "").lower() == validated["email"]:
+            raise HTTPException(status_code=409, detail=f"Email '{validated['email']}' already exists in this group.")
+
+    entries[idx]["name"] = validated["name"]
+    entries[idx]["email"] = validated["email"]
+    entries[idx]["notes"] = validated["notes"]
+    entries[idx]["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+    db.crm_target_groups.update_one(
+        {"_id": oid},
+        {"$set": {"entries": entries, "updated_at": datetime.now(timezone.utc)}},
+    )
+    updated = db.crm_target_groups.find_one({"_id": oid})
+    return {"status": "success", "entry": entries[idx], "group": _serialize_target_group(updated)}
+
+
+@router.delete("/api/crm/target-groups/{group_id}/entries/{entry_id}")
+@router.delete("/api/admin/console/crm-target-groups/{group_id}/entries/{entry_id}")
+def delete_target_group_entry(group_id: str, entry_id: str):
+    """Remove a contact entry from a target group."""
+    try:
+        oid = ObjectId(group_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid target group ID")
+
+    res = db.crm_target_groups.update_one(
+        {"_id": oid},
+        {"$pull": {"entries": {"id": entry_id}}, "$set": {"updated_at": datetime.now(timezone.utc)}},
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Target group not found")
+
+    updated = db.crm_target_groups.find_one({"_id": oid})
+    return {"status": "success", "deleted_entry_id": entry_id, "group": _serialize_target_group(updated)}
+
+
 @router.post("/api/crm/campaigns")
 @router.post("/api/admin/console/crm-campaigns")
 def create_crm_campaign(payload: CampaignCreateRequest, current_user: Optional[dict] = Depends(get_optional_user)):
-    """Create a new multi-channel outreach campaign."""
+    """Create a new Smart CRM reachout / growth campaign."""
     camp_name = (payload.name or payload.title or "").strip()
     if not camp_name or not payload.subject.strip() or not payload.body.strip():
         raise HTTPException(
@@ -269,11 +571,48 @@ def create_crm_campaign(payload: CampaignCreateRequest, current_user: Optional[d
             detail="Campaign name/title, subject, and body are required."
         )
 
+    # Enforce no SMS/WhatsApp policy
+    try:
+        clean_channels = assert_email_only_channels(payload.channels)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
+    target_group_doc = None
+    if payload.target_group_id:
+        try:
+            tg_oid = ObjectId(payload.target_group_id)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid target_group_id")
+        target_group_doc = db.crm_target_groups.find_one({"_id": tg_oid})
+        if not target_group_doc:
+            raise HTTPException(status_code=404, detail="Target group not found")
+        # Target group reachouts are strictly email-only
+        clean_channels = ["email"]
+
+    promotion_type = (payload.promotion_type or "product_service").strip().lower()
+    if promotion_type not in ("product_service", "event"):
+        promotion_type = "product_service"
+
+    event_meta = None
+    if promotion_type == "event" and payload.event_id:
+        from routes.events_router import get_or_seed_events
+        events = get_or_seed_events()
+        event_meta = next((e for e in events if e.get("id") == payload.event_id), None)
+        if not event_meta:
+            raise HTTPException(status_code=404, detail=f"Event '{payload.event_id}' not found")
+
+    initiator = resolve_initiator_affiliate(
+        current_user=current_user,
+        affiliate_ref_code=payload.affiliate_ref_code or (target_group_doc.get("affiliate_ref_code") if target_group_doc else None),
+        initiator_email=payload.initiator_email,
+        initiator_name=payload.initiator_name,
+    )
+
     now = datetime.now(timezone.utc)
-    raw_segment = payload.segment or "all"
+    raw_segment = f"group:{target_group_doc['name']}" if target_group_doc else (payload.segment or "all")
     segment_key = SEGMENT_ALIASES.get(raw_segment, raw_segment)
     segment_meta = AUDIENCE_SEGMENTS.get(segment_key, AUDIENCE_SEGMENTS["all"])
-    cta_url = payload.cta_url or segment_meta["default_cta"]
+    cta_url = payload.cta_url or (f"/events?event={payload.event_id}" if event_meta else segment_meta["default_cta"])
 
     doc = {
         "name": camp_name,
@@ -281,13 +620,29 @@ def create_crm_campaign(payload: CampaignCreateRequest, current_user: Optional[d
         "subject": payload.subject.strip(),
         "body": payload.body.strip(),
         "segment": raw_segment,
+        "target_group_id": payload.target_group_id,
+        "target_group_name": target_group_doc["name"] if target_group_doc else None,
         "target_roles": payload.target_roles or segment_meta.get("role_filter") or [],
-        "channels": payload.channels or ["email", "in_app"],
-        "cta_label": payload.cta_label or "Explore Now",
+        "channels": clean_channels,
+        "promotion_type": promotion_type,
+        "product_name": payload.product_name,
+        "event_id": payload.event_id,
+        "event_title": event_meta.get("title") if event_meta else None,
+        "event_ctas": payload.event_ctas or (["rsvp", "ticket"] if promotion_type == "event" else []),
+        "cta_label": payload.cta_label or ("RSVP / Get Tickets" if promotion_type == "event" else "Explore Now"),
         "cta_url": cta_url,
+        "affiliate_ref_code": initiator.get("ref_code"),
+        "affiliate_id": initiator.get("affiliate_id"),
+        "initiated_by_name": initiator.get("name"),
+        "initiated_by_email": initiator.get("email"),
+        "initiated_by_user_id": initiator.get("user_id"),
         "status": "draft",
         "recipient_count": 0,
-        "stats": {"sent": 0, "delivered": 0, "opened": 0, "clicked": 0, "replied": 0},
+        "stats": {
+            "sent": 0, "delivered": 0, "opened": 0, "clicked": 0, "replied": 0,
+            "rsvps": 0, "onboarded": 0, "conversions": 0,
+            "total_spend_usd": 0.0, "commission_earned_usd": 0.0,
+        },
         "created_at": now,
         "dispatched_at": None
     }
@@ -322,7 +677,7 @@ def delete_crm_campaign(campaign_id: str, current_user: Optional[dict] = Depends
 @router.post("/api/crm/campaigns/{campaign_id}/dispatch")
 @router.post("/api/admin/console/crm-campaigns/{campaign_id}/dispatch")
 def dispatch_crm_campaign(campaign_id: str, current_user: Optional[dict] = Depends(get_optional_user)):
-    """Dispatches a campaign across selected channels (Email, In-App Inbox, Social DM)."""
+    """Dispatches a campaign across selected channels with tracked affiliate reachout links."""
     try:
         oid = ObjectId(campaign_id)
     except Exception:
@@ -332,49 +687,86 @@ def dispatch_crm_campaign(campaign_id: str, current_user: Optional[dict] = Depen
     if not campaign_doc:
         raise HTTPException(status_code=404, detail="Campaign not found")
 
-    channels = campaign_doc.get("channels", ["email", "in_app"])
+    channels = campaign_doc.get("channels", ["email"])
     segment = campaign_doc.get("segment", "all")
+    target_group_id = campaign_doc.get("target_group_id")
     subject = campaign_doc.get("subject", "TuneMavens Announcement")
     body = campaign_doc.get("body", "")
     cta_label = campaign_doc.get("cta_label", "Explore Now")
     cta_url = campaign_doc.get("cta_url", "/community")
+    promotion_type = campaign_doc.get("promotion_type", "product_service")
+    event_id = campaign_doc.get("event_id")
+    event_ctas = campaign_doc.get("event_ctas") or []
+    affiliate_ref_code = campaign_doc.get("affiliate_ref_code")
+    affiliate_id = campaign_doc.get("affiliate_id")
+    initiated_by_name = campaign_doc.get("initiated_by_name")
+    initiated_by_email = campaign_doc.get("initiated_by_email")
 
-    # Resolve target cohort
-    canonical_segment = SEGMENT_ALIASES.get(segment, segment)
-    query = {}
-    if canonical_segment == "luminaries":
-        cohort = list(db.featured_profiles.find({"has_epk": True}))
-    elif canonical_segment == "unclaimed_inductees":
-        cohort = list(db.featured_profiles.find({"has_epk": False}))
-    elif canonical_segment != "all":
-        seg_meta = AUDIENCE_SEGMENTS.get(canonical_segment, {})
-        rf = seg_meta.get("role_filter")
-        if isinstance(rf, list):
-            query = {"$or": [{"role": {"$in": rf}}, {"roles": {"$in": rf}}]}
-        elif rf:
-            query = {"role": rf}
-        cohort = list(db.users.find(query))
+    # Resolve event document if event reachout
+    event_doc = None
+    if promotion_type == "event" and event_id:
+        try:
+            from routes.events_router import get_or_seed_events
+            event_doc = next((e for e in get_or_seed_events() if e.get("id") == event_id), None)
+        except Exception:
+            event_doc = None
+
+    # Resolve target cohort: Target Group takes precedence
+    cohort = []
+    if target_group_id:
+        try:
+            tg = db.crm_target_groups.find_one({"_id": ObjectId(target_group_id)})
+            if tg:
+                cohort = [
+                    {
+                        "_id": e.get("id") or uuid.uuid4().hex[:8],
+                        "name": e.get("name"),
+                        "email": e.get("email"),
+                        "role": "guest",
+                        "credits": 0,
+                    }
+                    for e in (tg.get("entries") or [])
+                    if e.get("email")
+                ]
+        except Exception:
+            pass
+        if not cohort:
+            raise HTTPException(status_code=400, detail="Target group has no email entries to dispatch to.")
     else:
-        cohort = list(db.users.find())
+        canonical_segment = SEGMENT_ALIASES.get(segment, segment)
+        query = {}
+        if canonical_segment == "luminaries":
+            cohort = list(db.featured_profiles.find({"has_epk": True}))
+        elif canonical_segment == "unclaimed_inductees":
+            cohort = list(db.featured_profiles.find({"has_epk": False}))
+        elif canonical_segment != "all":
+            seg_meta = AUDIENCE_SEGMENTS.get(canonical_segment, {})
+            rf = seg_meta.get("role_filter")
+            if isinstance(rf, list):
+                query = {"$or": [{"role": {"$in": rf}}, {"roles": {"$in": rf}}]}
+            elif rf:
+                query = {"role": rf}
+            cohort = list(db.users.find(query))
+        else:
+            cohort = list(db.users.find())
 
-    if not cohort:
-        # Fallback to realistic recipient records
-        cohort = list(db.users.find().limit(25)) or [
-            {"_id": "seed-u1", "name": "Sarz", "email": "sarz@tunemavens.com", "role": "producer", "credits": 450},
-            {"_id": "seed-u2", "name": "Tems", "email": "tems@tunemavens.com", "role": "creator", "credits": 890},
-            {"_id": "seed-u3", "name": "Mutoriah", "email": "mutoriah@tunemavens.com", "role": "producer", "credits": 210},
-            {"_id": "seed-u4", "name": "Bien", "email": "bien@tunemavens.com", "role": "creator", "credits": 300},
-            {"_id": "seed-u5", "name": "SyncMavens Desk", "email": "supervisor@syncmavens.com", "role": "supervisor", "credits": 1200}
-        ]
+        if not cohort:
+            cohort = list(db.users.find().limit(25)) or [
+                {"_id": "seed-u1", "name": "Sarz", "email": "sarz@tunemavens.com", "role": "producer", "credits": 450},
+                {"_id": "seed-u2", "name": "Tems", "email": "tems@tunemavens.com", "role": "creator", "credits": 890},
+                {"_id": "seed-u3", "name": "Mutoriah", "email": "mutoriah@tunemavens.com", "role": "producer", "credits": 210},
+                {"_id": "seed-u4", "name": "Bien", "email": "bien@tunemavens.com", "role": "creator", "credits": 300},
+                {"_id": "seed-u5", "name": "SyncMavens Desk", "email": "supervisor@syncmavens.com", "role": "supervisor", "credits": 1200}
+            ]
 
     dispatch_time = datetime.now(timezone.utc)
     sends_docs = []
     inbox_docs = []
+    reachout_links = []
 
-    # Import email sender if available
     send_email_fn = None
     try:
-        from account_setup import send_email, _email_wrapper
+        from account_setup import send_email
         send_email_fn = send_email
     except Exception:
         pass
@@ -382,26 +774,82 @@ def dispatch_crm_campaign(campaign_id: str, current_user: Optional[dict] = Depen
     for recipient in cohort:
         r_id = str(recipient.get("_id", uuid.uuid4().hex[:8]))
         r_name = recipient.get("name") or recipient.get("subject_name") or recipient.get("username") or "TuneMavens Member"
-        r_email = recipient.get("email") or recipient.get("subject_email") or f"{r_name.lower().replace(' ', '')}@example.com"
+        r_email = (recipient.get("email") or recipient.get("subject_email") or f"{r_name.lower().replace(' ', '')}@example.com").strip().lower()
         r_role = recipient.get("role") or "creator"
         r_credits = recipient.get("credits", 100)
 
-        # Interpolate placeholders
-        rendered_body = body.replace("{{name}}", r_name)\
-                            .replace("{{role}}", r_role)\
-                            .replace("{{cta_url}}", cta_url)\
-                            .replace("{{credits}}", str(r_credits))\
-                            .replace("{{cta_label}}", cta_label)
+        # Create unique tracked reachout link per recipient
+        token = f"rch_{secrets.token_urlsafe(10)}"
+        rendered_subject = subject.replace("{{name}}", r_name).replace("{{role}}", r_role)
+        if event_doc:
+            rendered_subject = rendered_subject.replace("{{event_title}}", event_doc.get("title", ""))
 
-        # 1. In-App Inbox Dispatch
+        rendered_body = (
+            body.replace("{{name}}", r_name)
+                .replace("{{role}}", r_role)
+                .replace("{{cta_url}}", cta_url)
+                .replace("{{credits}}", str(r_credits))
+                .replace("{{cta_label}}", cta_label)
+        )
+        if event_doc:
+            rendered_body = (
+                rendered_body.replace("{{event_title}}", event_doc.get("title", ""))
+                             .replace("{{event_date}}", event_doc.get("date_display", ""))
+                             .replace("{{event_venue}}", event_doc.get("venue", ""))
+            )
+
+        wrapped_html, tracked_urls = build_reachout_email_html(
+            recipient_name=r_name,
+            subject=rendered_subject,
+            rendered_body=rendered_body,
+            reachout_token=token,
+            promotion_type=promotion_type,
+            event_doc=event_doc,
+            event_ctas=event_ctas,
+            cta_label=cta_label,
+            affiliate_name=initiated_by_name,
+            affiliate_ref_code=affiliate_ref_code,
+        )
+
+        reachout_link_doc = {
+            "token": token,
+            "campaign_id": campaign_id,
+            "campaign_title": campaign_doc.get("title") or campaign_doc.get("name"),
+            "target_group_id": target_group_id,
+            "recipient_name": r_name,
+            "recipient_email": r_email,
+            "affiliate_ref_code": affiliate_ref_code,
+            "affiliate_id": affiliate_id,
+            "initiated_by_name": initiated_by_name,
+            "initiated_by_email": initiated_by_email,
+            "promotion_type": promotion_type,
+            "product_name": campaign_doc.get("product_name"),
+            "event_id": event_id,
+            "event_ctas": event_ctas,
+            "cta_label": cta_label,
+            "cta_url": cta_url,
+            "tracked_urls": tracked_urls,
+            "clicks": 0,
+            "rsvped": False,
+            "ticket_purchased": False,
+            "onboarded": False,
+            "total_spend_usd": 0.0,
+            "commission_earned_usd": 0.0,
+            "created_at": dispatch_time,
+        }
+        reachout_links.append(reachout_link_doc)
+
+        # 1. In-App Inbox Dispatch (only for platform segments where in_app is enabled)
         if "in_app" in channels:
             inbox_item = {
                 "user_id": r_id,
+                "user_email": r_email,
                 "campaign_id": campaign_id,
-                "sender": "TuneMavens Growth Team",
-                "subject": subject,
+                "reachout_token": token,
+                "sender": initiated_by_name or "TuneMavens Growth Team",
+                "subject": rendered_subject,
                 "body": rendered_body,
-                "cta_url": cta_url,
+                "cta_url": f"/reachout/{token}",
                 "cta_label": cta_label,
                 "category": "campaign",
                 "read": False,
@@ -416,11 +864,13 @@ def dispatch_crm_campaign(campaign_id: str, current_user: Optional[dict] = Depen
                 "recipient_email": r_email,
                 "channel": "in_app",
                 "status": "delivered",
-                "cta_url": cta_url,
+                "reachout_token": token,
+                "affiliate_ref_code": affiliate_ref_code,
+                "cta_url": f"/reachout/{token}",
                 "created_at": dispatch_time
             })
 
-        # 2. Email Dispatch (Resend API)
+        # 2. Email Dispatch (Resend API + full HTML audit in email_outbox)
         if "email" in channels:
             try:
                 is_test_env = bool(os.environ.get("PYTEST_CURRENT_TEST"))
@@ -431,36 +881,42 @@ def dispatch_crm_campaign(campaign_id: str, current_user: Optional[dict] = Depen
                     r_email.endswith("@syncmavens.com")
                 )
                 if send_email_fn and not is_test_env and not is_sandbox_recipient:
-                    inner_html = f"""
-                    <div style="font-size: 18px; font-weight: 800; color: #00f0ff; margin-bottom: 14px;">{subject}</div>
-                    <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">{rendered_body.replace(chr(10), '<br>')}</p>
-                    <div style="margin: 24px 0;">
-                        <a href="http://localhost:3000{cta_url}" style="background: #00f0ff; color: #060813; font-weight: 800; padding: 10px 22px; text-decoration: none; border-radius: 3px; display: inline-block;">
-                            {cta_label} ↗
-                        </a>
-                    </div>
-                    """
-                    wrapped = _email_wrapper(inner_html, subject, r_role)
                     send_email_fn(
                         to=r_email,
-                        subject=subject,
-                        html=wrapped,
+                        subject=rendered_subject,
+                        html=wrapped_html,
                         text=rendered_body,
-                        event_type="crm_campaign",
+                        event_type="crm_reachout" if target_group_id else "crm_campaign",
                         role=r_role,
                         recipient_name=r_name,
-                        metadata={"campaign_id": campaign_id}
+                        metadata={
+                            "campaign_id": campaign_id,
+                            "reachout_token": token,
+                            "affiliate_ref_code": affiliate_ref_code,
+                            "promotion_type": promotion_type,
+                            "event_id": event_id,
+                        }
                     )
                 else:
-                    # Record simulated audit log for sandbox / example recipients
                     db.email_outbox.insert_one({
                         "to": r_email,
-                        "subject": subject,
+                        "recipient_name": r_name,
+                        "subject": rendered_subject,
+                        "html": wrapped_html,
+                        "text": rendered_body,
                         "created_at": dispatch_time,
                         "status": "delivered",
-                        "event_type": "crm_campaign",
+                        "event_type": "crm_reachout" if target_group_id else "crm_campaign",
                         "role": r_role,
-                        "metadata": {"campaign_id": campaign_id, "simulated": True}
+                        "metadata": {
+                            "campaign_id": campaign_id,
+                            "reachout_token": token,
+                            "affiliate_ref_code": affiliate_ref_code,
+                            "promotion_type": promotion_type,
+                            "event_id": event_id,
+                            "tracked_urls": tracked_urls,
+                            "simulated": True,
+                        }
                     })
             except Exception as e:
                 logger.warning(f"Email dispatch error for {r_email}: {e}")
@@ -472,25 +928,33 @@ def dispatch_crm_campaign(campaign_id: str, current_user: Optional[dict] = Depen
                 "recipient_email": r_email,
                 "channel": "email",
                 "status": "sent",
-                "cta_url": cta_url,
+                "reachout_token": token,
+                "affiliate_ref_code": affiliate_ref_code,
+                "cta_url": tracked_urls["rsvp"] if promotion_type == "event" else tracked_urls["primary"],
+                "tracked_urls": tracked_urls,
                 "created_at": dispatch_time
             })
 
-        # 3. Social DM Dispatch Tracker (Instagram & X)
-        if "social_dm" in channels:
-            dm_script = f"Hey {r_name}! Quick note from TuneMavens: {subject}. Check it out here: http://localhost:3000{cta_url}"
+        # 3. Social DM Dispatch Tracker (only for non-target-group legacy campaigns)
+        if "social_dm" in channels and not target_group_id:
+            dm_script = f"Hey {r_name}! Quick note from TuneMavens: {rendered_subject}. Check it out here: {tracked_urls['primary']}"
             sends_docs.append({
                 "campaign_id": campaign_id,
                 "user_id": r_id,
                 "recipient_name": r_name,
+                "recipient_email": r_email,
                 "channel": "social_dm",
                 "dm_script": dm_script,
                 "status": "pending_manual_send",
-                "cta_url": cta_url,
+                "reachout_token": token,
+                "affiliate_ref_code": affiliate_ref_code,
+                "cta_url": tracked_urls["primary"],
                 "created_at": dispatch_time
             })
 
-    # Bulk insert inbox notifications & send logs
+    # Bulk insert tracked reachout links, inbox notifications & send logs
+    if reachout_links:
+        db.crm_reachout_links.insert_many(reachout_links)
     if inbox_docs:
         db.user_inbox.insert_many(inbox_docs)
     if sends_docs:
@@ -500,9 +964,14 @@ def dispatch_crm_campaign(campaign_id: str, current_user: Optional[dict] = Depen
     stats = {
         "sent": len(sends_docs),
         "delivered": len([s for s in sends_docs if s["status"] in ["delivered", "sent"]]),
-        "opened": int(recipient_count * 0.72),
-        "clicked": int(recipient_count * 0.48),
-        "replied": int(recipient_count * 0.15)
+        "opened": 0 if target_group_id else int(recipient_count * 0.72),
+        "clicked": 0 if target_group_id else int(recipient_count * 0.48),
+        "replied": 0 if target_group_id else int(recipient_count * 0.15),
+        "rsvps": 0,
+        "onboarded": 0,
+        "conversions": 0,
+        "total_spend_usd": 0.0,
+        "commission_earned_usd": 0.0,
     }
 
     db.crm_campaigns.update_one(
@@ -521,8 +990,137 @@ def dispatch_crm_campaign(campaign_id: str, current_user: Optional[dict] = Depen
         "campaign_id": campaign_id,
         "recipient_count": recipient_count,
         "channels": channels,
+        "affiliate_ref_code": affiliate_ref_code,
+        "reachout_tokens": [
+            {"email": rl["recipient_email"], "name": rl["recipient_name"], "token": rl["token"], "urls": rl["tracked_urls"]}
+            for rl in reachout_links
+        ],
         "stats": stats
     }
+
+
+# ======================================================================
+# Public Reachout Landing Resolver & Affiliate Funnel Activity Telemetry
+# ======================================================================
+@router.get("/api/crm/reachout/resolve/{token}")
+def resolve_reachout_link(token: str, response: Response):
+    """Resolve a tracked reachout link clicked from an email.
+
+    - Logs the click under the initiating affiliate account.
+    - Sets 90-day attribution cookies (`tm_aff_ref`, `tm_reachout_token`).
+    - Returns campaign info, event details (for direct RSVP / Buy Ticket),
+      recipient's prefilled name & email, and TuneMavens platform introduction.
+    """
+    link = record_reachout_click(token)
+    if not link:
+        raise HTTPException(status_code=404, detail="Reachout link not found or expired.")
+
+    ref_code = link.get("affiliate_ref_code")
+    if ref_code:
+        response.set_cookie(
+            key="tm_aff_ref",
+            value=ref_code,
+            max_age=90 * 86400,
+            httponly=False,
+            samesite="lax",
+            secure=False,
+        )
+    response.set_cookie(
+        key="tm_reachout_token",
+        value=token,
+        max_age=90 * 86400,
+        httponly=False,
+        samesite="lax",
+        secure=False,
+    )
+
+    event_info = None
+    if link.get("event_id"):
+        try:
+            from routes.events_router import get_or_seed_events
+            event_info = next((e for e in get_or_seed_events() if e.get("id") == link["event_id"]), None)
+        except Exception:
+            event_info = None
+
+    campaign_info = None
+    if link.get("campaign_id"):
+        try:
+            c = db.crm_campaigns.find_one({"_id": ObjectId(link["campaign_id"])})
+            if c:
+                campaign_info = {
+                    "id": str(c["_id"]),
+                    "title": c.get("title") or c.get("name"),
+                    "subject": c.get("subject"),
+                    "body": c.get("body"),
+                    "promotion_type": c.get("promotion_type", "product_service"),
+                    "product_name": c.get("product_name"),
+                    "cta_label": c.get("cta_label"),
+                    "cta_url": c.get("cta_url"),
+                    "event_ctas": c.get("event_ctas") or [],
+                }
+        except Exception:
+            pass
+
+    return {
+        "token": token,
+        "recipient": {
+            "name": link.get("recipient_name"),
+            "email": link.get("recipient_email"),
+        },
+        "affiliate": {
+            "ref_code": ref_code,
+            "name": link.get("initiated_by_name") or "TuneMavens Partner",
+        },
+        "campaign": campaign_info,
+        "promotion_type": link.get("promotion_type", "product_service"),
+        "event": event_info,
+        "clicks": link.get("clicks", 1),
+        "rsvped": bool(link.get("rsvped")),
+        "onboarded": bool(link.get("onboarded")),
+        "platform_intro": {
+            "headline": "Welcome to TuneMavens — The Global Music, Live Events & Creator Ecosystem",
+            "subtitle": "Stream lossless 24-bit audio, reserve VIP passes & free RSVPs, and save your music preferences for instant 1-tap access next time.",
+            "highlights": [
+                "Save your favourite genres, artists, and event cities for tailored recommendations",
+                "Instant QR passes & M-Pesa / Card ticket vault for all live concerts & tours",
+                "Direct creator tipping, lossless TuneStream audio, and SyncMavens licensing tools",
+            ],
+        },
+    }
+
+
+@router.get("/api/crm/reachout/activity")
+@router.get("/api/admin/console/crm-reachout-activity")
+def get_reachout_activity(
+    affiliate_ref_code: Optional[str] = None,
+    campaign_id: Optional[str] = None,
+    limit: int = Query(50, ge=1, le=200),
+):
+    """Retrieve affiliate-attributed Smart CRM reachout funnel telemetry and recent actions."""
+    query: Dict[str, Any] = {}
+    if affiliate_ref_code:
+        query["affiliate_ref_code"] = affiliate_ref_code.strip().upper()
+    if campaign_id:
+        query["campaign_id"] = campaign_id
+
+    docs = list(db.crm_reachout_activity.find(query).sort("created_at", -1).limit(limit))
+    activities = []
+    for d in docs:
+        d.pop("_id", None)
+        if isinstance(d.get("created_at"), datetime):
+            d["created_at"] = d["created_at"].isoformat()
+        activities.append(d)
+
+    summary = {
+        "clicks": db.crm_reachout_activity.count_documents({**query, "action_type": "click"}),
+        "rsvps": db.crm_reachout_activity.count_documents({**query, "action_type": "rsvp"}),
+        "onboardings": db.crm_reachout_activity.count_documents({**query, "action_type": "onboarding"}),
+        "purchases": db.crm_reachout_activity.count_documents({**query, "action_type": "spend"}),
+        "total_spend_usd": round(sum(a.get("amount_usd", 0.0) for a in activities if a.get("action_type") == "spend"), 2),
+        "total_commission_usd": round(sum(a.get("commission_usd", 0.0) for a in activities if a.get("action_type") == "spend"), 2),
+    }
+
+    return {"summary": summary, "activities": activities, "total": len(activities)}
 
 
 # ======================================================================
@@ -581,12 +1179,27 @@ def mark_social_send_complete(send_id: str):
 def get_user_inbox(
     category: Optional[str] = None,
     unread_only: bool = False,
+    affiliate_ref_code: Optional[str] = None,
     current_user: Optional[dict] = Depends(get_optional_user)
 ):
-    """Retrieves authenticated user's inbox messages with unread counts."""
+    """Retrieves authenticated user's (or affiliate's) inbox messages with unread counts."""
     my_id = str(current_user["_id"]) if current_user else "guest_user"
+    my_email = (current_user.get("email") or "").strip().lower() if current_user else None
 
-    query = {"$or": [{"user_id": my_id}, {"user_id": "guest_user"}, {"user_id": "all"}]}
+    if affiliate_ref_code:
+        or_clauses: List[Dict[str, Any]] = [{"affiliate_ref_code": affiliate_ref_code.strip().upper()}]
+        aff = db.affiliates.find_one({"ref_code": affiliate_ref_code.strip().upper()})
+        if aff and aff.get("email"):
+            or_clauses.append({"user_email": aff["email"].strip().lower()})
+    else:
+        or_clauses = [{"user_id": my_id}, {"user_id": "guest_user"}, {"user_id": "all"}]
+        if my_email:
+            or_clauses.append({"user_email": my_email})
+            aff = db.affiliates.find_one({"email": my_email})
+            if aff and aff.get("ref_code"):
+                or_clauses.append({"affiliate_ref_code": aff["ref_code"]})
+
+    query: Dict[str, Any] = {"$or": or_clauses}
     if category and category != "all":
         query["category"] = category
     if unread_only:
@@ -602,7 +1215,7 @@ def get_user_inbox(
         messages.append(doc)
 
     unread_count = db.user_inbox.count_documents({
-        "$or": [{"user_id": my_id}, {"user_id": "guest_user"}, {"user_id": "all"}],
+        "$or": or_clauses,
         "read": False
     })
 

@@ -495,6 +495,9 @@ export default function RegisterView({ onLogin, onClose }) {
       return;
     }
     const userRole = roles[0] || 'consumer';
+    const qsParams = new URLSearchParams(location.search);
+    const storedRefCode = qsParams.get('ref') || localStorage.getItem('tm_aff_ref') || undefined;
+    const storedReachoutToken = qsParams.get('reachout') || localStorage.getItem('tm_reachout_token') || undefined;
     try {
       const { user, access_token } = await authApi.register({
         email,
@@ -503,6 +506,13 @@ export default function RegisterView({ onLogin, onClose }) {
         role: userRole,
         brand_name: name + ' Productions',
         country: 'KE',
+        ref_code: storedRefCode,
+        reachout_token: storedReachoutToken,
+        preferences: {
+          favorite_genres: genres,
+          listening_vibe: listeningVibe,
+          followed_creators: followedCreators,
+        },
       });
       tokenStore.set(access_token);
       onLogin(user);

@@ -76,6 +76,11 @@ class User(BaseDocument):
     signup_source: Optional[str] = None      # Spec §3 — UTM source or referrer
     utm_medium: Optional[str] = None
     utm_campaign: Optional[str] = None
+    referred_by_ref_code: Optional[str] = None
+    referred_by_affiliate_id: Optional[str] = None
+    reachout_token: Optional[str] = None
+    reachout_campaign_id: Optional[str] = None
+    preferences: Optional[Dict[str, Any]] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -96,11 +101,11 @@ class UserPublic(BaseModel):
     signup_source: Optional[str] = None
     utm_medium: Optional[str] = None
     utm_campaign: Optional[str] = None
+    referred_by_ref_code: Optional[str] = None
+    preferences: Optional[Dict[str, Any]] = None
     bio: Optional[str] = None
     apps: List[str] = Field(default_factory=list)
     dashboard_layout: Optional[dict] = None
-    signup_page: Optional[str] = None
-    signup_source: Optional[str] = None
 
 
 # ======================================================================
@@ -118,6 +123,9 @@ class RegisterRequest(BaseModel):
     signup_source: Optional[str] = None
     utm_medium: Optional[str] = None
     utm_campaign: Optional[str] = None
+    ref_code: Optional[str] = None
+    reachout_token: Optional[str] = None
+    preferences: Optional[Dict[str, Any]] = None
     sandbox: Optional[bool] = False  # test/sandbox sign-ups never send email
 
 
@@ -393,10 +401,15 @@ class Event(BaseDocument):
     creator_id: PyObjectId
     title: str
     description: Optional[str] = None
-    price: float
+    payment_mode: str = "paid"  # 'paid' | 'free_rsvp'
+    price: float = 0.0
     date: datetime
     location: str
     capacity: int
+    seating_capacity: Optional[int] = None
+    standing_capacity: Optional[int] = None
+    guest_limit_policy: str = "open"  # 'open' | 'strict_plus_1' | 'strict_plus_2'
+    max_additional_guests: Optional[int] = None
     tickets_sold: int = 0
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 

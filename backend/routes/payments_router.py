@@ -422,6 +422,21 @@ def initiate_credit_reload(
             f"Granted +{credits_to_grant} credits. New balance: {new_balance}."
         )
 
+        # Attribute platform credit spend to initiating affiliate (if referred)
+        try:
+            from services.reachout_service import record_reachout_spend
+            record_reachout_spend(
+                conversion_type="creator_onboarding",
+                item_title=f"Credits Reload: {package['name']}",
+                gross_amount_usd=float(expected_amount),
+                user_id=user_id,
+                buyer_email=current_user.get("email") if current_user else None,
+                buyer_name=current_user.get("name") if current_user else None,
+                tx_id=receipt,
+            )
+        except Exception as exc:
+            logger.warning(f"Affiliate credit spend attribution error: {exc}")
+
         return {
             "status": "completed",
             "success": True,
@@ -1173,6 +1188,18 @@ def _process_successful_checkout(metadata: dict, provider_ref: str = ""):
             db.products.update_one({"_id": item_id}, {"$inc": {"stock": -quantity}})
 
         logger.info(f"[Checkout Fulfillment] Processed order for product {item_id} (User: {user_id})")
+
+        try:
+            from services.reachout_service import record_reachout_spend
+            record_reachout_spend(
+                conversion_type="album_sale",
+                item_title=product.get("name") or f"Storefront Order ({item_id})",
+                gross_amount_usd=float(total_amount),
+                user_id=str(user_id),
+                tx_id=provider_ref,
+            )
+        except Exception as exc:
+            logger.warning(f"Affiliate merch spend attribution error: {exc}")
 
 
 @router.post("/sandbox-bypass")
