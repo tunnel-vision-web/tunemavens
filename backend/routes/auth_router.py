@@ -39,7 +39,7 @@ DEFAULT_APPS_BY_ROLE = {
     "media": ["sync-marketplace", "corporate-ads"],
     "corporate": ["sync-marketplace", "corporate-ads"],
     "consumer": ["tunemavens-library", "tunemavens-tips"],
-    "affiliate": ["affiliates", "split-cascade", "tunemavens-library"],
+    "affiliate": ["affiliates", "crm", "split-cascade", "tunemavens-library"],
     "vc": ["vc-discover", "vc-portfolio", "vc-sponsorship", "tours-vault", "split-cascade", "escrow-contracts", "crm"],
     "investor": ["vc-discover", "vc-portfolio", "vc-sponsorship", "tours-vault", "split-cascade", "escrow-contracts", "crm"],
     "admin": [

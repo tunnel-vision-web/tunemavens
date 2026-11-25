@@ -1,5 +1,5 @@
 // TuneStream Native Service Worker — Offline Audio & App Installation
-const CACHE_NAME = 'tunestream-cache-v4';
+const CACHE_NAME = 'tunestream-cache-v5';
 const OFFLINE_URLS = [
   '/',
   '/manifest.json',

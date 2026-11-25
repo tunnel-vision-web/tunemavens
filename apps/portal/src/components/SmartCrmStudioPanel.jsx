@@ -10,7 +10,7 @@ import EmailReachoutManager from './EmailReachoutManager.jsx'
 
 const CREATOR_PROFILES = {
   admin: {
-    name: 'TuneMavens Admin (House Contacts)',
+    name: 'Admin — TuneMavens Official Contacts',
     genre: 'Platform Operations, Partners & Official House Contacts',
     contacts: [
       { id: 'CRM-ADM-1', name: 'Zawadi Kiprop', email: 'zawadi@tunemavens.co.ke', phone: '', preferred_comm_method: 'email', channel: 'EMAIL', source: 'Admin House List', status: 'Subscribed', interests: ['Affiliate Partner Updates', 'Live Events', 'Platform Launches'], tags: ['admin', 'partner', 'vip'] },
@@ -313,10 +313,37 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
     return id.replace(/[^a-z0-9]/gi, '_') || name.replace(/[^a-z0-9]/gi, '_');
   };
 
-  const contractedKeys = isVc ? activeVcContracts.map(mapContractToKey) : Object.keys(CREATOR_PROFILES);
+  const [dynamicUsers, setDynamicUsers] = useState({});
+  useEffect(() => {
+    fetch('/api/admin/console/users', { credentials: 'include' })
+      .then(r => (r.ok ? r.json() : { users: [] }))
+      .then(data => {
+        const map = {};
+        (data.users || []).forEach(u => {
+          if (!u?.email) return;
+          const slug = (u.username || u.email.split('@')[0]).toLowerCase().replace(/[^a-z0-9_]/g, '_');
+          if (!CREATOR_PROFILES[slug] && slug !== 'admin') {
+            map[slug] = {
+              name: `${u.name || u.email.split('@')[0]} (${u.role || 'member'})`,
+              email: u.email,
+              role: u.role || 'creator',
+              genre: `${(u.role || 'Member').toUpperCase()} Account`,
+              contacts: [],
+              campaigns: [],
+              playlists: [],
+            };
+          }
+        });
+        setDynamicUsers(map);
+      })
+      .catch(() => {});
+  }, []);
+
+  const allProfiles = { ...CREATOR_PROFILES, ...dynamicUsers };
+  const contractedKeys = isVc ? activeVcContracts.map(mapContractToKey) : Object.keys(allProfiles);
   const availableCreatorKeys = isVc
-    ? Object.keys(CREATOR_PROFILES).filter(k => contractedKeys.includes(k))
-    : Object.keys(CREATOR_PROFILES);
+    ? Object.keys(allProfiles).filter(k => contractedKeys.includes(k))
+    : Object.keys(allProfiles);
 
   const [activeTab, setActiveTab] = useState('reachout') // 'reachout' | 'contacts' | 'broadcasts' | 'playlists' | 'pipeline'
   const [selectedSubdomain, setSelectedSubdomain] = useState(() => {
@@ -399,7 +426,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
       const seenEmails = new Set()
 
       // Active Creator Profile Data
-      const creatorProfile = CREATOR_PROFILES[selectedSubdomain] || CREATOR_PROFILES.ndufo
+      const creatorProfile = allProfiles[selectedSubdomain] || CREATOR_PROFILES.admin || CREATOR_PROFILES.ndufo
 
       // Update campaigns and playlists for the selected creator
       if (creatorProfile.campaigns) {
@@ -892,7 +919,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
             >
               {availableCreatorKeys.map(k => (
                 <option key={k} value={k} style={{ background: '#090d1a', color: '#fff' }}>
-                  {CREATOR_PROFILES[k]?.name || k}
+                  {allProfiles[k]?.name || k}
                 </option>
               ))}
             </select>
@@ -1134,7 +1161,11 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
         {/* ================= TAB 0: EMAIL-ONLY TARGET GROUPS & REACHOUT ================= */}
         {activeTab === 'reachout' && (
-          <EmailReachoutManager sessionUser={sessionUser} />
+          <EmailReachoutManager
+            sessionUser={sessionUser}
+            selectedAccountKey={selectedSubdomain}
+            selectedAccountLabel={allProfiles[selectedSubdomain]?.name || selectedSubdomain}
+          />
         )}
 
         {/* ================= TAB 1: AUDIENCE & FAN LEADS ================= */}
