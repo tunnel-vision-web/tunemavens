@@ -6,8 +6,23 @@ import {
   RiDiscFill, RiBarChartFill, RiSparklingFill, RiStarFill, RiPhoneFill,
   RiTimeLine, RiCheckboxCircleFill, RiRefreshLine, RiArrowDownSLine, RiArrowUpSLine, RiLockFill, RiShieldCheckFill, RiCoinsFill
 } from 'react-icons/ri'
+import EmailReachoutManager from './EmailReachoutManager.jsx'
 
 const CREATOR_PROFILES = {
+  admin: {
+    name: 'TuneMavens Admin (House Contacts)',
+    genre: 'Platform Operations, Partners & Official House Contacts',
+    contacts: [
+      { id: 'CRM-ADM-1', name: 'Zawadi Kiprop', email: 'zawadi@tunemavens.co.ke', phone: '', preferred_comm_method: 'email', channel: 'EMAIL', source: 'Admin House List', status: 'Subscribed', interests: ['Affiliate Partner Updates', 'Live Events', 'Platform Launches'], tags: ['admin', 'partner', 'vip'] },
+      { id: 'CRM-ADM-2', name: 'Marcus Vance', email: 'marcus@afrobeatsweekly.com', phone: '', preferred_comm_method: 'email', channel: 'EMAIL', source: 'Admin House List', status: 'Subscribed', interests: ['Press & Media Releases', 'Festival Showcases', 'Sync Briefs'], tags: ['admin', 'press', 'vip'] },
+      { id: 'CRM-ADM-3', name: 'Amina Chen', email: 'amina@synclabs.io', phone: '', preferred_comm_method: 'email', channel: 'EMAIL', source: 'Admin House List', status: 'Subscribed', interests: ['Sync Licensing Desk', 'Catalogue Acquisitions'], tags: ['admin', 'sync'] },
+      { id: 'CRM-ADM-4', name: 'Wanjiku Kamau', email: 'wanjiku@kenyasync.tv', phone: '', preferred_comm_method: 'email', channel: 'EMAIL', source: 'Admin House List', status: 'Confirmed', interests: ['Broadcast Syndication', 'VIP Event Invites'], tags: ['admin', 'supervisor'] }
+    ],
+    campaigns: [
+      { id: 'CMP-ADM-101', name: 'TuneMavens Ecosystem Q4 Event & Product Reachout', channel: 'email', target: 'Admin Email-Only Target Groups', recipients: 120, openRate: '76.4%', status: 'Sent', date: 'NOV 25, 2026' }
+    ],
+    playlists: []
+  },
   ndufo: {
     name: 'Ndufo (Official)',
     genre: 'Electronic & Modular Synthesizer',
@@ -303,8 +318,9 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
     ? Object.keys(CREATOR_PROFILES).filter(k => contractedKeys.includes(k))
     : Object.keys(CREATOR_PROFILES);
 
-  const [activeTab, setActiveTab] = useState('contacts') // 'contacts' | 'broadcasts' | 'playlists' | 'pipeline'
+  const [activeTab, setActiveTab] = useState('reachout') // 'reachout' | 'contacts' | 'broadcasts' | 'playlists' | 'pipeline'
   const [selectedSubdomain, setSelectedSubdomain] = useState(() => {
+    if (sessionUser?.role === 'admin' || sessionUser?.is_admin) return 'admin'
     return localStorage.getItem('last_saved_epk_subdomain') || 'ndufo'
   })
   const [statsMinimized, setStatsMinimized] = useState(false)
@@ -868,7 +884,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', background: '#04060d', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '4px 10px' }}>
-            <span style={{ fontSize: '0.75rem', color: '#64748b', marginRight: '6px', fontWeight: 700 }}>CREATOR:</span>
+            <span style={{ fontSize: '0.75rem', color: '#64748b', marginRight: '6px', fontWeight: 700 }}>ACCOUNT / CREATOR:</span>
             <select
               value={selectedSubdomain}
               onChange={e => setSelectedSubdomain(e.target.value)}
@@ -1068,6 +1084,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
         gap: '4px'
       }}>
         {[
+          { id: 'reachout', label: 'Email-Only Target Groups & Reachout', icon: RiMailSendFill },
           { id: 'contacts', label: 'Audience & Fan Leads', icon: RiUserHeartLine, count: filteredContacts.length },
           { id: 'broadcasts', label: 'Omnichannel Broadcasts', icon: RiSendPlaneFill, count: campaignHistory.length },
           { id: 'playlists', label: 'Fan Playlists & Curations', icon: RiDiscFill, count: fanPlaylists.length },
@@ -1115,6 +1132,11 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
 
       {/* Main Content Area */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        {/* ================= TAB 0: EMAIL-ONLY TARGET GROUPS & REACHOUT ================= */}
+        {activeTab === 'reachout' && (
+          <EmailReachoutManager sessionUser={sessionUser} />
+        )}
+
         {/* ================= TAB 1: AUDIENCE & FAN LEADS ================= */}
         {activeTab === 'contacts' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

@@ -3249,7 +3249,7 @@
         crmAffiliatesData = affRes.affiliates || [];
         crmEventsData = Array.isArray(evRes) ? evRes : (evRes.events || []);
 
-        const affOptions = `<option value="">-- Select Affiliate Account --</option>` +
+        const affOptions = `<option value="TM-ADMIN">TuneMavens Admin (House Account · TM-ADMIN)</option>` +
           crmAffiliatesData.map(a => `<option value="${escapeHtml(a.ref_code)}">${escapeHtml(a.name)} (${escapeHtml(a.ref_code)} · ${escapeHtml(a.email || '')})</option>`).join('');
         const campAffSel = document.getElementById('campAffiliateRef');
         const tgAffSel = document.getElementById('tgAffiliateRef');
