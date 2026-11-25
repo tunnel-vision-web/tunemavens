@@ -572,6 +572,22 @@ def build_reachout_email_html(
         ev_venue = event_doc.get("venue", "")
         ev_city = event_doc.get("city", "")
         ev_mode = event_doc.get("payment_mode", "paid")
+        raw_flyer = (
+            event_doc.get("image_url")
+            or event_doc.get("poster_url")
+            or event_doc.get("flyer_url")
+            or event_doc.get("banner_url")
+            or ""
+        ).strip()
+        flyer_url = f"{PUBLIC_APP_URL}{raw_flyer}" if raw_flyer.startswith("/") else raw_flyer
+        flyer_html = (
+            f'<div style="margin-bottom: 14px;">'
+            f'<img src="{flyer_url}" alt="{ev_title} Official Event Poster" '
+            f'style="width: 100%; max-height: 300px; object-fit: cover; display: block; border-radius: 3px; border: 1px solid rgba(34,211,238,0.28);" />'
+            f'</div>'
+            if flyer_url
+            else ""
+        )
 
         chosen_ctas = [c.lower() for c in (event_ctas or [])]
         if not chosen_ctas:
@@ -584,6 +600,7 @@ def build_reachout_email_html(
 
         promo_block = f"""
         <div style="background: rgba(34,211,238,0.06); border: 1px solid rgba(34,211,238,0.25); border-radius: 3px; padding: 16px 18px; margin: 18px 0;">
+          {flyer_html}
           <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #22d3ee; margin-bottom: 6px;">
             LIVE EVENT INVITATION
           </div>

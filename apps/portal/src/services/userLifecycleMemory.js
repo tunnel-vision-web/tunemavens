@@ -219,10 +219,10 @@ export const APP_DOC_MAPPINGS = {
   },
   // CRM, CMS & Social AI
   'crm': {
-    articleId: 'crm-growth-engine-and-inbox',
-    fallbackArticleId: 'corporate-ads-and-brand-flights',
-    label: 'Smart CRM & Inbound Leads Guide',
-    appTitle: 'Intermaven Smart CRM'
+    articleId: 'smart-crm-email-reachout-and-target-groups',
+    fallbackArticleId: 'smart-crm-affiliate-attribution-and-learning-engine',
+    label: 'Smart CRM & Email Reachout Guide',
+    appTitle: 'Smart CRM & Email Reachout'
   },
   'cms': {
     articleId: 'epk-studio-and-custom-domains',
@@ -1052,6 +1052,35 @@ Here is what TuneCompanion coordinates for your catalog:
     };
   }
 
+  if (
+    q.includes('crm') ||
+    q.includes('reachout') ||
+    q.includes('target group') ||
+    q.includes('csv') ||
+    q.includes('preview email') ||
+    q.includes('flyer') ||
+    q.includes('poster') ||
+    q.includes('rsvp') ||
+    q.includes('persona') ||
+    q.includes('auto-optimize') ||
+    q.includes('learning engine') ||
+    q.includes('dual notification')
+  ) {
+    return {
+      reply: `**Smart CRM & Email-Only Reachout Studio** combines compliant audience segmentation, live event ticketing, affiliate attribution, and an adaptive self-learning engine:
+* **Email-Only Target Groups & Pre-Built User Cohorts**: Stores strictly Names + Emails (phone numbers, SMS, and WhatsApp are stripped automatically on CSV/TSV/TXT/JSON import to eliminate text fees and anti-spam account flagging). Admins also get auto-synced **All Registered Platform Users** plus 10 role-specific registered user Target Groups out of the box.
+* **Live Event Flyers, Preview Email & Direct CTAs**: Selecting any live site event automatically embeds the official **Event Flyer / Poster** from the event page into the email and Reachout Landing Page alongside direct **RSVP Now** and **Buy Ticket Now** CTAs. Click **Preview Email** in Step 2 to inspect the exact rendered HTML before dispatching.
+* **Admin Global Scope vs. Strict Affiliate Isolation**: Administrators can inspect and manage all registered affiliates and their Target Groups, whereas individual Affiliates only access their own cohorts, campaigns, and conversions (enforced server-side).
+* **90-Day Attribution & Dual Notifications**: Every click, RSVP, ticket purchase, onboarding registration, EPK launch, catalogue upload, and platform spend is attributed to the initiating affiliate, triggering instant alerts to both their **In-App Inbox** and **Registered Email on File**.
+* **10-Persona Playbooks & Self-Learning CRM**: Introductory templates tailor messaging for all 10 platform personas (encouraging onboarding, EPK creation, and catalogue ingestion where relevant) while **Smart Auto-Optimize Copy** adapts subject lines and Warm Clicker segments from real conversion telemetry.`,
+      suggestedActions: [
+        { label: 'Email Reachout & Target Groups Guide', link: '/#/help?article=smart-crm-email-reachout-and-target-groups' },
+        { label: 'Attribution & Learning Engine Guide', link: '/#/help?article=smart-crm-affiliate-attribution-and-learning-engine' },
+        { label: 'Open Smart CRM Reachout', tab: 'crm' }
+      ]
+    };
+  }
+
   if (q.includes('split') || q.includes('ledger') || activeTab === 'splits') {
     return {
       reply: `I see from your lifecycle history that you recently configured a **50/50 songwriter & producer split** in TuneLedger for your upcoming single release.
@@ -1239,6 +1268,19 @@ All campaigns feature live impression telemetry, click-through tracking, and aut
       suggestedActions: [
         { label: 'EPK & Custom Domains Guide', link: '/#/help#epk-studio-and-custom-domains' },
         { label: 'Open Hosting Manager', tab: 'hosting-manager' }
+      ]
+    };
+  }
+
+  if (activeTab === 'crm' || activeTab === 'inbox') {
+    return {
+      reply: `You are working inside **Smart CRM & Email-Only Reachout**. Here is what you can execute right here:
+* **Step 1 — Manage Email-Only Target Groups**: Select pre-populated **All Registered Platform Users** / persona cohorts (Admin) or create/edit/delete custom Email-Only Target Groups and bulk-import **CSV, TSV, TXT, or JSON** lists (phone numbers are automatically stripped).
+* **Step 2 — Compose, Preview & Dispatch**: Promote **Live Site Events** (with the official event flyer/poster and **RSVP Now** + **Buy Ticket Now** buttons), **Products/Services**, or **10-Persona Introductory Playbooks** (with direct **Build EPK** & **Ingest Catalogue** CTAs). Use **Preview Email** to verify the live HTML layout before sending.
+* **Step 3 — Adaptive Attribution & Dual Alerts**: Track clicks, RSVPs, ticket buys, onboarding, and 90-day downstream spend per affiliate, with automatic notifications delivered to both the affiliate's **In-App Inbox** and **Registered Email**.`,
+      suggestedActions: [
+        { label: 'Read Email Reachout Guide', link: '/#/help?article=smart-crm-email-reachout-and-target-groups' },
+        { label: 'Self-Learning CRM Docs', link: '/#/help?article=smart-crm-affiliate-attribution-and-learning-engine' }
       ]
     };
   }

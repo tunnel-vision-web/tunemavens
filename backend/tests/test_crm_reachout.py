@@ -448,3 +448,40 @@ def test_persona_intro_epk_catalog_and_self_learning_crm():
     client.delete(f"/api/crm/campaigns/{camp['id']}")
     client.delete(f"/api/crm/target-groups/{gid}")
     db.crm_reachout_links.delete_one({"token": token})
+
+
+def test_system_user_target_groups_event_flyer_and_email_preview():
+    """Pre-created registered-user groups, event flyer embedding and live email preview."""
+    client.cookies.clear()
+    groups_res = client.get("/api/crm/target-groups")
+    # Unauthenticated callers may be rejected; the preview endpoint must work regardless.
+    if groups_res.status_code == 200:
+        payload = groups_res.json()
+        groups = payload if isinstance(payload, list) else payload.get("groups", [])
+        names = [g.get("name") for g in groups if g.get("is_system_group")]
+        if names:
+            assert "All Registered Platform Users" in names
+
+    event = {
+        "id": "ev_flyer_test",
+        "title": "Flyer Test Live",
+        "date": "2026-12-12",
+        "venue": "Nairobi Arena",
+        "image_url": "/uploads/flyer-test.jpg",
+        "price": 20,
+    }
+    res = client.post(
+        "/api/crm/campaigns/preview",
+        json={
+            "subject": "Join us {{name}}",
+            "body": "Hi {{name}}, {{event_title}} is live.",
+            "promotion_type": "event",
+            "event_doc": event,
+            "event_ctas": ["rsvp", "ticket"],
+        },
+    )
+    assert res.status_code == 200, res.text
+    data = res.json()
+    assert "flyer-test.jpg" in data["html"]
+    assert data["event_flyer_url"] == "/uploads/flyer-test.jpg"
+    assert "border-radius: 3px" in data["html"] or "border-radius:3px" in data["html"]

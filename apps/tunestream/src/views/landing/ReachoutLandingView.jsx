@@ -10,6 +10,7 @@ import {
   RiArrowRightLine,
   RiMapPin2Fill,
   RiShieldCheckFill,
+  RiCheckLine,
 } from 'react-icons/ri';
 import { API_BASE, tokenStore } from '../../lib/api.js';
 
@@ -36,6 +37,16 @@ const ROLE_OPTIONS = [
   { key: 'vc', label: 'Tour VC & Catalogue Investor' },
   { key: 'affiliate', label: 'Affiliate Partner & Influencer' },
 ];
+
+const INPUT_STYLE = {
+  width: '100%',
+  padding: '9px 12px',
+  borderRadius: '3px',
+  border: '1px solid #1e293b',
+  background: '#060813',
+  color: '#fff',
+  boxSizing: 'border-box',
+};
 
 export default function ReachoutLandingView({ sessionUser, onLogin }) {
   const { token } = useParams();
@@ -94,7 +105,6 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
         if (!active) return;
         setData(payload);
 
-        // Persist 90-day attribution in localStorage for seamless downstream tracking
         if (payload.affiliate?.ref_code) {
           localStorage.setItem('tm_aff_ref', payload.affiliate.ref_code);
         }
@@ -243,7 +253,7 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#070b14', color: '#e2e8f0' }}>
+      <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#060813', color: '#e2e8f0' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '18px', fontWeight: 700, color: '#22d3ee' }}>Loading your TuneMavens Invitation...</div>
           <div style={{ fontSize: '13px', color: '#94a3b8', marginTop: '6px' }}>Preparing personalized access &amp; direct actions</div>
@@ -254,11 +264,11 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
 
   if (error && !data) {
     return (
-      <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#070b14', color: '#e2e8f0', padding: '24px' }}>
-        <div style={{ maxWidth: '480px', background: '#0f172a', border: '1px solid #1e293b', borderRadius: '6px', padding: '28px', textAlign: 'center' }}>
-          <h2 style={{ color: '#f87171', marginTop: 0 }}>Invitation Unavailable</h2>
+      <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#060813', color: '#e2e8f0', padding: '24px' }}>
+        <div style={{ maxWidth: '480px', background: '#0c0f20', border: '1px solid #1e293b', borderRadius: '3px', padding: '28px', textAlign: 'center' }}>
+          <h2 style={{ color: '#ef4444', marginTop: 0 }}>Invitation Unavailable</h2>
           <p style={{ color: '#94a3b8', fontSize: '14px' }}>{error}</p>
-          <Link to="/" style={{ display: 'inline-block', marginTop: '12px', padding: '10px 20px', background: '#22d3ee', color: '#04141a', fontWeight: 700, borderRadius: '4px', textDecoration: 'none' }}>
+          <Link to="/" style={{ display: 'inline-block', marginTop: '12px', padding: '10px 20px', background: '#22d3ee', color: '#060813', fontWeight: 700, borderRadius: '3px', textDecoration: 'none' }}>
             Explore TuneMavens
           </Link>
         </div>
@@ -272,7 +282,7 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
   const canBuyTicket = isEvent && ev.payment_mode !== 'free_rsvp' && (ev.tiers || []).length > 0;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #070b14 0%, #0d1526 100%)', color: '#e2e8f0', padding: '36px 20px 72px' }}>
+    <div style={{ minHeight: '100vh', background: '#060813', color: '#e2e8f0', padding: '36px 20px 72px' }}>
       <div style={{ maxWidth: '1040px', margin: '0 auto' }}>
         {/* Header / Personalized Greeting */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
@@ -286,39 +296,49 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
             <div style={{ fontSize: '13px', color: '#94a3b8' }}>
               {data?.affiliate?.name && (
                 <span>
-                  Personally shared by <strong style={{ color: '#34d399' }}>{data.affiliate.name}</strong>
+                  Personally shared by <strong style={{ color: '#10b981' }}>{data.affiliate.name}</strong>
                   {data.affiliate.ref_code ? ` · Partner Ref ${data.affiliate.ref_code}` : ''}
                 </span>
               )}
             </div>
           </div>
-          <Link to="/" style={{ padding: '8px 14px', border: '1px solid rgba(34,211,238,0.35)', borderRadius: '4px', color: '#22d3ee', textDecoration: 'none', fontSize: '13px', fontWeight: 600 }}>
-            Visit TuneMavens Home ↗
+          <Link to="/" style={{ padding: '8px 14px', border: '1px solid rgba(34,211,238,0.35)', borderRadius: '3px', color: '#22d3ee', textDecoration: 'none', fontSize: '13px', fontWeight: 600 }}>
+            Visit TuneMavens Home
           </Link>
         </div>
 
         {error && (
-          <div style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.4)', color: '#fca5a5', padding: '12px 16px', borderRadius: '4px', marginBottom: '18px', fontSize: '13px' }}>
+          <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid #ef4444', color: '#fca5a5', padding: '12px 16px', borderRadius: '3px', marginBottom: '18px', fontSize: '13px' }}>
             {error}
           </div>
         )}
 
-        {/* Main 2-column grid: Left = Promoted Event/Product Direct CTA, Right = New User Platform Intro & Onboarding */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '24px', alignItems: 'start' }}>
-          {/* LEFT CARD: Direct Action (Event RSVP / Ticket OR Product/Service CTA) */}
-          <div style={{ background: '#0f172a', border: '1px solid rgba(34,211,238,0.28)', borderRadius: '6px', padding: '24px' }}>
+          {/* LEFT CARD: Direct Action (Event Poster + RSVP / Ticket OR Persona/Product CTA) */}
+          <div style={{ background: '#0c0f20', border: '1px solid rgba(34,211,238,0.28)', borderRadius: '3px', padding: '24px' }}>
             {isEvent ? (
               <>
+                {ev.image_url && (
+                  <img
+                    src={ev.image_url}
+                    alt={`${ev.title} Official Event Poster`}
+                    style={{ width: '100%', maxHeight: '240px', objectFit: 'cover', display: 'block', borderRadius: '3px', border: '1px solid rgba(34,211,238,0.28)', marginBottom: '16px' }}
+                  />
+                )}
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(34,211,238,0.12)', color: '#22d3ee', padding: '4px 10px', borderRadius: '3px', fontSize: '11px', fontWeight: 700, marginBottom: '12px' }}>
-                  <RiCalendarEventFill /> LIVE EVENT DIRECT ACCESS
+                  <RiCalendarEventFill color="#22d3ee" /> LIVE EVENT DIRECT ACCESS
                 </div>
                 <h2 style={{ margin: '0 0 6px', fontSize: '22px', color: '#ffffff' }}>{ev.title}</h2>
                 <div style={{ fontSize: '14px', color: '#cbd5e1', marginBottom: '10px' }}>
                   Featuring <strong>{ev.artist}</strong>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', fontSize: '12px', color: '#94a3b8', marginBottom: '18px' }}>
-                  <span><RiCalendarEventFill style={{ verticalAlign: 'middle' }} /> {ev.date_display || ev.date}</span>
-                  <span><RiMapPin2Fill style={{ verticalAlign: 'middle' }} /> {ev.venue}{ev.city ? `, ${ev.city}` : ''}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <RiCalendarEventFill color="#22d3ee" /> {ev.date_display || ev.date}
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <RiMapPin2Fill color="#10b981" /> {ev.venue}{ev.city ? `, ${ev.city}` : ''}
+                  </span>
                 </div>
 
                 {/* Action Tabs: RSVP vs Buy Ticket */}
@@ -330,16 +350,20 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
                       style={{
                         flex: 1,
                         padding: '10px 12px',
-                        borderRadius: '4px',
+                        borderRadius: '3px',
                         border: activeTab === 'rsvp' ? '1px solid #10b981' : '1px solid #1e293b',
-                        background: activeTab === 'rsvp' ? 'rgba(16,185,129,0.18)' : '#0b1220',
-                        color: activeTab === 'rsvp' ? '#34d399' : '#94a3b8',
+                        background: activeTab === 'rsvp' ? 'rgba(16,185,129,0.18)' : '#060813',
+                        color: activeTab === 'rsvp' ? '#10b981' : '#94a3b8',
                         fontWeight: 700,
                         fontSize: '13px',
                         cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
                       }}
                     >
-                      <RiCheckboxCircleFill style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                      <RiCheckboxCircleFill color={activeTab === 'rsvp' ? '#10b981' : '#94a3b8'} />
                       Direct RSVP
                     </button>
                   )}
@@ -350,16 +374,20 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
                       style={{
                         flex: 1,
                         padding: '10px 12px',
-                        borderRadius: '4px',
+                        borderRadius: '3px',
                         border: activeTab === 'ticket' ? '1px solid #22d3ee' : '1px solid #1e293b',
-                        background: activeTab === 'ticket' ? 'rgba(34,211,238,0.18)' : '#0b1220',
+                        background: activeTab === 'ticket' ? 'rgba(34,211,238,0.18)' : '#060813',
                         color: activeTab === 'ticket' ? '#22d3ee' : '#94a3b8',
                         fontWeight: 700,
                         fontSize: '13px',
                         cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
                       }}
                     >
-                      <RiTicket2Fill style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                      <RiTicket2Fill color={activeTab === 'ticket' ? '#22d3ee' : '#94a3b8'} />
                       Buy Ticket
                     </button>
                   )}
@@ -368,9 +396,9 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
                 {/* RSVP Form */}
                 {activeTab === 'rsvp' && canRsvp && (
                   rsvpResult ? (
-                    <div style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.35)', borderRadius: '4px', padding: '16px' }}>
-                      <div style={{ fontWeight: 800, color: '#34d399', fontSize: '15px', marginBottom: '6px' }}>
-                        ✓ RSVP Confirmed!
+                    <div style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid #10b981', borderRadius: '3px', padding: '16px' }}>
+                      <div style={{ fontWeight: 800, color: '#10b981', fontSize: '15px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <RiCheckboxCircleFill color="#10b981" /> RSVP Confirmed!
                       </div>
                       <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#e2e8f0' }}>{rsvpResult.message}</p>
                       <div style={{ fontSize: '12px', color: '#94a3b8' }}>
@@ -381,27 +409,27 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
                     <form onSubmit={handleRsvpSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Full Name</label>
-                        <input value={rsvpName} onChange={(e) => setRsvpName(e.target.value)} required style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid #1e293b', background: '#070b14', color: '#fff', boxSizing: 'border-box' }} />
+                        <input value={rsvpName} onChange={(e) => setRsvpName(e.target.value)} required style={INPUT_STYLE} />
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Email Address</label>
-                        <input type="email" value={rsvpEmail} onChange={(e) => setRsvpEmail(e.target.value)} required style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid #1e293b', background: '#070b14', color: '#fff', boxSizing: 'border-box' }} />
+                        <input type="email" value={rsvpEmail} onChange={(e) => setRsvpEmail(e.target.value)} required style={INPUT_STYLE} />
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                         <div>
                           <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Zone</label>
-                          <select value={rsvpZone} onChange={(e) => setRsvpZone(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: '4px', border: '1px solid #1e293b', background: '#070b14', color: '#fff' }}>
+                          <select value={rsvpZone} onChange={(e) => setRsvpZone(e.target.value)} style={INPUT_STYLE}>
                             <option value="seating">Seating</option>
                             <option value="standing">Standing</option>
                           </select>
                         </div>
                         <div>
                           <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Additional Guests</label>
-                          <input type="number" min="0" max="5" value={rsvpGuests} onChange={(e) => setRsvpGuests(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: '4px', border: '1px solid #1e293b', background: '#070b14', color: '#fff', boxSizing: 'border-box' }} />
+                          <input type="number" min="0" max="5" value={rsvpGuests} onChange={(e) => setRsvpGuests(e.target.value)} style={INPUT_STYLE} />
                         </div>
                       </div>
-                      <button type="submit" disabled={rsvpSubmitting} style={{ marginTop: '6px', padding: '12px', background: '#10b981', color: '#04141a', fontWeight: 800, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
-                        {rsvpSubmitting ? 'Confirming RSVP...' : 'Confirm My RSVP Now ✓'}
+                      <button type="submit" disabled={rsvpSubmitting} style={{ marginTop: '6px', padding: '12px', background: '#10b981', color: '#060813', fontWeight: 800, border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                        <RiCheckLine color="#060813" /> {rsvpSubmitting ? 'Confirming RSVP...' : 'Confirm My RSVP Now'}
                       </button>
                     </form>
                   )
@@ -410,20 +438,20 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
                 {/* Ticket Purchase Form */}
                 {activeTab === 'ticket' && canBuyTicket && (
                   ticketResult ? (
-                    <div style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.35)', borderRadius: '4px', padding: '16px' }}>
-                      <div style={{ fontWeight: 800, color: '#22d3ee', fontSize: '15px', marginBottom: '6px' }}>
-                        🎟️ Ticket Booked Successfully!
+                    <div style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid #22d3ee', borderRadius: '3px', padding: '16px' }}>
+                      <div style={{ fontWeight: 800, color: '#22d3ee', fontSize: '15px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <RiTicket2Fill color="#22d3ee" /> Ticket Booked Successfully!
                       </div>
                       <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#e2e8f0' }}>{ticketResult.message}</p>
                       <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-                        Ticket ID: <strong style={{ color: '#fff' }}>{ticketResult.booking?.ticket_id}</strong> · Total: <strong style={{ color: '#34d399' }}>${ticketResult.booking?.total_usd}</strong>
+                        Ticket ID: <strong style={{ color: '#fff' }}>{ticketResult.booking?.ticket_id}</strong> · Total: <strong style={{ color: '#10b981' }}>${ticketResult.booking?.total_usd}</strong>
                       </div>
                     </div>
                   ) : (
                     <form onSubmit={handleTicketSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Ticket Tier</label>
-                        <select value={selectedTierId} onChange={(e) => setSelectedTierId(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: '4px', border: '1px solid #1e293b', background: '#070b14', color: '#fff' }}>
+                        <select value={selectedTierId} onChange={(e) => setSelectedTierId(e.target.value)} style={INPUT_STYLE}>
                           {(ev.tiers || []).map((t) => (
                             <option key={t.tier_id} value={t.tier_id}>
                               {t.name} — ${t.price_usd} ({t.available} left)
@@ -434,11 +462,11 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                         <div>
                           <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Quantity</label>
-                          <input type="number" min="1" max="10" value={ticketQty} onChange={(e) => setTicketQty(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: '4px', border: '1px solid #1e293b', background: '#070b14', color: '#fff', boxSizing: 'border-box' }} />
+                          <input type="number" min="1" max="10" value={ticketQty} onChange={(e) => setTicketQty(e.target.value)} style={INPUT_STYLE} />
                         </div>
                         <div>
                           <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Payment Method</label>
-                          <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: '4px', border: '1px solid #1e293b', background: '#070b14', color: '#fff' }}>
+                          <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} style={INPUT_STYLE}>
                             <option value="tunepay">TunePay Instant</option>
                             <option value="card">Debit / Credit Card</option>
                             <option value="mpesa">M-Pesa STK Push</option>
@@ -447,14 +475,14 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Full Name</label>
-                        <input value={rsvpName} onChange={(e) => setRsvpName(e.target.value)} required style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid #1e293b', background: '#070b14', color: '#fff', boxSizing: 'border-box' }} />
+                        <input value={rsvpName} onChange={(e) => setRsvpName(e.target.value)} required style={INPUT_STYLE} />
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Email for QR Pass</label>
-                        <input type="email" value={rsvpEmail} onChange={(e) => setRsvpEmail(e.target.value)} required style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid #1e293b', background: '#070b14', color: '#fff', boxSizing: 'border-box' }} />
+                        <input type="email" value={rsvpEmail} onChange={(e) => setRsvpEmail(e.target.value)} required style={INPUT_STYLE} />
                       </div>
-                      <button type="submit" disabled={ticketSubmitting} style={{ marginTop: '6px', padding: '12px', background: '#22d3ee', color: '#04141a', fontWeight: 800, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
-                        {ticketSubmitting ? 'Booking Ticket...' : 'Buy Ticket Now 🎟️'}
+                      <button type="submit" disabled={ticketSubmitting} style={{ marginTop: '6px', padding: '12px', background: '#22d3ee', color: '#060813', fontWeight: 800, border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                        <RiTicket2Fill color="#060813" /> {ticketSubmitting ? 'Booking Ticket...' : 'Buy Ticket Now'}
                       </button>
                     </form>
                   )
@@ -463,10 +491,10 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
             ) : (
               <>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(34,211,238,0.12)', color: '#22d3ee', padding: '4px 10px', borderRadius: '3px', fontSize: '11px', fontWeight: 700, marginBottom: '12px' }}>
-                  <RiSparkling2Fill /> FEATURED PROMOTION
+                  <RiSparkling2Fill color="#22d3ee" /> FEATURED INVITATION
                 </div>
                 <h2 style={{ margin: '0 0 8px', fontSize: '22px', color: '#ffffff' }}>
-                  {data?.campaign?.product_name || data?.campaign?.title || 'TuneMavens Ecosystem'}
+                  {data?.persona_playbook?.label || data?.campaign?.product_name || data?.campaign?.title || 'TuneMavens Ecosystem'}
                 </h2>
                 <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.65, whiteSpace: 'pre-line' }}>
                   {data?.campaign?.body || data?.platform_intro?.subtitle}
@@ -474,18 +502,18 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
                 <button
                   type="button"
                   onClick={() => navigate(data?.campaign?.cta_url || '/stream')}
-                  style={{ marginTop: '14px', padding: '12px 20px', background: '#22d3ee', color: '#04141a', fontWeight: 800, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                  style={{ marginTop: '14px', padding: '12px 20px', background: '#22d3ee', color: '#060813', fontWeight: 800, border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
                 >
-                  {data?.campaign?.cta_label || 'Explore Now'} <RiArrowRightLine />
+                  {data?.campaign?.cta_label || 'Explore Now'} <RiArrowRightLine color="#060813" />
                 </button>
               </>
             )}
           </div>
 
           {/* RIGHT CARD: New User Platform Introduction + Quick Onboarding & Save Preferences */}
-          <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '6px', padding: '24px' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(168,85,247,0.15)', color: '#c084fc', padding: '4px 10px', borderRadius: '3px', fontSize: '11px', fontWeight: 700, marginBottom: '12px' }}>
-              <RiMusic2Fill /> NEW TO TUNEMAVENS?
+          <div style={{ background: '#0c0f20', border: '1px solid #1e293b', borderRadius: '3px', padding: '24px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(168,85,247,0.15)', color: '#a855f7', padding: '4px 10px', borderRadius: '3px', fontSize: '11px', fontWeight: 700, marginBottom: '12px' }}>
+              <RiMusic2Fill color="#a855f7" /> NEW TO TUNEMAVENS?
             </div>
             <h2 style={{ margin: '0 0 8px', fontSize: '20px', color: '#ffffff' }}>
               {data?.platform_intro?.headline || 'Discover TuneMavens & Save Your Preferences'}
@@ -500,9 +528,9 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
             </ul>
 
             {sessionUser || onbResult ? (
-              <div style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.35)', borderRadius: '4px', padding: '16px' }}>
-                <div style={{ fontWeight: 800, color: '#34d399', fontSize: '15px', marginBottom: '6px' }}>
-                  <RiShieldCheckFill style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+              <div style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid #10b981', borderRadius: '3px', padding: '16px' }}>
+                <div style={{ fontWeight: 800, color: '#10b981', fontSize: '15px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <RiShieldCheckFill color="#10b981" />
                   Account Active &amp; Preferences Saved!
                 </div>
                 <p style={{ margin: '0 0 12px', fontSize: '13px', color: '#e2e8f0' }}>
@@ -512,55 +540,55 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
                   <button
                     type="button"
                     onClick={() => navigate('/dashboard')}
-                    style={{ padding: '10px 16px', background: '#22d3ee', color: '#04141a', fontWeight: 800, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
+                    style={{ padding: '10px 16px', background: '#22d3ee', color: '#060813', fontWeight: 800, border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '13px' }}
                   >
-                    Go to My Dashboard →
+                    Go to My Dashboard
                   </button>
                   {data?.persona_playbook?.supports_epk && (
                     <button
                       type="button"
                       onClick={() => navigate('/dashboard?tab=epk-builder')}
-                      style={{ padding: '10px 16px', background: '#10b981', color: '#04141a', fontWeight: 800, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
+                      style={{ padding: '10px 16px', background: '#10b981', color: '#060813', fontWeight: 800, border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '13px' }}
                     >
-                      Launch Official EPK Builder →
+                      Launch Official EPK Builder
                     </button>
                   )}
                   {data?.persona_playbook?.supports_catalog && (
                     <button
                       type="button"
                       onClick={() => navigate('/dashboard?tab=catalog')}
-                      style={{ padding: '10px 16px', background: '#a855f7', color: '#ffffff', fontWeight: 800, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
+                      style={{ padding: '10px 16px', background: '#a855f7', color: '#ffffff', fontWeight: 800, border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '13px' }}
                     >
-                      Ingest Your Catalogue →
+                      Ingest Your Catalogue
                     </button>
                   )}
                 </div>
               </div>
             ) : (
               <form onSubmit={handleQuickOnboard} style={{ borderTop: '1px solid #1e293b', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>
-                  <RiUserAddFill style={{ verticalAlign: 'middle', marginRight: '6px', color: '#22d3ee' }} />
+                <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <RiUserAddFill color="#22d3ee" />
                   Quick Onboard — Save Preferences for Faster Access Next Time
                 </div>
                 {onbError && (
-                  <div style={{ color: '#f87171', fontSize: '12px', background: 'rgba(248,113,113,0.1)', padding: '8px 10px', borderRadius: '4px' }}>
+                  <div style={{ color: '#ef4444', fontSize: '12px', background: 'rgba(239,68,68,0.1)', padding: '8px 10px', borderRadius: '3px' }}>
                     {onbError}
                   </div>
                 )}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>Your Name</label>
-                    <input value={onbName} onChange={(e) => setOnbName(e.target.value)} required style={{ width: '100%', padding: '8px 10px', borderRadius: '4px', border: '1px solid #1e293b', background: '#070b14', color: '#fff', boxSizing: 'border-box' }} />
+                    <input value={onbName} onChange={(e) => setOnbName(e.target.value)} required style={INPUT_STYLE} />
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>Email</label>
-                    <input type="email" value={onbEmail} onChange={(e) => setOnbEmail(e.target.value)} required style={{ width: '100%', padding: '8px 10px', borderRadius: '4px', border: '1px solid #1e293b', background: '#070b14', color: '#fff', boxSizing: 'border-box' }} />
+                    <input type="email" value={onbEmail} onChange={(e) => setOnbEmail(e.target.value)} required style={INPUT_STYLE} />
                   </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>I am joining as</label>
-                    <select value={onbRole} onChange={(e) => setOnbRole(e.target.value)} style={{ width: '100%', padding: '8px 10px', borderRadius: '4px', border: '1px solid #1e293b', background: '#070b14', color: '#fff' }}>
+                    <select value={onbRole} onChange={(e) => setOnbRole(e.target.value)} style={INPUT_STYLE}>
                       {ROLE_OPTIONS.map((r) => (
                         <option key={r.key} value={r.key}>{r.label}</option>
                       ))}
@@ -568,7 +596,7 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>City / Region</label>
-                    <input value={onbCity} onChange={(e) => setOnbCity(e.target.value)} style={{ width: '100%', padding: '8px 10px', borderRadius: '4px', border: '1px solid #1e293b', background: '#070b14', color: '#fff', boxSizing: 'border-box' }} />
+                    <input value={onbCity} onChange={(e) => setOnbCity(e.target.value)} style={INPUT_STYLE} />
                   </div>
                 </div>
                 <div>
@@ -583,16 +611,20 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
                           onClick={() => toggleGenre(g)}
                           style={{
                             padding: '5px 10px',
-                            borderRadius: '14px',
+                            borderRadius: '3px',
                             fontSize: '11px',
                             fontWeight: 600,
                             cursor: 'pointer',
                             border: active ? '1px solid #22d3ee' : '1px solid #334155',
                             background: active ? 'rgba(34,211,238,0.18)' : 'transparent',
                             color: active ? '#22d3ee' : '#94a3b8',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
                           }}
                         >
-                          {active ? '✓ ' : ''}{g}
+                          {active && <RiCheckLine size={12} color="#22d3ee" />}
+                          {g}
                         </button>
                       );
                     })}
@@ -600,10 +632,10 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>Choose a Password (min 8 chars)</label>
-                  <input type="password" value={onbPassword} onChange={(e) => setOnbPassword(e.target.value)} minLength={8} required placeholder="Create a password to save your profile" style={{ width: '100%', padding: '8px 10px', borderRadius: '4px', border: '1px solid #1e293b', background: '#070b14', color: '#fff', boxSizing: 'border-box' }} />
+                  <input type="password" value={onbPassword} onChange={(e) => setOnbPassword(e.target.value)} minLength={8} required placeholder="Create a password to save your profile" style={INPUT_STYLE} />
                 </div>
-                <button type="submit" disabled={onbSubmitting} style={{ padding: '11px', background: 'linear-gradient(90deg, #22d3ee, #a855f7)', color: '#04141a', fontWeight: 800, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13.5px' }}>
-                  {onbSubmitting ? 'Saving Account & Preferences...' : 'Onboard & Save Preferences →'}
+                <button type="submit" disabled={onbSubmitting} style={{ padding: '11px', background: '#22d3ee', color: '#060813', fontWeight: 800, border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '13.5px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  {onbSubmitting ? 'Saving Account & Preferences...' : 'Onboard & Save Preferences'} <RiArrowRightLine color="#060813" />
                 </button>
               </form>
             )}

@@ -189,6 +189,7 @@ class CampaignCreateRequest(BaseModel):
     include_catalog_cta: Optional[bool] = True
     product_name: Optional[str] = None
     event_id: Optional[str] = None
+    event_doc: Optional[Dict[str, Any]] = None
     event_ctas: Optional[List[str]] = None  # ['rsvp'], ['ticket'], or ['rsvp', 'ticket']
     cta_label: Optional[str] = "Explore Now"
     cta_url: Optional[str] = None
@@ -410,6 +411,95 @@ def _assert_group_access(group_doc: Dict[str, Any], current_user: Optional[dict]
     )
 
 
+SYSTEM_USER_COHORTS = [
+    ("sys_all_users", "All Registered Platform Users", "Auto-synced email-only target group of every registered user on TuneMavens", None),
+    ("sys_role_creator", "Registered Creators, Songwriters & Producers", "Auto-synced registered creators, artists, songwriters, and producers", ["creator", "producer", "songwriter"]),
+    ("sys_role_dj", "Registered DJs & Mix Curators", "Auto-synced registered DJs and mix curators", ["dj"]),
+    ("sys_role_label", "Registered Record Labels & Distributors", "Auto-synced registered record labels and distribution accounts", ["label", "distro"]),
+    ("sys_role_podcaster", "Registered Podcasters & Show Hosts", "Auto-synced registered podcasters and show hosts", ["podcaster"]),
+    ("sys_role_supervisor", "Registered Music Supervisors & Sync Buyers", "Auto-synced registered music supervisors and licensing executives", ["supervisor", "studio", "exec"]),
+    ("sys_role_corporate", "Registered Corporate Brands & Agencies", "Auto-synced registered corporate sponsors and agencies", ["corporate"]),
+    ("sys_role_media_house", "Registered Media Houses & Broadcasters", "Auto-synced registered radio, TV, and media house accounts", ["media_house", "media"]),
+    ("sys_role_vc", "Registered Tour VCs & Investors", "Auto-synced registered venture capital and tour investors", ["vc", "investor"]),
+    ("sys_role_affiliate", "Registered Affiliate Partners", "Auto-synced registered affiliate partners and scouts", ["affiliate"]),
+    ("sys_role_consumer", "Registered Listeners & Fans", "Auto-synced registered audiophile listeners and event fans", ["consumer"]),
+]
+
+
+def sync_registered_user_target_groups() -> None:
+    """Ensure pre-created Email-Only Target Groups exist for All Registered Users and each registered role cohort."""
+    try:
+        all_users = list(db.users.find({}, {"name": 1, "first_name": 1, "last_name": 1, "username": 1, "email": 1, "role": 1, "roles": 1}))
+        now = datetime.now(timezone.utc)
+        now_iso = now.isoformat()
+
+        def _user_to_entry(u: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+            raw_email = (u.get("email") or "").strip().lower()
+            if not raw_email or "@" not in raw_email:
+                return None
+            try:
+                clean_email = validate_email_address(raw_email)
+            except ValueError:
+                return None
+            full_name = (
+                u.get("name")
+                or f"{u.get('first_name', '')} {u.get('last_name', '')}".strip()
+                or u.get("username")
+                or clean_email.split("@")[0].replace(".", " ").replace("_", " ").title()
+            )
+            return {
+                "id": f"sys_{str(u.get('_id', uuid.uuid4().hex[:8]))[-8:]}",
+                "name": str(full_name).strip(),
+                "email": clean_email,
+                "notes": f"Registered {(u.get('role') or 'member').title()}",
+                "tags": [u.get("role") or "member"],
+                "added_at": now_iso,
+            }
+
+        for sys_key, title, desc, role_filter in SYSTEM_USER_COHORTS:
+            matched_entries: List[Dict[str, Any]] = []
+            seen = set()
+            for u in all_users:
+                u_roles = set([u.get("role") or ""] + (u.get("roles") or []))
+                if role_filter is not None and not u_roles.intersection(role_filter):
+                    continue
+                ent = _user_to_entry(u)
+                if ent and ent["email"] not in seen:
+                    seen.add(ent["email"])
+                    matched_entries.append(ent)
+
+            existing = db.crm_target_groups.find_one({"system_key": sys_key})
+            if existing:
+                # Merge any manually added non-duplicate entries with live registered users
+                manual_extras = [
+                    e for e in (existing.get("entries") or [])
+                    if e.get("email") and e["email"].lower() not in seen and not str(e.get("id", "")).startswith("sys_")
+                ]
+                merged = matched_entries + manual_extras
+                if len(merged) != len(existing.get("entries") or []):
+                    db.crm_target_groups.update_one(
+                        {"_id": existing["_id"]},
+                        {"$set": {"entries": merged, "updated_at": now}},
+                    )
+            else:
+                db.crm_target_groups.insert_one({
+                    "system_key": sys_key,
+                    "is_system_group": True,
+                    "name": title,
+                    "description": desc,
+                    "channel_policy": "email_only",
+                    "entries": matched_entries,
+                    "affiliate_ref_code": "TM-ADMIN",
+                    "affiliate_id": "aff_tm_admin",
+                    "created_by_name": "TuneMavens System",
+                    "created_by_email": "admin@tunemavens.com",
+                    "created_at": now,
+                    "updated_at": now,
+                })
+    except Exception as exc:
+        logger.warning("Registered user target group sync warning: %s", exc)
+
+
 # ======================================================================
 # Smart CRM Email-Only Target Groups CRUD & Import
 # ======================================================================
@@ -420,6 +510,9 @@ def list_target_groups(
     current_user: Optional[dict] = Depends(get_optional_user),
 ):
     """List email-only Smart CRM target groups (Admin sees all or filtered by affiliate; Affiliates see only their own)."""
+    if _is_admin_user(current_user):
+        sync_registered_user_target_groups()
+
     query: Dict[str, Any] = {}
     if not _is_admin_user(current_user):
         own_ref = _resolve_user_own_affiliate_ref(current_user)
@@ -433,7 +526,7 @@ def list_target_groups(
     elif affiliate_ref_code and affiliate_ref_code.strip().upper() != "ALL":
         query["affiliate_ref_code"] = affiliate_ref_code.strip().upper()
 
-    docs = list(db.crm_target_groups.find(query).sort("created_at", -1))
+    docs = list(db.crm_target_groups.find(query).sort([("is_system_group", -1), ("created_at", -1)]))
     groups = [_serialize_target_group(d) for d in docs]
     return {"groups": groups, "total": len(groups)}
 
@@ -734,6 +827,106 @@ def delete_target_group_entry(
     return {"status": "success", "deleted_entry_id": entry_id, "group": _serialize_target_group(updated)}
 
 
+class CampaignPreviewRequest(BaseModel):
+    subject: str
+    body: str
+    target_group_id: Optional[str] = None
+    promotion_type: Optional[str] = "persona_intro"
+    target_persona: Optional[str] = "creator"
+    include_epk_cta: Optional[bool] = True
+    include_catalog_cta: Optional[bool] = True
+    product_name: Optional[str] = None
+    event_id: Optional[str] = None
+    event_doc: Optional[Dict[str, Any]] = None
+    event_ctas: Optional[List[str]] = None
+    cta_label: Optional[str] = "Explore Now"
+    cta_url: Optional[str] = None
+    affiliate_ref_code: Optional[str] = None
+    sample_recipient_name: Optional[str] = None
+    sample_recipient_email: Optional[str] = None
+
+
+@router.post("/api/crm/campaigns/preview")
+def preview_crm_campaign(
+    payload: CampaignPreviewRequest,
+    current_user: Optional[dict] = Depends(get_optional_user),
+):
+    """Render an exact HTML email preview (including Event Flyer/Poster & direct CTAs) without dispatching."""
+    sample_name = (payload.sample_recipient_name or "").strip()
+    sample_email = (payload.sample_recipient_email or "").strip()
+
+    if payload.target_group_id and not sample_name:
+        try:
+            tg = db.crm_target_groups.find_one({"_id": ObjectId(payload.target_group_id)})
+            if tg and (tg.get("entries") or []):
+                first_ent = tg["entries"][0]
+                sample_name = first_ent.get("name") or "Alex Mwangi"
+                sample_email = first_ent.get("email") or "alex@example.com"
+        except Exception:
+            pass
+
+    if not sample_name:
+        sample_name = "Alex Mwangi"
+    if not sample_email:
+        sample_email = "alex.mwangi@example.com"
+
+    promo_type = (payload.promotion_type or "persona_intro").strip().lower()
+    event_doc = payload.event_doc
+    if promo_type == "event" and not event_doc and payload.event_id:
+        try:
+            from routes.events_router import get_or_seed_events
+            event_doc = next((e for e in get_or_seed_events() if e.get("id") == payload.event_id), None)
+        except Exception:
+            event_doc = None
+
+    initiator = resolve_initiator_affiliate(
+        current_user=current_user,
+        affiliate_ref_code=payload.affiliate_ref_code,
+    )
+
+    rendered_subject = (payload.subject or "").replace("{{name}}", sample_name).replace("{{role}}", payload.target_persona or "member")
+    rendered_body = (
+        (payload.body or "")
+        .replace("{{name}}", sample_name)
+        .replace("{{role}}", payload.target_persona or "member")
+        .replace("{{cta_label}}", payload.cta_label or "Explore Now")
+        .replace("{{cta_url}}", payload.cta_url or "/stream")
+    )
+    if event_doc:
+        rendered_subject = rendered_subject.replace("{{event_title}}", event_doc.get("title", ""))
+        rendered_body = (
+            rendered_body.replace("{{event_title}}", event_doc.get("title", ""))
+                         .replace("{{event_date}}", event_doc.get("date_display") or event_doc.get("date", ""))
+                         .replace("{{event_venue}}", event_doc.get("venue", ""))
+        )
+
+    wrapped_html, tracked_urls = build_reachout_email_html(
+        recipient_name=sample_name,
+        subject=rendered_subject,
+        rendered_body=rendered_body,
+        reachout_token="preview_sample_token",
+        promotion_type=promo_type,
+        event_doc=event_doc,
+        event_ctas=payload.event_ctas,
+        cta_label=payload.cta_label or "Explore Now",
+        affiliate_name=initiator.get("name"),
+        affiliate_ref_code=initiator.get("ref_code"),
+        target_persona=payload.target_persona,
+        include_epk_cta=bool(payload.include_epk_cta) if payload.include_epk_cta is not None else True,
+        include_catalog_cta=bool(payload.include_catalog_cta) if payload.include_catalog_cta is not None else True,
+    )
+
+    return {
+        "subject": rendered_subject,
+        "html": wrapped_html,
+        "text": rendered_body,
+        "recipient": {"name": sample_name, "email": sample_email},
+        "affiliate_ref_code": initiator.get("ref_code") or payload.affiliate_ref_code or "TM-ADMIN",
+        "event_flyer_url": event_doc.get("image_url") if event_doc else None,
+        "tracked_urls": tracked_urls,
+    }
+
+
 @router.post("/api/crm/campaigns")
 @router.post("/api/admin/console/crm-campaigns")
 def create_crm_campaign(payload: CampaignCreateRequest, current_user: Optional[dict] = Depends(get_optional_user)):
@@ -772,8 +965,8 @@ def create_crm_campaign(payload: CampaignCreateRequest, current_user: Optional[d
     if promotion_type == "persona_intro" and (not target_persona or target_persona not in PERSONA_PLAYBOOKS):
         target_persona = "creator"
 
-    event_meta = None
-    if promotion_type == "event" and payload.event_id:
+    event_meta = payload.event_doc
+    if promotion_type == "event" and payload.event_id and not event_meta:
         from routes.events_router import get_or_seed_events
         events = get_or_seed_events()
         event_meta = next((e for e in events if e.get("id") == payload.event_id), None)
@@ -822,6 +1015,7 @@ def create_crm_campaign(payload: CampaignCreateRequest, current_user: Optional[d
         "product_name": payload.product_name,
         "event_id": payload.event_id,
         "event_title": event_meta.get("title") if event_meta else None,
+        "event_doc_snapshot": event_meta,
         "event_ctas": payload.event_ctas or (["rsvp", "ticket"] if promotion_type == "event" else []),
         "cta_label": payload.cta_label or (
             "RSVP / Get Tickets"
@@ -901,8 +1095,8 @@ def dispatch_crm_campaign(campaign_id: str, current_user: Optional[dict] = Depen
     initiated_by_email = campaign_doc.get("initiated_by_email")
 
     # Resolve event document if event reachout
-    event_doc = None
-    if promotion_type == "event" and event_id:
+    event_doc = campaign_doc.get("event_doc_snapshot")
+    if promotion_type == "event" and event_id and not event_doc:
         try:
             from routes.events_router import get_or_seed_events
             event_doc = next((e for e in get_or_seed_events() if e.get("id") == event_id), None)

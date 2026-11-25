@@ -272,13 +272,13 @@ The TuneMavens Wall of Fame is the authoritative hall of icons honoring trailbla
         "read_time": "4 min read",
         "summary": "How TuneMavens coordinates candidate leads, automated WhatsApp notices, and statutory email dispatch queues.",
         "content": """
-## Smart CRM Overview
-The TuneMavens Smart CRM manages the complete communication lifecycle for artist nominations, sync briefs, and inbound inquiries.
-
-### Multi-Channel Protocols
-- **WhatsApp Integration**: Leverages direct Twilio/WhatsApp Business APIs to send instant, formatted induction links and contract sign-off alerts.
-- **Email Gateway**: Sends cryptographic claim invitations with unique, non-guessable tokens.
-- **Audit Trails**: Every dispatch is stored with timestamp, recipient coordinates, delivery status, and payload in `db.communication_logs`.
+## Smart CRM Email Reachout
+- **Email-Only Target Groups**: Names + emails only (no SMS/WhatsApp costs or flagging). Add, edit, delete entries or import CSV/TSV/TXT/JSON.
+- **Pre-built cohorts**: `All Registered Platform Users` and 10 role cohorts auto-sync for Admins.
+- **Event campaigns**: Live site events, with the event flyer embedded and RSVP / Buy Ticket CTAs; use Preview Email before dispatch.
+- **Affiliate attribution**: Admins see all affiliates; affiliates see only their own data. 90-day spend attribution with in-app inbox + email notifications.
+- **Learning engine**: 10 persona introductory playbooks (EPK and catalogue CTAs) that adapt from conversion telemetry.
+- **Audit Trails**: Dispatches are stored in `db.communication_logs` and `db.email_outbox`.
         """
     },
     {
@@ -797,13 +797,15 @@ def ask_ai_admin_assistant(payload: AskAiPayload):
             "Administrators have full read/write/delete capabilities, while other personas operate in scoped domains."
         )
         actions = ["Inspect RBAC Matrix", "View User Accounts", "Switch Persona"]
-    elif "crm" in prompt or "lead" in prompt or "whatsapp" in prompt:
+    elif "crm" in prompt or "reachout" in prompt or "target group" in prompt or "flyer" in prompt or "preview" in prompt or "lead" in prompt:
         reply = (
-            "The Smart CRM manages induction nominees, sync proposals, and candidate leads. "
-            "Whenever an icon is inducted, a lead record is automatically created and synced to the CRM pipeline. "
-            "Dispatches via WhatsApp and Email are tracked in the communication logs with cryptographic verification tokens."
+            "Smart CRM Reachout is email-only: Target Groups hold Names + Emails (phone/SMS/WhatsApp fields are stripped on CSV/TSV/TXT/JSON import). "
+            "Admins get auto-synced 'All Registered Platform Users' plus 10 role cohorts, can act on any affiliate's groups, while affiliates only see their own data. "
+            "Event campaigns embed the event page flyer with RSVP Now / Buy Ticket Now CTAs, and 'Preview Email' renders the exact HTML before dispatch. "
+            "Clicks, onboarding and 90-day spend are attributed to the initiating affiliate, who is notified in their in-app inbox and registered email. "
+            "10 persona introductory playbooks (with EPK and catalogue CTAs) feed an adaptive learning engine that improves copy from conversions."
         )
-        actions = ["View CRM Pipeline", "Inspect Communication Logs"]
+        actions = ["Read Email Reachout Guide", "Open Smart CRM", "Inspect Communication Logs"]
     elif "split" in prompt or "cascade" in prompt or "royalty" in prompt:
         reply = (
             "TuneLedger automates the split cascade for Master (SR) and Composition (PA) rights. "

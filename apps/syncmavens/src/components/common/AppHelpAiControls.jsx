@@ -278,7 +278,7 @@ export default function AppHelpAiControls({
         return ['What are the criteria for Wall of Fame induction?', 'How do EPK showcase links work?', 'How does viral momentum tracking work?'];
       case 'inbox':
       case 'crm':
-        return ['How do VIP buyer lead scoring and tags work?', 'How does automated outreach sequencing work?', 'Can I filter leads by sync readiness?'];
+        return ['How do Email-Only Target Groups & CSV imports work?', 'How do Event Flyers, Preview Email & RSVP/Ticket CTAs work?', 'Explain Affiliate Reachout attribution & dual notifications', 'How does the Self-Learning Persona CRM Engine optimize copy?'];
       case 'media-house':
         return ['How does broadcast syndication routing work?', 'Explain linear TV & FM cue clearance', 'What are satellite radio stem bundles?'];
       case 'localization':

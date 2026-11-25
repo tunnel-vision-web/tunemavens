@@ -1599,38 +1599,107 @@ Every communication logged in your **Communications Vault** includes an embedded
   },
 
   {
+    id: 'smart-crm-email-reachout-and-target-groups',
+    category: 'services',
+    title: 'Smart CRM Email-Only Reachout: Auto-Synced Target Groups, Event Flyers, Live Preview & CSV Import',
+    readingTime: '8 min read',
+    excerpt: 'Complete operational guide to creating and importing Email-Only Target Groups, using pre-populated Registered User cohorts, previewing emails with Event Flyers, and dispatching direct RSVP & Ticket CTAs.',
+    tags: ['Smart CRM', 'Email Reachout', 'Target Groups', 'Event Flyers', 'CSV Import', 'Email Preview'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['admin', 'affiliate', 'creator', 'label', 'dj', 'podcaster', 'corporate'],
+    toolLink: { label: 'Open Smart CRM & Reachout', path: '/dashboard?tab=crm' },
+    sections: [
+      {
+        heading: 'Why Smart CRM Reachout Uses Strictly Email-Only Target Groups',
+        content: `Smart CRM Reachout is engineered around **Email-Only Target Groups** storing **Names and Email addresses only**:
+* **Zero SMS Per-Message Fees**: Eliminates costly international and carrier per-segment text messaging charges when reaching hundreds or thousands of fans, creators, or industry leads.
+* **Zero WhatsApp Flagging Risk**: Prevents automated bulk messaging bans or account restrictions on WhatsApp Business numbers.
+* **Auto-Sanitized CSV, TSV & JSON Imports**: When you upload a spreadsheet via **Import CSV / JSON**, any legacy phone or WhatsApp columns are automatically stripped while preserving clean, deduplicated Name + Email entries.`
+      },
+      {
+        heading: 'Pre-Populated Registered User Cohorts & Custom Target Groups',
+        content: `For administrators, Smart CRM automatically maintains **Auto-Synced System Target Groups** directly from live platform registrations:
+1. **All Registered Platform Users**: A unified email-only target group containing every registered user on TuneMavens.
+2. **10 Persona-Specific Registered Groups**: Pre-built target groups for Registered Creators & Producers, DJs & Mix Curators, Record Labels, Podcasters, Music Supervisors, Corporate Brands, Media Houses, Tour VCs, Affiliate Partners, and Listeners/Fans.
+3. **Custom & Imported Groups**: Create bespoke outreach lists, add/edit/delete individual contacts inline, or append CSV/JSON files into existing groups.`
+      },
+      {
+        heading: 'Live Event Posters, Direct RSVP / Ticket CTAs & Live Email Preview',
+        content: `Every campaign composed in Smart CRM can be inspected before a single email leaves the server:
+* **Automatic Event Flyer / Poster Embedding**: Selecting any active concert, residency, or Free RSVP event under **Select Live Site Event** automatically embeds the official **Event Flyer / Poster** from the event page right inside the email invitation card.
+* **Direct In-Email Action Buttons**: Event emails include direct **RSVP Now (Reserve Spot)** and/or **Buy Ticket Now** CTA buttons alongside a **Save Preferences & Join TuneMavens** onboarding callout.
+* **Live Email Render Preview**: Click **Preview Email** in the composer to inspect the exact dark-theme HTML layout, sample recipient interpolation (\`{{name}}\`), event poster, and affiliate attribution code before clicking **Dispatch**.`
+      }
+    ]
+  },
+
+  {
+    id: 'smart-crm-affiliate-attribution-and-learning-engine',
+    category: 'services',
+    title: 'Affiliate Reachout Attribution, RBAC Isolation & The Self-Learning Persona CRM Engine',
+    readingTime: '8 min read',
+    excerpt: 'How Smart CRM tracks initiating affiliates across clicks, RSVPs, user onboarding, and downstream spending with dual In-App Inbox + Email alerts, RBAC isolation, and 10 self-learning persona playbooks.',
+    tags: ['Affiliate Attribution', 'Self-Learning CRM', 'Persona Playbooks', 'RBAC', 'EPK & Catalogue'],
+    popular: true,
+    recommendedReading: true,
+    requiredReading: false,
+    assignedRoles: ['admin', 'affiliate', 'label', 'creator'],
+    toolLink: { label: 'Open Smart CRM & Reachout', path: '/dashboard?tab=crm' },
+    sections: [
+      {
+        heading: 'Admin Global Scope vs. Strict Affiliate Data Isolation',
+        content: `Smart CRM enforces strict Role-Based Access Control (RBAC) across every Target Group, campaign, and telemetry query:
+* **Admin Global Scope**: Administrators see every registered affiliate account in the **Initiating Affiliate Account** selector (including \`TM-ADMIN\` Official House Account and auto-synced system cohorts). Selecting an affiliate dynamically loads their Target Groups and funnel metrics.
+* **Affiliate Privacy Isolation**: Non-admin Affiliate Partners are strictly locked to their own affiliate account (\`403 Forbidden\` on cross-affiliate requests), ensuring their imported contact lists and conversion ledgers remain 100% private.`
+      },
+      {
+        heading: 'Full-Funnel Affiliate Tracking & Dual Notifications (Inbox + Email)',
+        content: `Every dispatched email generates a unique per-recipient reachout token (\`/#/reachout/:token\`) with a 90-day attribution cookie (\`tm_aff_ref\`):
+* **Tracked Actions**: Logs link clicks, live event RSVPs, new-user onboarding (saving favorite genres, role, and city preferences), and all downstream platform spending—even when an onboarded user purchases tickets, reloads credits, or buys storefront items weeks later.
+* **Dual-Channel Partner Alerts**: Whenever a recipient RSVPs, onboards, or spends on TuneMavens, the initiating affiliate receives an instant alert in **both** their **In-App Inbox** (\`/inbox\`) and their **registered email address on file** with exact commission calculations (3%–12%).`
+      },
+      {
+        heading: '10 Persona Playbooks & The Adaptive Self-Learning CRM Engine',
+        content: `Under **Persona Introductory & Onboarding Email**, Smart CRM includes 10 role-specific playbooks (Creator, DJ, Label, Podcaster, Supervisor, Corporate, Media House, VC, Affiliate, Consumer):
+* **Contextual EPK & Catalogue Prompts**: For Creators, DJs, Labels, Podcasters, and Media Houses, emails embed direct **Launch Official EPK** and **Ingest Catalogue & Stems** buttons that route new signups straight into the EPK Builder and Catalogue Ingestion wizards.
+* **Continuous Learning Loop**: Every click, RSVP, onboarding, EPK activation, catalogue upload, and purchase updates \`db.crm_learning_weights\`. Clicking **Smart Auto-Optimize Copy** applies the highest-scoring subject hooks and CTAs learned from real campaign outcomes, while **Warm Unconverted Clickers** lets you segment recipients who clicked without onboarding in one click.`
+      }
+    ]
+  },
+
+  {
     id: 'crm-growth-engine-and-inbox',
     category: 'services',
-    title: 'Intermaven Smart CRM: Multi-Channel Outreach, Audience Segmentation & In-App Messaging',
+    title: 'Intermaven Smart CRM: Email-Only Target Groups, Persona Playbooks & In-App Inbox',
     readingTime: '7 min read',
-    excerpt: 'Guide to the Intermaven CRM and in-app communications suite. Audience cohort targeting, Resend email delivery, native in-app notifications, and threaded messaging.',
+    excerpt: 'Guide to the Intermaven Smart CRM and In-App Inbox: pre-built user cohorts, email-only reachouts with event posters, affiliate attribution, and threaded inbox replies.',
     tags: ['Smart CRM', 'Email Delivery', 'In-App Inbox', 'Audience Segments', 'Campaigns'],
     popular: true,
     recommendedReading: true,
     requiredReading: false,
-    assignedRoles: ['admin', 'corporate', 'label', 'creator'],
-    toolLink: { label: 'Open In-App Inbox', path: '/inbox' },
+    assignedRoles: ['admin', 'affiliate', 'corporate', 'label', 'creator'],
+    toolLink: { label: 'Open Smart CRM & Reachout', path: '/dashboard?tab=crm' },
     sections: [
       {
-        heading: 'Audience Cohort Segmentation (12 Live Personas)',
-        content: `The CRM composer lets administrators and brand managers target exact ecosystem segments:
-* **Persona Cohorts**: Filter across Creators, Record Labels, DJs, Podcasters, Media Houses, Music Supervisors, Corporate Brands, VCs, and Affiliates.
-* **Activity-Based Filters**: Segment users by credit balance, catalog release volume, active sync pitches, or onboarding completion state.
-* **Real-Time Aggregation**: Live MongoDB counts display exact target audience reach before dispatching.`
+        heading: 'Pre-Built User Cohorts & Email-Only Target Groups',
+        content: `The Smart CRM composer provides instant access to both live platform cohorts and custom email-only outreach lists:
+* **Auto-Synced System Target Groups**: Pre-created groups for **All Registered Platform Users** plus all 10 registered persona cohorts (Creators, DJs, Labels, Podcasters, Supervisors, Corporate, Media Houses, VCs, Affiliates, and Listeners).
+* **Email-Only Reachout Policy**: Target groups use Names and Email addresses only (no phone numbers, SMS, or WhatsApp) to eliminate SMS costs and WhatsApp flagging, with CSV/TSV/JSON import auto-sanitization.`
       },
       {
-        heading: 'Multi-Channel Dispatch Adapters',
-        content: `Campaigns can be delivered through three distinct communication channels:
-1. **Branded Email (Resend)**: High-deliverability transactional and marketing emails wrapped in custom HTML templates, logged to MongoDB \`email_outbox\`.
-2. **Native In-App Inbox (\`db.user_inbox\`)**: Real-time alerts visible inside the user dashboard with unread notification badges.
-3. **Personalized Social DM Generator**: Generates customized outreach copy for Instagram and X with 1-click clipboard copy and dispatch tracking.`
+        heading: 'Event Flyer Invitations, Persona Playbooks & Live Email Preview',
+        content: `Campaigns adapt dynamically to your promotion goal:
+1. **Persona Introductory Playbooks**: Personalized onboarding invitations across 10 personas with direct **Launch Official EPK** and **Ingest Catalogue** CTAs where applicable.
+2. **Live Event Invitations**: Embeds the official **Event Flyer / Poster** alongside direct **RSVP Now** and **Buy Ticket Now** email buttons.
+3. **Live Email Preview & Adaptive Copy**: Preview the exact rendered HTML email before sending, and use **Smart Auto-Optimize Copy** powered by historical conversion weights.`
       },
       {
-        heading: 'User-Facing In-App Inbox (/inbox)',
-        content: `Users manage communications in a dedicated in-app message center:
-* **Category Filters**: Filter across All, Campaigns, Deals & Contracts, Announcements, and Unread items.
-* **Threaded Real-Time Replies**: Reply directly to campaign inquiries, contract proposals, or support messages.
-* **Action Routing**: Every message features deep action buttons routing users straight to relevant dashboard tools.`
+        heading: 'User-Facing In-App Inbox (/inbox) & Affiliate Alerts',
+        content: `Users and affiliates manage all platform notifications in a dedicated In-App Inbox:
+* **Dual Affiliate Notifications**: Affiliates receive instant In-App Inbox + Registered Email alerts whenever their reachouts generate RSVPs, user onboardings, or commissionable spending.
+* **Threaded Real-Time Replies**: Reply directly to campaign inquiries, deal notifications, or support threads.`
       }
     ]
   },

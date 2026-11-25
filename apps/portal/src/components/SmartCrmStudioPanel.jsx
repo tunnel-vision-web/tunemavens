@@ -7,6 +7,7 @@ import {
   RiTimeLine, RiCheckboxCircleFill, RiRefreshLine, RiArrowDownSLine, RiArrowUpSLine, RiLockFill, RiShieldCheckFill, RiCoinsFill
 } from 'react-icons/ri'
 import EmailReachoutManager from './EmailReachoutManager.jsx'
+import AppHelpAiControls from './common/AppHelpAiControls.jsx'
 
 const CREATOR_PROFILES = {
   admin: {
@@ -682,9 +683,9 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
     return (
       <div style={{ padding: '40px 20px', maxWidth: '1000px', margin: '40px auto', color: '#fff', fontFamily: 'Inter, system-ui, sans-serif' }}>
         <div style={{
-          background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%)',
+          background: '#0f172a',
           border: '1px solid rgba(0, 240, 255, 0.3)',
-          borderRadius: '12px',
+          borderRadius: '3px',
           padding: '44px 32px',
           textAlign: 'center',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)'
@@ -692,7 +693,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
           <div style={{
             width: '68px',
             height: '68px',
-            borderRadius: '50%',
+            borderRadius: '3px',
             background: 'rgba(0, 240, 255, 0.1)',
             border: '1px solid rgba(0, 240, 255, 0.4)',
             display: 'inline-flex',
@@ -710,7 +711,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
             border: '1px solid rgba(0, 240, 255, 0.3)',
             color: '#00f0ff',
             padding: '4px 14px',
-            borderRadius: '20px',
+            borderRadius: '3px',
             fontSize: '0.75rem',
             fontWeight: 800,
             letterSpacing: '0.05em',
@@ -736,7 +737,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
             margin: '0 auto 32px',
             textAlign: 'left'
           }}>
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '16px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', padding: '16px' }}>
               <div style={{ color: '#00f0ff', fontWeight: 800, fontSize: '0.85rem', marginBottom: '6px' }}>
                 Tri-Party Data Ring-Fencing
               </div>
@@ -744,7 +745,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
                 Fan contact data and pre-sale booking lists remain encrypted and inaccessible until an online underwriting facility is executed.
               </div>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '16px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', padding: '16px' }}>
               <div style={{ color: '#10b981', fontWeight: 800, fontSize: '0.85rem', marginBottom: '6px' }}>
                 Zero Credits Charged
               </div>
@@ -752,7 +753,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
                 VCs and Investor Syndicate LPs are permanently exempt from platform credit fees across all CRM tools and audience analytics.
               </div>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '16px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', padding: '16px' }}>
               <div style={{ color: '#a78bfa', fontWeight: 800, fontSize: '0.85rem', marginBottom: '6px' }}>
                 Direct Tour Geo-Targeting
               </div>
@@ -769,11 +770,11 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
               else window.dispatchEvent(new CustomEvent('tunemavens:navigate-tab', { detail: { tab: 'vc-discover' } }));
             }}
             style={{
-              background: 'linear-gradient(135deg, #00f0ff 0%, #0284c7 100%)',
+              background: '#22d3ee',
               border: 'none',
               color: '#000',
               padding: '12px 28px',
-              borderRadius: '6px',
+              borderRadius: '3px',
               fontWeight: 800,
               fontSize: '0.9rem',
               cursor: 'pointer',
@@ -825,7 +826,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
             border: '1px solid rgba(16, 185, 129, 0.3)',
             color: '#10b981',
             padding: '3px 10px',
-            borderRadius: '4px',
+            borderRadius: '3px',
             fontSize: '0.72rem',
             fontWeight: 800
           }}>
@@ -849,7 +850,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
           <div style={{
             width: '36px',
             height: '36px',
-            borderRadius: '6px',
+            borderRadius: '3px',
             background: '#00f0ff',
             display: 'flex',
             alignItems: 'center',
@@ -871,12 +872,12 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
                 color: isCentralSynced ? '#10b981' : '#f59e0b',
                 border: `1px solid ${isCentralSynced ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)'}`,
                 padding: '2px 8px',
-                borderRadius: '12px',
+                borderRadius: '3px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px'
               }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: isCentralSynced ? '#10b981' : '#f59e0b', boxShadow: isCentralSynced ? '0 0 6px #10b981' : 'none' }} />
+                <span style={{ width: '6px', height: '6px', borderRadius: '3px', background: isCentralSynced ? '#10b981' : '#f59e0b', boxShadow: isCentralSynced ? '0 0 6px #10b981' : 'none' }} />
                 {isCentralSynced ? 'TUNEMAVENS CRM CLOUD SYNCED' : 'OFFLINE BUFFER'}
               </span>
             </div>
@@ -887,7 +888,8 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
         </div>
 
         {/* Creator Subdomain Selector & Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <AppHelpAiControls activeTab="crm" sessionUser={sessionUser} onNavigateTab={onNavigateTab} />
           <button
             type="button"
             onClick={loadContacts}
@@ -897,7 +899,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
               border: '1px solid rgba(0,240,255,0.3)',
               color: '#00f0ff',
               padding: '6px 12px',
-              borderRadius: '4px',
+              borderRadius: '3px',
               fontSize: '0.78rem',
               fontWeight: 800,
               cursor: 'pointer',
@@ -910,7 +912,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
             {syncing ? 'Syncing...' : 'Sync Central CRM'}
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', background: '#04060d', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', padding: '4px 10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', background: '#04060d', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '3px', padding: '4px 10px' }}>
             <span style={{ fontSize: '0.75rem', color: '#64748b', marginRight: '6px', fontWeight: 700 }}>ACCOUNT / CREATOR:</span>
             <select
               value={selectedSubdomain}
@@ -933,7 +935,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
               border: '1px solid rgba(255,255,255,0.15)',
               color: '#fff',
               padding: '7px 12px',
-              borderRadius: '4px',
+              borderRadius: '3px',
               fontSize: '0.8rem',
               fontWeight: 700,
               cursor: 'pointer',
@@ -953,7 +955,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
               border: 'none',
               color: '#000',
               padding: '7px 14px',
-              borderRadius: '4px',
+              borderRadius: '3px',
               fontSize: '0.8rem',
               fontWeight: 900,
               cursor: 'pointer',
@@ -975,7 +977,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
               border: statsMinimized ? '1px solid #00f0ff' : '1px solid rgba(255,255,255,0.15)',
               color: statsMinimized ? '#00f0ff' : '#cbd5e1',
               padding: '6px 12px',
-              borderRadius: '4px',
+              borderRadius: '3px',
               fontSize: '0.78rem',
               fontWeight: 800,
               cursor: 'pointer',
@@ -997,7 +999,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
                 border: '1px solid rgba(239,68,68,0.2)',
                 color: '#ef4444',
                 padding: '6px 10px',
-                borderRadius: '4px',
+                borderRadius: '3px',
                 fontSize: '0.85rem',
                 cursor: 'pointer'
               }}
@@ -1052,7 +1054,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
           background: '#060810',
           borderBottom: '1px solid rgba(255,255,255,0.06)'
         }}>
-          <div style={{ background: '#0b1021', padding: '12px 16px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ background: '#0b1021', padding: '12px 16px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Total Audience Vault
             </div>
@@ -1064,7 +1066,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
             </div>
           </div>
 
-          <div style={{ background: '#0b1021', padding: '12px 16px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ background: '#0b1021', padding: '12px 16px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               VIP Passholders
             </div>
@@ -1076,7 +1078,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
             </div>
           </div>
 
-          <div style={{ background: '#0b1021', padding: '12px 16px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ background: '#0b1021', padding: '12px 16px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Tour Ticket Reserves
             </div>
@@ -1088,7 +1090,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
             </div>
           </div>
 
-          <div style={{ background: '#0b1021', padding: '12px 16px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ background: '#0b1021', padding: '12px 16px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Fan Curated Playlists
             </div>
@@ -1145,7 +1147,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
                 <span style={{
                   fontSize: '0.7rem',
                   padding: '1px 6px',
-                  borderRadius: '10px',
+                  borderRadius: '3px',
                   background: isActive ? 'rgba(0,240,255,0.2)' : 'rgba(255,255,255,0.06)',
                   color: isActive ? '#00f0ff' : '#94a3b8'
                 }}>
@@ -1186,7 +1188,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
                       padding: '8px 12px 8px 32px',
                       background: '#0a0f1d',
                       border: '1px solid rgba(255,255,255,0.12)',
-                      borderRadius: '4px',
+                      borderRadius: '3px',
                       color: '#fff',
                       fontSize: '0.82rem'
                     }}
@@ -1200,7 +1202,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
                     padding: '8px 12px',
                     background: '#0a0f1d',
                     border: '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: '4px',
+                    borderRadius: '3px',
                     color: '#cbd5e1',
                     fontSize: '0.82rem',
                     outline: 'none'
@@ -1225,11 +1227,11 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
                 Connecting to TuneMavens Smart CRM engine...
               </div>
             ) : filteredContacts.length === 0 ? (
-              <div style={{ padding: '60px', textAlign: 'center', color: '#64748b', background: '#0a0f1d', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ padding: '60px', textAlign: 'center', color: '#64748b', background: '#0a0f1d', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.06)' }}>
                 No fans matching current filter criteria.
               </div>
             ) : (
-              <div style={{ background: '#0a0f1d', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)', overflowX: 'auto' }}>
+              <div style={{ background: '#0a0f1d', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.08)', overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.82rem' }}>
                   <thead>
                     <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.08)', color: '#94a3b8' }}>
@@ -1249,8 +1251,8 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
                             <div style={{
                               width: '32px',
                               height: '32px',
-                              borderRadius: '50%',
-                              background: 'linear-gradient(135deg, #1e293b, #0f172a)',
+                              borderRadius: '3px',
+                              background: '#0f172a',
                               border: '1px solid rgba(255,255,255,0.15)',
                               display: 'flex',
                               alignItems: 'center',
@@ -1312,7 +1314,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
                         <td style={{ padding: '12px 16px' }}>
                           <span style={{
                             padding: '3px 8px',
-                            borderRadius: '10px',
+                            borderRadius: '3px',
                             fontSize: '0.72rem',
                             fontWeight: 800,
                             background: 'rgba(16,185,129,0.15)',
@@ -1383,7 +1385,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
         {activeTab === 'broadcasts' && (
           <div className="crm-broadcast-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: '24px' }}>
             {/* Broadcast Composer */}
-            <div style={{ background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
                 <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 900, color: '#fff' }}>
                   Compose Omnichannel Broadcast
@@ -1394,7 +1396,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
               </div>
 
               {dispatchSuccess && (
-                <div style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid #10b981', color: '#10b981', padding: '12px', borderRadius: '4px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid #10b981', color: '#10b981', padding: '12px', borderRadius: '3px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <RiCheckboxCircleFill size={18} /> {dispatchSuccess}
                 </div>
               )}
@@ -1484,7 +1486,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
                     color: '#000',
                     border: 'none',
                     padding: '10px 20px',
-                    borderRadius: '4px',
+                    borderRadius: '3px',
                     fontWeight: 900,
                     fontSize: '0.85rem',
                     cursor: dispatching ? 'not-allowed' : 'pointer',
@@ -1506,10 +1508,10 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {campaignHistory.map(cmp => (
-                  <div key={cmp.id} style={{ background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div key={cmp.id} style={{ background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <strong style={{ color: '#fff', fontSize: '0.88rem' }}>{cmp.name}</strong>
-                      <span style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '10px', background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)', fontWeight: 800 }}>
+                      <span style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '3px', background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)', fontWeight: 800 }}>
                         {cmp.status}
                       </span>
                     </div>
@@ -1543,7 +1545,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
               {fanPlaylists.map(pl => (
-                <div key={pl.id} style={{ background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div key={pl.id} style={{ background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '3px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <RiDiscFill color="#00f0ff" size={20} />
@@ -1556,7 +1558,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
                     Curator: <strong style={{ color: '#cbd5e1' }}>{pl.fanName}</strong> · {pl.tracks?.length || 0} Tracks Selected
                   </div>
 
-                  <div style={{ background: '#04060d', borderRadius: '4px', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                  <div style={{ background: '#04060d', borderRadius: '3px', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '6px', border: '1px solid rgba(255,255,255,0.04)' }}>
                     {(pl.tracks || []).map((t, idx) => (
                       <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem' }}>
                         <span style={{ color: '#cbd5e1' }}>{idx + 1}. {t.title}</span>
@@ -1617,10 +1619,10 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
                 { stage: '3. TICKET PRE-SALES', count: 3, desc: 'Fans with reserved passes for live tour dates', color: '#a855f7' },
                 { stage: '4. STEM & MERCH BUYERS', count: 2, desc: 'Priced vinyl collectors and industry stem practitioners', color: '#10b981' }
               ].map((col, idx) => (
-                <div key={idx} style={{ background: '#0a0f1d', border: `1px solid ${col.color}40`, borderRadius: '6px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div key={idx} style={{ background: '#0a0f1d', border: `1px solid ${col.color}40`, borderRadius: '3px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <strong style={{ color: col.color, fontSize: '0.8rem', letterSpacing: '0.04em' }}>{col.stage}</strong>
-                    <span style={{ background: `${col.color}20`, color: col.color, fontWeight: 900, padding: '2px 8px', borderRadius: '10px', fontSize: '0.8rem' }}>
+                    <span style={{ background: `${col.color}20`, color: col.color, fontWeight: 900, padding: '2px 8px', borderRadius: '3px', fontSize: '0.8rem' }}>
                       {col.count}
                     </span>
                   </div>
@@ -1666,7 +1668,7 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
               overflowY: 'auto',
               background: '#090d1a',
               border: '1px solid rgba(0,240,255,0.3)',
-              borderRadius: '8px',
+              borderRadius: '3px',
               padding: '24px',
               display: 'flex',
               flexDirection: 'column',
@@ -1759,14 +1761,14 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
               <button
                 type="button"
                 onClick={() => setAddLeadModalOpen(false)}
-                style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '8px 16px', borderRadius: '4px', fontSize: '0.82rem', cursor: 'pointer' }}
+                style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '8px 16px', borderRadius: '3px', fontSize: '0.82rem', cursor: 'pointer' }}
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleCreateLead}
-                style={{ background: '#00f0ff', border: 'none', color: '#000', padding: '8px 20px', borderRadius: '4px', fontWeight: 900, fontSize: '0.82rem', cursor: 'pointer' }}
+                style={{ background: '#00f0ff', border: 'none', color: '#000', padding: '8px 20px', borderRadius: '3px', fontWeight: 900, fontSize: '0.82rem', cursor: 'pointer' }}
               >
                 Save Contact
               </button>

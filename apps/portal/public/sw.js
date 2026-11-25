@@ -1,5 +1,5 @@
 // TuneStream & TuneMavens Service Worker — PWA & Offline Support
-const CACHE_NAME = 'tunemavens-cache-v5';
+const CACHE_NAME = 'tunemavens-cache-v6';
 const OFFLINE_URLS = [
   '/',
   '/native',
