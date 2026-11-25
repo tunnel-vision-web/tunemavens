@@ -13,6 +13,8 @@ from typing import Optional
 
 try:
     from dotenv import load_dotenv
+    _backend_env = Path(__file__).resolve().parent.parent / ".env"
+    load_dotenv(dotenv_path=_backend_env)
     load_dotenv()
 except ImportError:
     pass
