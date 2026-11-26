@@ -146,19 +146,21 @@ export default function LiveEventsSection({ sessionUser }) {
   const [docModalOpen, setDocModalOpen] = useState(false);
   const [activeDocArticleId, setActiveDocArticleId] = useState('global-tours-live-concerts-ticketing');
 
-  // Deep link or initial event selection support
+  const location = useLocation();
+
+  // Deep link or initial event selection support (HashRouter location.search + window.location.search)
   useEffect(() => {
     try {
-      const sp = new URLSearchParams(window.location.search);
+      const sp = new URLSearchParams(location.search || window.location.search);
       const eventParam = sp.get('event');
       if (eventParam && events && events.length > 0) {
         const found = events.find(e => e.id === eventParam || e.id === `event-${eventParam}` || String(e.id).includes(eventParam));
-        if (found) {
+        if (found && selectedEventDetail?.id !== found.id) {
           handleOpenEventPage(found);
         }
       }
     } catch (_) {}
-  }, [events]);
+  }, [events, location.search]);
 
   // Load Events from API
   const fetchEvents = async () => {
