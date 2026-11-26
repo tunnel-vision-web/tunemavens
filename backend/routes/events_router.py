@@ -33,8 +33,12 @@ INITIAL_EVENTS = [
     {
         "id": "evt-ndufo-nairobi-tonight",
         "tour_id": "tour-ndufo-modular",
+        "is_featured": True,
         "title": "Ndufo & The Modular Collective: Live at The Wave Lab",
         "artist": "Ndufo & The Modular Collective",
+        "hosts": "TuneMavens Live & The Wave Lab",
+        "mc": "MC Jayden (Nairobi Soundstage)",
+        "entertainers": "Ndufo & The Modular Collective, Kilifi Percussionists & DJ Kalonje",
         "artist_id": "creator_ndufo",
         "status": "in-progress",
         "status_label": "LIVE TONIGHT",
@@ -646,6 +650,10 @@ class EventCreateRequest(BaseModel):
         default="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1000&q=80"
     )
     description: Optional[str] = Field(default="")
+    hosts: Optional[str] = Field(default=None)
+    mc: Optional[str] = Field(default=None)
+    entertainers: Optional[str] = Field(default=None)
+    is_featured: bool = Field(default=False)
     tiers: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
 
 
@@ -663,6 +671,10 @@ class EventConfigUpdateRequest(BaseModel):
     city: Optional[str] = None
     date_display: Optional[str] = None
     description: Optional[str] = None
+    hosts: Optional[str] = None
+    mc: Optional[str] = None
+    entertainers: Optional[str] = None
+    is_featured: Optional[bool] = None
 
 
 class GuestInviteItem(BaseModel):
@@ -750,6 +762,10 @@ def _normalize_event_fields(event: Dict[str, Any]) -> Dict[str, Any]:
     policy, max_add = _normalize_policy(doc.get("guest_limit_policy"), doc.get("max_additional_guests"))
     doc["guest_limit_policy"] = policy
     doc["max_additional_guests"] = max_add
+    doc["is_featured"] = bool(doc.get("is_featured", False))
+    doc["hosts"] = (doc.get("hosts") or doc.get("artist") or "TuneMavens Live").strip()
+    doc["mc"] = (doc.get("mc") or "TuneMavens Live Host").strip()
+    doc["entertainers"] = (doc.get("entertainers") or doc.get("artist") or "Featured Live Talent").strip()
     return doc
 
 
@@ -810,6 +826,11 @@ def get_or_seed_events() -> List[Dict[str, Any]]:
             db.live_events.insert_many(missing)
 
         docs = list(db.live_events.find({}, {"_id": 0}))
+        if docs and not any(d.get("is_featured") for d in docs):
+            first_id = docs[0].get("id")
+            if first_id:
+                db.live_events.update_one({"id": first_id}, {"$set": {"is_featured": True}})
+                docs[0]["is_featured"] = True
         return [_normalize_event_fields(d) for d in docs]
     except Exception as e:
         logger.warning(f"Failed to query Mongo for live events, using memory seed: {e}")
@@ -825,10 +846,12 @@ def build_event_guest_list_and_telemetry(event: Dict[str, Any]) -> Dict[str, Any
 
     invitations = []
     rsvps = []
+    reachout_invites = []
     if db is not None:
         try:
             invitations = list(db.event_invitations.find({"event_id": event_id}, {"_id": 0}))
             rsvps = list(db.event_rsvps.find({"event_id": event_id}, {"_id": 0}))
+            reachout_invites = list(db.crm_reachout_links.find({"event_id": event_id}, {"_id": 0}))
         except Exception as e:
             logger.warning(f"Error reading guest list for {event_id}: {e}")
 
@@ -870,6 +893,35 @@ def build_event_guest_list_and_telemetry(event: Dict[str, Any]) -> Dict[str, Any
             "party_size": (1 + add_guests) if is_confirmed else 0,
             "invited_at": inv.get("invited_at"),
             "confirmed_at": (matched_rsvp.get("created_at") if matched_rsvp else inv.get("confirmed_at")),
+        })
+
+    # Reconcile Smart CRM reachout recipients invited to this event into invited_guests
+    for rl in reachout_invites:
+        em = (rl.get("recipient_email") or "").strip().lower()
+        if not em or em in invited_emails:
+            continue
+        invited_emails.add(em)
+        matched_rsvp = rsvp_by_email.get(em)
+        is_confirmed = bool(matched_rsvp) or bool(rl.get("rsvped"))
+        add_guests = int(matched_rsvp.get("additional_guests", 0)) if matched_rsvp else 0
+        zone = (matched_rsvp.get("attendance_type") if matched_rsvp else "seating") or "seating"
+        created_val = rl.get("created_at")
+        invited_at_str = created_val.isoformat() if isinstance(created_val, datetime) else created_val
+        invited_guests.append({
+            "invitation_id": rl.get("token"),
+            "name": rl.get("recipient_name") or em,
+            "email": em,
+            "phone": None,
+            "role_tag": "Smart CRM Reachout",
+            "crm_contact_id": rl.get("token"),
+            "crm_channel": "email",
+            "crm_synced": True,
+            "status": "confirmed" if is_confirmed else "invited",
+            "attendance_type": zone if is_confirmed else None,
+            "additional_guests": add_guests if is_confirmed else 0,
+            "party_size": (1 + add_guests) if is_confirmed else 0,
+            "invited_at": invited_at_str,
+            "confirmed_at": (matched_rsvp.get("created_at") if matched_rsvp else None),
         })
 
     confirmed_guests: List[Dict[str, Any]] = []
@@ -1111,9 +1163,12 @@ def list_events(
     total_capacity = sum(e.get("capacity", 0) for e in events)
     total_sold = sum(e.get("tickets_sold", 0) for e in events)
 
+    featured_ev = next((e for e in events if e.get("is_featured")), None) or (events[0] if events else None)
+
     return {
         "status": "success",
         "count": len(filtered),
+        "featured_event": featured_ev,
         "macro_telemetry": {
             "in_progress_count": in_progress_count,
             "upcoming_count": upcoming_count,
@@ -1124,6 +1179,44 @@ def list_events(
             "overall_occupancy_rate": f"{round((total_sold / max(total_capacity, 1)) * 100, 1)}%"
         },
         "events": filtered
+    }
+
+
+def _assert_admin_user(user: Optional[dict]):
+    if not user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin privileges required.")
+    role = (user.get("role") or "").strip().lower()
+    is_admin = bool(user.get("is_admin")) or role == "admin" or ("admin" in [str(r).lower() for r in (user.get("roles") or [])])
+    if not is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only administrators can set the Featured Event.")
+
+
+@router.get("/featured", summary="Get the single Admin-featured event for Home & Event pages")
+def get_featured_event():
+    """Return the single event marked as featured (or the first active event)."""
+    events = [_enrich_event_with_rsvp(e, include_lists=False) for e in get_or_seed_events()]
+    featured_ev = next((e for e in events if e.get("is_featured")), None) or (events[0] if events else None)
+    return {"status": "success", "featured_event": featured_ev}
+
+
+@router.post("/{event_id}/feature", summary="Admin-only: Set an event as the single Featured Event")
+def set_featured_event(event_id: str, user=Depends(get_optional_user)):
+    """Set `event_id` as the sole featured event across the Home landing page and all Event pages (Admin-only)."""
+    _assert_admin_user(user)
+    events = get_or_seed_events()
+    target = next((e for e in events if e.get("id") == event_id), None)
+    if not target:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Event '{event_id}' not found.")
+
+    if db is not None:
+        db.live_events.update_many({}, {"$set": {"is_featured": False}})
+        db.live_events.update_one({"id": event_id}, {"$set": {"is_featured": True, "updated_at": datetime.now(timezone.utc).isoformat()}})
+
+    updated = dict(target, is_featured=True)
+    return {
+        "status": "success",
+        "message": f"'{updated.get('title')}' is now the single Featured Event across Home & Events pages.",
+        "featured_event": _enrich_event_with_rsvp(updated, include_lists=False),
     }
 
 
@@ -1259,10 +1352,19 @@ def update_event_config(event_id: str, payload: EventConfigUpdateRequest, user=D
         updates["guest_limit_policy"] = policy
         updates["max_additional_guests"] = max_add
 
-    for field in ("title", "venue", "city", "date_display", "description"):
+    for field in ("title", "venue", "city", "date_display", "description", "hosts", "mc", "entertainers"):
         val = getattr(payload, field, None)
         if val is not None:
             updates[field] = val
+
+    if payload.is_featured is True:
+        _assert_admin_user(user)
+        if db is not None:
+            db.live_events.update_many({}, {"$set": {"is_featured": False}})
+        updates["is_featured"] = True
+    elif payload.is_featured is False:
+        _assert_admin_user(user)
+        updates["is_featured"] = False
 
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
 

@@ -1723,9 +1723,10 @@ def resolve_reachout_link(
     - Returns campaign info, event details (for direct RSVP / Buy Ticket),
       recipient's prefilled name & email, and TuneMavens platform introduction.
     """
-    if token == "preview_sample_token":
+    if token in ("preview_sample_token", "direct"):
         pb = PERSONA_PLAYBOOKS.get(role or "creator", PERSONA_PLAYBOOKS["creator"])
-        sample_name = (name or "").strip() or "Alex Mwangi"
+        is_preview_tok = token == "preview_sample_token"
+        sample_name = (name or "").strip() or ("Alex Mwangi" if is_preview_tok else "")
         preview_event = None
         if event_id:
             try:
@@ -1743,10 +1744,10 @@ def resolve_reachout_link(
         )
         return {
             "token": token,
-            "is_preview": True,
+            "is_preview": is_preview_tok,
             "recipient": {
                 "name": sample_name,
-                "email": (email or "alex.mwangi@example.com").strip().lower(),
+                "email": (email or ("alex.mwangi@example.com" if is_preview_tok else "")).strip().lower(),
             },
             "affiliate": {
                 "ref_code": "TM-ADMIN",

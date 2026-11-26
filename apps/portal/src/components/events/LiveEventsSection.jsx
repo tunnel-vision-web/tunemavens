@@ -25,6 +25,7 @@ import {
   RiStarFill
 } from 'react-icons/ri'
 import { useRegion } from '../../RegionContext.jsx'
+import { tokenStore } from '../../lib/api.js'
 import InAppDocModal from '../common/InAppDocModal.jsx'
 import { AUTHORITATIVE_EVENTS, AUTHORITATIVE_MACRO_TELEMETRY } from '../../data/authoritativeEvents.js'
 import './LiveEventsSection.css'
@@ -46,12 +47,50 @@ export default function LiveEventsSection({ sessionUser }) {
   // Dedicated Comprehensive Event Detail Page State
   const [selectedEventDetail, setSelectedEventDetail] = useState(null);
 
-  // Featured Events Carousel State
+  // Featured Events Carousel State (Admin-selected is_featured event always comes first)
+  const isAdmin = Boolean(
+    sessionUser?.role === 'admin' ||
+    sessionUser?.is_admin === true ||
+    sessionUser?.original_role === 'admin' ||
+    (Array.isArray(sessionUser?.roles) && sessionUser.roles.includes('admin')) ||
+    localStorage.getItem('tunemavens_admin_verified') === 'true'
+  );
   const [featuredIndex, setFeaturedIndex] = useState(0);
+  const [settingFeaturedId, setSettingFeaturedId] = useState(null);
+  const adminFeaturedEvent = useMemo(() => events.find(e => e.is_featured) || null, [events]);
   const featuredEvents = useMemo(() => {
-    const list = events.filter(e => e.status === 'in-progress' || (e.sold_percentage && e.sold_percentage > 50) || e.status === 'upcoming');
-    return list.length > 0 ? list.slice(0, 5) : events.slice(0, 3);
-  }, [events]);
+    const others = events.filter(e => !e.is_featured && (e.status === 'in-progress' || (e.sold_percentage && e.sold_percentage > 50) || e.status === 'upcoming'));
+    const combined = adminFeaturedEvent ? [adminFeaturedEvent, ...others] : others;
+    return combined.length > 0 ? combined.slice(0, 5) : events.slice(0, 3);
+  }, [events, adminFeaturedEvent]);
+
+  useEffect(() => {
+    setFeaturedIndex(0);
+  }, [adminFeaturedEvent?.id]);
+
+  const handleSetFeaturedEvent = async (evt) => {
+    if (!isAdmin || !evt?.id) return;
+    setSettingFeaturedId(evt.id);
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      const tok = tokenStore?.get?.();
+      if (tok) headers['Authorization'] = `Bearer ${tok}`;
+      const res = await fetch(`/api/events/${encodeURIComponent(evt.id)}/feature`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+      });
+      if (res.ok) {
+        setEvents(prev => prev.map(item => ({ ...item, is_featured: item.id === evt.id })));
+        if (selectedEventDetail?.id === evt.id) {
+          setSelectedEventDetail(prev => prev ? ({ ...prev, is_featured: true }) : prev);
+        }
+        setFeaturedIndex(0);
+      }
+    } catch (_) {} finally {
+      setSettingFeaturedId(null);
+    }
+  };
 
   useEffect(() => {
     if (featuredEvents.length <= 1) return;
@@ -576,6 +615,35 @@ export default function LiveEventsSection({ sessionUser }) {
               <p style={{ fontSize: '13.5px', color: '#cbd5e1', lineHeight: 1.7, margin: '0 0 14px' }}>
                 {evt.description || `${evt.title} brings ${evt.artist} to ${evt.venue} in ${evt.city} for an immersive live showcase powered by TuneMavens Tour Capital and 24-bit spatial soundstage engineering.`}
               </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px', marginBottom: '12px', fontSize: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '3px', padding: '10px 12px' }}>
+                <div style={{ color: '#94a3b8' }}><strong style={{ color: '#e2e8f0' }}>Hosts:</strong> {evt.hosts || evt.artist}</div>
+                <div style={{ color: '#94a3b8' }}><strong style={{ color: '#e2e8f0' }}>MC:</strong> {evt.mc || 'TuneMavens Live Host'}</div>
+                <div style={{ color: '#94a3b8' }}><strong style={{ color: '#e2e8f0' }}>Entertainers:</strong> {evt.entertainers || evt.artist}</div>
+              </div>
+              {isAdmin && (
+                <div style={{ marginBottom: '12px' }}>
+                  <button
+                    type="button"
+                    disabled={settingFeaturedId === evt.id || evt.is_featured}
+                    onClick={() => handleSetFeaturedEvent(evt)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '3px',
+                      border: evt.is_featured ? '1px solid #f59e0b' : '1px solid rgba(245,158,11,0.45)',
+                      background: evt.is_featured ? 'rgba(245,158,11,0.18)' : 'rgba(245,158,11,0.08)',
+                      color: '#f59e0b',
+                      fontSize: '11.5px',
+                      fontWeight: 800,
+                      cursor: evt.is_featured ? 'default' : 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                    }}
+                  >
+                    <RiStarFill size={12} /> {evt.is_featured ? '★ Featured Event (Home & All Event Pages)' : (settingFeaturedId === evt.id ? 'Updating...' : 'Set as Featured Event (Admin Only)')}
+                  </button>
+                </div>
+              )}
               <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
                 Every ticket purchased on this page mints a cryptographic QR pass tied to your TuneStream &amp; TunePay wallet, with automated split settlement directly to the performing artist, promoter, and venue.
               </p>
@@ -1683,6 +1751,32 @@ export default function LiveEventsSection({ sessionUser }) {
                     >
                       <RiSparklingFill size={14} /> {isFreeRsvp ? 'View Invited' : 'Join VIP List'}
                     </button>
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        disabled={settingFeaturedId === evt.id || evt.is_featured}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSetFeaturedEvent(evt);
+                        }}
+                        title="Admin-only: Feature this event on Home & all Event pages"
+                        style={{
+                          padding: '6px 10px',
+                          borderRadius: '3px',
+                          border: evt.is_featured ? '1px solid #f59e0b' : '1px solid rgba(245,158,11,0.4)',
+                          background: evt.is_featured ? 'rgba(245,158,11,0.18)' : 'rgba(245,158,11,0.06)',
+                          color: '#f59e0b',
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          cursor: evt.is_featured ? 'default' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        <RiStarFill size={11} /> {evt.is_featured ? 'Featured' : 'Set Featured'}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

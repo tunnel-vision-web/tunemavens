@@ -209,3 +209,48 @@ def test_strict_plus_2_and_open_policy_plus_smart_crm_invitations():
     assert open_rsvp.status_code == 200
     assert open_rsvp.json()["party_size"] == 5
     assert open_rsvp.json()["rsvp_summary"]["standing_confirmed"] == 5
+
+
+def test_featured_event_admin_only_and_guest_reconciliation():
+    """Verify Admin-only single Featured Event across Home & Events + live guest list reconciliation + direct confirmation link."""
+    # 1. Non-admin (anonymous or creator) cannot set featured event
+    unauth = client.post("/api/events/evt-ndufo-album-listening-nairobi/feature")
+    assert unauth.status_code == 403
+
+    creator_client = TestClient(app)
+    creator_client.post("/api/auth/demo?role=creator")
+    creator_res = creator_client.post("/api/events/evt-ndufo-album-listening-nairobi/feature")
+    assert creator_res.status_code == 403
+
+    # 2. Admin can set a specific featured event
+    admin_client = TestClient(app)
+    admin_login = admin_client.post("/api/auth/demo?role=admin")
+    assert admin_login.status_code == 200
+
+    feat_set = admin_client.post("/api/events/evt-ndufo-album-listening-nairobi/feature")
+    assert feat_set.status_code == 200
+    assert feat_set.json()["featured_event"]["id"] == "evt-ndufo-album-listening-nairobi"
+    assert feat_set.json()["featured_event"]["is_featured"] is True
+
+    # Verify ONLY ONE event is featured across /api/events and /api/events/featured
+    all_ev = client.get("/api/events").json()["events"]
+    featured_list = [e for e in all_ev if e.get("is_featured")]
+    assert len(featured_list) == 1
+    assert featured_list[0]["id"] == "evt-ndufo-album-listening-nairobi"
+
+    feat_get = client.get("/api/events/featured")
+    assert feat_get.status_code == 200
+    fe = feat_get.json()["featured_event"]
+    assert fe["id"] == "evt-ndufo-album-listening-nairobi"
+    assert fe.get("hosts")
+    assert fe.get("mc")
+    assert fe.get("entertainers")
+
+    # 3. Direct confirmation page resolution works
+    direct_res = client.get("/api/crm/reachout/resolve/direct?event_id=evt-ndufo-album-listening-nairobi&promo=event")
+    assert direct_res.status_code == 200
+    assert direct_res.json()["event"]["id"] == "evt-ndufo-album-listening-nairobi"
+    assert direct_res.json()["is_preview"] is False
+
+    # Restore default featured event so seeded state stays tidy
+    admin_client.post("/api/events/evt-ndufo-nairobi-tonight/feature")
