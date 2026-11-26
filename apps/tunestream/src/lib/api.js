@@ -14,7 +14,11 @@ export const getApiBase = () => {
 
   if (typeof window !== 'undefined' && window.location) {
     if (window.location.protocol === 'capacitor:' || window.location.protocol === 'file:') {
-      return 'https://tunestream.co';
+      return 'https://api.tunemavens.com';
+    }
+    const host = (window.location.hostname || '').toLowerCase();
+    if (host.endsWith('tunemavens.com') || host.endsWith('tunestream.co') || host.endsWith('syncmavens.com') || host.endsWith('intermaven.io') || host.endsWith('.onrender.com')) {
+      return 'https://api.tunemavens.com';
     }
   }
   return '';

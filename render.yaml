@@ -30,6 +30,9 @@ services:
     name: tunestream
     buildCommand: "npm run build:tunestream"
     staticPublishPath: "apps/tunestream/dist"
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: "https://api.tunemavens.com"
     routes:
       - type: rewrite
         source: /*
@@ -39,6 +42,9 @@ services:
     name: tunemavens-portal
     buildCommand: "npm run build:portal"
     staticPublishPath: "apps/portal/dist"
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: "https://api.tunemavens.com"
     routes:
       - type: rewrite
         source: /*
@@ -48,6 +54,9 @@ services:
     name: syncmavens
     buildCommand: "npm run build:syncmavens"
     staticPublishPath: "apps/syncmavens/dist"
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: "https://api.tunemavens.com"
     routes:
       - type: rewrite
         source: /*
