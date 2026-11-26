@@ -2,8 +2,21 @@
 
 .affiliate-admin-panel {
   padding: 24px;
+  width: 100%;
   max-width: 1280px;
+  min-width: 0;
   margin: 0 auto;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.aff-partner-portal-section,
+.aff-network-section,
+.aff-partner-conversions-card {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* Header */
@@ -250,11 +263,17 @@
   background: rgba(14, 20, 42, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 3px;
+  width: 100%;
+  max-width: 100%;
+  display: block;
   overflow-x: auto;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
 }
 
 .aff-admin-table {
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
   font-size: 13px;
   text-align: left;
