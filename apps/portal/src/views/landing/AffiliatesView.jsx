@@ -265,7 +265,7 @@ export default function AffiliatesView({ sessionUser }) {
     handle: '',
     custom_ref: '',
     website_or_social: '',
-    audience_category: 'curator',
+    audience_category: 'affiliate',
     target_region: 'global',
     payout_method: 'mpesa',
     payout_account: ''
@@ -1173,21 +1173,6 @@ export default function AffiliatesView({ sessionUser }) {
                   </div>
 
                   <div className="form-grid-2">
-                    <div className="form-group">
-                      <label>Your Role / Audience Category</label>
-                      <select 
-                        value={applyForm.audience_category}
-                        onChange={(e) => setApplyForm({ ...applyForm, audience_category: e.target.value })}
-                        className="aff-form-select"
-                      >
-                        <option value="curator">Playlist Curator</option>
-                        <option value="creator">Independent Artist / Creator</option>
-                        <option value="producer">Producer / Sound Engineer</option>
-                        <option value="blogger">Music Blogger / Journalist</option>
-                        <option value="label">Record Label / Manager</option>
-                        <option value="podcaster">Podcaster / Content Creator</option>
-                      </select>
-                    </div>
 
                     <div className="form-group">
                       <label>Preferred Payout Rail</label>

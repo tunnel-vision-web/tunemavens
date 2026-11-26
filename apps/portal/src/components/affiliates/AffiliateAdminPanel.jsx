@@ -574,6 +574,16 @@ export default function AffiliateAdminPanel({ sessionUser, setActiveTab }) {
             {academyStatus.completed_count}/{academyStatus.total_required} Read
           </span>
         </button>
+        {typeof setActiveTab === 'function' && (
+          <button
+            className="aff-subnav-btn"
+            onClick={() => setActiveTab('crm')}
+            data-testid="subnav-affiliate-smart-crm"
+            style={{ borderColor: 'rgba(34, 211, 238, 0.35)', color: '#67e8f9' }}
+          >
+            <RiShareLine /> Smart CRM &amp; Reachout
+          </button>
+        )}
         {isAdminUser && (
           <>
             <button 

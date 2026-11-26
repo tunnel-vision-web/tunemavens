@@ -2586,7 +2586,7 @@ function DashboardView({
         visibleKeys = ['home', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'podcasts', 'splits', 'corporate-ads', 'social-ai', 'crm', 'inbox', 'domain-mappings', 'hosting-manager', 'profile', 'affiliates', 'support'];
         break;
       case 'consumer':
-        visibleKeys = ['home', 'dj-mixes', 'podcasts', 'podcaster-studio', 'library', 'tips', 'inbox', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'support'];
+        visibleKeys = ['home', 'dj-mixes', 'podcasts', 'podcaster-studio', 'library', 'tips', 'crm', 'inbox', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'support'];
         break;
       case 'creator':
       default:
@@ -2655,6 +2655,7 @@ function DashboardView({
       ],
       'Listener Apps & Support': [
         { id: 'listener-apps', label: 'Listener Apps Suite', icon: RiApps2Fill, color: '#00f2fe', badge: 'APPS' },
+        { id: 'crm', label: 'Smart CRM & Reachout', icon: RiMessage2Fill, color: '#22d3ee', badge: 'CRM' },
         { id: 'support', label: 'Listener Support Desk', icon: RiCustomerService2Fill },
         { id: 'profile', label: 'Taste & Audio Preferences', icon: RiSettings3Fill },
       ]

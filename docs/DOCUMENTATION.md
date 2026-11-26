@@ -3837,6 +3837,9 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
     - **First-Name Personalization & Persistent Intelligence**: Updated `generateAiAssistantResponse` (`apps/portal/src/services/userLifecycleMemory.js`) and `POST /api/admin/console/ask-ai` (`backend/routes/backend_admin_router.py`) to greet users by first name (`Hi <FirstName>!`), identify as **Maven**, and retain full live awareness of role, route/tab, credits, recent actions, Featured Events, Multi-EPK, Waitlists, Smart CRM, and splits.
     - **25-Second Pop-Up Persistent Chat Overlay Across All Apps**: Added `MavenAssistantOverlay.jsx` to `apps/portal`, `apps/tunestream`, and `apps/syncmavens`, upgraded `backend/admin_app/index.html` with the matching **Maven** 25s auto-popup drawer + `localStorage` chat persistence, and added `js/maven-widget.js` to `Intermaven/index.html`.
     - **Production VPS Deployment Package (`deploy/vps/` & `docs/VPS_DEPLOYMENT_GUIDE.md`)**: Added `Dockerfile.backend`, `Dockerfile.api`, `docker-compose.prod.yml`, multi-domain `nginx/intermaven.conf` (`intermaven.io`, `tunemavens.com`, `tunestream.co`, `syncmavens.com`), `.env.production.template`, and `deploy.sh`.
+  - **Streamlined Affiliate Sign-Up & Universal Smart CRM Access**:
+    - Removed the redundant Role / Audience Category selector from the Affiliate Application modal (`AffiliatesView.jsx`) and skipped the Role selection step in `RegisterView.jsx` when registering specifically for an Affiliate account.
+    - Enabled **Smart CRM & Reachout** across all user roles (including `affiliate` and `consumer` listener workspaces in `apps/portal/src/App.jsx`) and added a direct **Smart CRM & Reachout** button inside the Affiliate Programme sub-navigation (`AffiliateAdminPanel.jsx`).
 
 
 

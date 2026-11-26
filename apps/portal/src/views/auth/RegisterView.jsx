@@ -266,7 +266,11 @@ export default function RegisterView({ onLogin }) {
   };
 
   const getStepsForRoles = (selectedRoles) => {
-    const list = ['Role'];
+    const isDedicatedAffiliateSignup =
+      Array.isArray(selectedRoles) &&
+      selectedRoles.length === 1 &&
+      selectedRoles[0] === 'affiliate';
+    const list = isDedicatedAffiliateSignup ? [] : ['Role'];
     if (Array.isArray(selectedRoles)) {
       selectedRoles.forEach(r => {
         if (stepsMap[r]) {
