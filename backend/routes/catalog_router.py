@@ -825,10 +825,35 @@ def get_catalog_pricing_recommendation(
     }
 
 
+def _assert_catalog_subdomain_ownership(clean_sub: str, current_user: Optional[dict]) -> None:
+    """Ensure the authenticated user owns this subdomain or manages it via affiliate/label roster (or is admin)."""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required.")
+    scope = _get_catalog_account_scope(current_user)
+    if scope is None:
+        return  # Admin unrestricted
+    if clean_sub in scope["subdomains"]:
+        return
+    epk_doc = db.epks.find_one({"subdomain": clean_sub})
+    if epk_doc:
+        if str(epk_doc.get("user_id") or "") in scope["user_ids"] or (epk_doc.get("owner_email") or "").lower() in scope["emails"]:
+            return
+    art_doc = db.artists.find_one({"subdomain": clean_sub})
+    if art_doc:
+        if str(art_doc.get("owner_id") or "") in scope["user_ids"] or (art_doc.get("owner_email") or "").lower() in scope["emails"]:
+            return
+    # Allow creating a brand-new subdomain only if not already owned by someone else
+    cat_doc = db.catalog_tracks.find_one({"subdomain": clean_sub})
+    if not epk_doc and not art_doc and not cat_doc:
+        return
+    raise HTTPException(status_code=403, detail="Access denied: you cannot add, edit, or delete another user's catalog or IP.")
+
+
 @router.post("/tracks", response_model=Dict[str, Any])
-def add_catalog_track(payload: Dict[str, Any], subdomain: str = Query("ndufo")):
+def add_catalog_track(payload: Dict[str, Any], subdomain: str = Query("ndufo"), current_user: Optional[dict] = Depends(get_optional_user)):
     """Add or append single or multiple tracks into the catalog."""
     clean = subdomain.lower().strip().replace(" ", "")
+    _assert_catalog_subdomain_ownership(clean, current_user)
     existing_res = get_catalog_tracks(subdomain=clean)
     existing_tracks = existing_res.get("tracks", [])
 
@@ -875,9 +900,10 @@ def add_catalog_track(payload: Dict[str, Any], subdomain: str = Query("ndufo")):
 
 
 @router.post("/wizard-ingest", response_model=Dict[str, Any])
-def wizard_ingest_release(payload: WizardIngestPayload):
+def wizard_ingest_release(payload: WizardIngestPayload, current_user: Optional[dict] = Depends(get_optional_user)):
     """Complete multi-step wizard ingestion: Project/Album + Audio Tracks + Writers + Splits."""
     clean = (payload.subdomain or "ndufo").lower().strip().replace(" ", "")
+    _assert_catalog_subdomain_ownership(clean, current_user)
     project = payload.project or payload.release or {}
     tracks_input = payload.tracks
 
@@ -977,9 +1003,10 @@ def wizard_ingest_release(payload: WizardIngestPayload):
 
 
 @router.put("/tracks/{isrc}", response_model=Dict[str, Any])
-def update_catalog_track(isrc: str, payload: Dict[str, Any], subdomain: str = Query("ndufo")):
+def update_catalog_track(isrc: str, payload: Dict[str, Any], subdomain: str = Query("ndufo"), current_user: Optional[dict] = Depends(get_optional_user)):
     """Update track metadata, writers, producers, and revenue split allocations."""
     clean = subdomain.lower().strip().replace(" ", "")
+    _assert_catalog_subdomain_ownership(clean, current_user)
     existing_res = get_catalog_tracks(subdomain=clean)
     existing_tracks = existing_res.get("tracks", [])
 
@@ -1012,9 +1039,10 @@ def update_catalog_track(isrc: str, payload: Dict[str, Any], subdomain: str = Qu
 
 
 @router.delete("/tracks/{isrc}", response_model=Dict[str, Any])
-def delete_catalog_track(isrc: str, subdomain: str = Query("ndufo")):
+def delete_catalog_track(isrc: str, subdomain: str = Query("ndufo"), current_user: Optional[dict] = Depends(get_optional_user)):
     """Permanently delete a track from the catalogue across all collections."""
     clean = subdomain.lower().strip().replace(" ", "")
+    _assert_catalog_subdomain_ownership(clean, current_user)
     existing_res = get_catalog_tracks(subdomain=clean)
     existing_tracks = existing_res.get("tracks", [])
 
@@ -1054,9 +1082,10 @@ class UpdateTrackAudioPayload(BaseModel):
 
 
 @router.post("/albums/artwork", response_model=Dict[str, Any])
-def update_album_artwork(payload: UpdateAlbumArtworkPayload):
+def update_album_artwork(payload: UpdateAlbumArtworkPayload, current_user: Optional[dict] = Depends(get_optional_user)):
     """Updates the cover artwork of an existing ingested album across db.releases, catalog tracks, EPK, and CMS."""
     subdomain = (payload.subdomain or "ndufo").lower().strip().replace(" ", "")
+    _assert_catalog_subdomain_ownership(subdomain, current_user)
     album_title = (payload.albumTitle or payload.release_title or payload.album_title or "").strip()
     artwork_url = (payload.artworkUrl or payload.artwork_url or "").strip()
     bg_gradient = (payload.bg_gradient or payload.bgGradient or "").strip()
@@ -1118,9 +1147,10 @@ def update_album_artwork(payload: UpdateAlbumArtworkPayload):
 
 
 @router.put("/tracks/{identifier}/audio", response_model=Dict[str, Any])
-def update_track_audio(identifier: str, payload: UpdateTrackAudioPayload):
+def update_track_audio(identifier: str, payload: UpdateTrackAudioPayload, current_user: Optional[dict] = Depends(get_optional_user)):
     """Attaches an audio URL / storage link to a catalog track."""
     clean = (payload.subdomain or "ndufo").lower().strip().replace(" ", "")
+    _assert_catalog_subdomain_ownership(clean, current_user)
     existing_res = get_catalog_tracks(subdomain=clean)
     existing_tracks = existing_res.get("tracks", [])
 
@@ -1415,9 +1445,10 @@ def create_or_add_artist(
 
 
 @router.put("/artists/{artist_id}", response_model=Dict[str, Any])
-def update_artist_profile(artist_id: str, payload: ArtistPayload):
+def update_artist_profile(artist_id: str, payload: ArtistPayload, current_user: Optional[dict] = Depends(get_optional_user)):
     """Edit an existing artist profile in the roster."""
     clean_sub = re.sub(r"[^a-zA-Z0-9_-]", "", payload.subdomain.lower().strip())
+    _assert_catalog_subdomain_ownership(clean_sub or artist_id.replace("art_", "").lower().strip(), current_user)
     now = datetime.now(timezone.utc)
 
     update_fields = {
@@ -1453,9 +1484,10 @@ def update_artist_profile(artist_id: str, payload: ArtistPayload):
 
 
 @router.delete("/artists/{artist_id}", response_model=Dict[str, Any])
-def delete_artist_profile(artist_id: str):
+def delete_artist_profile(artist_id: str, current_user: Optional[dict] = Depends(get_optional_user)):
     """Delete an artist profile from the roster."""
     clean_sub = artist_id.replace("art_", "").lower().strip()
+    _assert_catalog_subdomain_ownership(clean_sub, current_user)
     if clean_sub == "ndufo":
         raise HTTPException(status_code=400, detail="Cannot delete default system artist 'ndufo'.")
 
@@ -1508,6 +1540,7 @@ def bulk_ingest_catalog(
     if not incoming_tracks:
         raise HTTPException(status_code=400, detail="No tracks provided for bulk ingestion.")
 
+    _assert_catalog_subdomain_ownership(clean, current_user)
     existing_res = get_catalog_tracks(subdomain=clean)
     existing_tracks = list(existing_res.get("tracks", []))
     existing_isrcs = {t.get("isrc") for t in existing_tracks if t.get("isrc")}

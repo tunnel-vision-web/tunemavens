@@ -671,10 +671,28 @@ def check_subdomain_availability(subdomain: str, request: Request):
     return {"available": True, "subdomain": clean_subdomain, "reason": "available"}
 
 
+def _assert_epk_subdomain_ownership(clean_subdomain: str, current_user: dict) -> None:
+    """Verify the authenticated user owns this EPK or manages it via affiliate/label roster (or is admin)."""
+    scope = _get_allowed_epk_scope(current_user)
+    if scope is None:
+        return
+    existing = db.epks.find_one({"subdomain": clean_subdomain})
+    if existing:
+        owner_id = str(existing.get("user_id") or "")
+        owner_email = (existing.get("owner_email") or "").lower()
+        if (
+            owner_id not in scope["user_ids"]
+            and owner_email not in scope["emails"]
+            and clean_subdomain not in scope["subdomains"]
+        ):
+            raise HTTPException(status_code=403, detail="Access denied: cannot modify another user's EPK.")
+
+
 @router.put("/public/{subdomain}", response_model=Dict[str, Any])
-def update_public_epk(subdomain: str, payload: Dict[str, Any]):
+def update_public_epk(subdomain: str, payload: Dict[str, Any], current_user: dict = Depends(get_current_user)):
     """Update published EPK configuration directly from the Live CMS Editor."""
     clean_subdomain = subdomain.lower().strip().replace(" ", "")
+    _assert_epk_subdomain_ownership(clean_subdomain, current_user)
     payload["updated_at"] = datetime.now(timezone.utc)
     payload["subdomain"] = clean_subdomain
     payload["artist_name"] = payload.get("artist_name") or clean_subdomain.capitalize()
@@ -720,9 +738,10 @@ def update_public_epk(subdomain: str, payload: Dict[str, Any]):
 
 
 @router.post("/public/{subdomain}/rollback/{version}", response_model=Dict[str, Any])
-def rollback_public_epk(subdomain: str, version: int):
+def rollback_public_epk(subdomain: str, version: int, current_user: dict = Depends(get_current_user)):
     """Roll back EPK to a previous CMS snapshot."""
     clean_subdomain = subdomain.lower().strip().replace(" ", "")
+    _assert_epk_subdomain_ownership(clean_subdomain, current_user)
     entry = db.epk_history.find_one({"subdomain": clean_subdomain, "version": version})
     if not entry:
         raise HTTPException(status_code=404, detail="Snapshot version not found")
@@ -763,8 +782,9 @@ def get_epk_history(subdomain: str):
 
 
 @router.post("/public/{subdomain}")
-def update_public_epk_post(subdomain: str, payload: Dict[str, Any]):
+def update_public_epk_post(subdomain: str, payload: Dict[str, Any], current_user: dict = Depends(get_current_user)):
     clean_subdomain = subdomain.lower().strip().replace(" ", "")
+    _assert_epk_subdomain_ownership(clean_subdomain, current_user)
     payload["subdomain"] = clean_subdomain
     payload["updated_at"] = datetime.now(timezone.utc)
     clean_payload = {k: v for k, v in payload.items() if k != "_id"}
@@ -804,13 +824,14 @@ class CreatorHeaderAiEditRequest(BaseModel):
 def edit_creator_header_ai(
     subdomain: str,
     payload: CreatorHeaderAiEditRequest,
-    current_user: Optional[dict] = Depends(get_optional_user)
+    current_user: dict = Depends(get_current_user)
 ):
     """AI-Assisted creator header image generation & prompt-based editing.
     Generates a bespoke 2560x854 retina widescreen banner for the creator's EPK/profile,
     persisting it to all web app public assets and updating MongoDB.
     """
     clean_subdomain = subdomain.lower().strip().replace(" ", "")
+    _assert_epk_subdomain_ownership(clean_subdomain, current_user)
     prompt = payload.prompt.strip()
     if not prompt:
         raise HTTPException(
