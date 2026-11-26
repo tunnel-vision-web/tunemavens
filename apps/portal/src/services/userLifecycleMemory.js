@@ -1025,10 +1025,35 @@ export function saveAiChatHistory(userId, history) {
 /**
  * Generate an intelligent, context-aware AI response utilizing full lifecycle memory
  */
+function getUserFirstName(user, memory) {
+  const raw =
+    user?.first_name ||
+    user?.firstName ||
+    (memory?.userName && memory.userName !== 'Creator' ? memory.userName : '') ||
+    user?.name ||
+    user?.full_name ||
+    user?.brand_name ||
+    '';
+  const cleaned = String(raw).trim();
+  if (cleaned) {
+    const first = cleaned.split(/\s+/)[0];
+    if (first && first.toLowerCase() !== 'creator' && first.toLowerCase() !== 'guest') {
+      return first;
+    }
+  }
+  if (user?.email) {
+    const emailLocal = String(user.email).split('@')[0].split(/[._-]/)[0];
+    if (emailLocal) return emailLocal.charAt(0).toUpperCase() + emailLocal.slice(1);
+  }
+  return 'there';
+}
+
 export function generateAiAssistantResponse(query, user, activeTab, conversationHistory) {
   const memory = loadUserLifecycleMemory(user);
+  const firstName = getUserFirstName(user, memory);
   const q = query.toLowerCase().trim();
   const currentApp = APP_DOC_MAPPINGS[activeTab] || { appTitle: activeTab || 'Workspace' };
+  const latestActivity = memory.recentActivities?.[0]?.action || 'Active ecosystem session';
 
   // Contextual intelligence based on lifecycle query & active tool
   if (q.includes('companion') || q.includes('tunecompanion') || activeTab === 'companion' || activeTab === 'tunecompanion') {
@@ -1322,15 +1347,15 @@ I retain persistent memory of your catalog (${memory.catalogStats.registeredTrac
 
   // Default context-aware response
   return {
-    reply: `Hello ${memory.userName}! I am your **TuneMavens AI Copilot**, equipped with full memory of your creator lifecycle, recent actions, and catalog assets.
+    reply: `Hi ${firstName}! I'm **Maven**, your persistent intelligence across TuneMavens, TuneStream, SyncMavens, and Intermaven.
 
-You are currently working in **${currentApp.appTitle}**. Based on your profile (${memory.primaryRole} with ${memory.creditsBalance} credits and ${memory.catalogStats.registeredTracks} registered tracks), I can help you with:
-* Verifying split sheets and collaborator payout cascades.
-* Reviewing global mechanical & performance royalty collection status.
-* Analyzing loudness targets for streaming and sync deliverables.
-* Preparing one-stop metadata for music supervisor briefs.
+I'm tracking your live session in **${currentApp.appTitle}** (${memory.primaryRole} • ${memory.creditsBalance} credits • ${memory.catalogStats.registeredTracks} registered tracks • Latest: *${latestActivity}*). Here is what I can help you with right now:
+* **Events, Multi-EPK & Waitlists**: Featured Events, multiple EPKs per user/entity, and automated FIFO waitlist spot notifications.
+* **Smart CRM & Affiliates**: Email-only reachout (hello@tunemavens.com), target groups, and 90-day attribution.
+* **Royalties & Split Cascades**: Master (SR) + Composition (PA) split sheets and M-Pesa / Stripe / PayPal payouts.
+* **Sync & Distribution**: One-stop sync briefs on SyncMavens and 24-bit lossless distribution on TuneStream.
 
-How would you like to proceed with your current project?`,
+What would you like to tackle next, ${firstName}?`,
     suggestedActions: [
       { label: `Read Docs for ${currentApp.appTitle}`, link: getRelevantDocLink(activeTab).url },
       { label: 'Explore Knowledge Base', link: '/#/help' }

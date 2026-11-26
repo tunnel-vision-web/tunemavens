@@ -1,4 +1,5 @@
 import OnboardingTasteModal, { AUTHORITATIVE_CREATORS_FOR_TASTE, GENRES_LIST } from './components/common/OnboardingTasteModal.jsx';
+import MavenAssistantOverlay from './components/common/MavenAssistantOverlay.jsx';
 import { initPlaybackSync, broadcastPlaybackStart, broadcastPlaybackStop } from './lib/playbackSync.js';
 import ConsumerSupportCommunityView from './components/community/ConsumerSupportCommunityView.jsx';
 import HiFiAudioPlayer from './components/player/HiFiAudioPlayer.jsx';
@@ -634,6 +635,7 @@ function AppContent() {
           try { localStorage.setItem('tunemavens_user_credits', String(newCredits)); } catch (_) {}
         }}
       />
+      <MavenAssistantOverlay sessionUser={sessionUser} appName="TuneStream" />
     </div>
   );
 }

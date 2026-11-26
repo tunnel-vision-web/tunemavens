@@ -1582,29 +1582,33 @@
     </main>
   </div>
 
-  <!-- ASK AI ASSISTANT DRAWER -->
+  <!-- ASK MAVEN PERSISTENT ASSISTANT DRAWER -->
+  <button id="mavenFloatingLauncher" onclick="toggleAiDrawer()" style="position: fixed; bottom: 20px; right: 20px; z-index: 9998; display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: rgba(9, 14, 28, 0.96); color: #f8fafc; border: 1px solid rgba(34, 211, 238, 0.48); border-radius: 3px; box-shadow: 0 10px 28px rgba(0,0,0,0.55); cursor: pointer; font-size: 13px; font-weight: 700;">
+    <span style="width: 8px; height: 8px; border-radius: 50%; background: #22d3ee; box-shadow: 0 0 8px #22d3ee;"></span>
+    <span>Ask Maven</span>
+  </button>
   <div class="ai-drawer" id="aiDrawer">
     <div class="ai-drawer-header">
       <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #ffffff;">
-        <span style="color: var(--cyan); font-size: 18px;">🤖</span>
-        <span>TuneSupport Operations AI</span>
+        <span style="color: var(--cyan); font-size: 18px;">✨</span>
+        <span>Maven • Persistent Operations AI</span>
       </div>
       <button class="btn" onclick="toggleAiDrawer()" style="padding: 2px 6px;">✕</button>
     </div>
     <div class="ai-chat-body" id="aiChatBody">
-      <div class="ai-chat-bubble bubble-assistant">
-        Hello! I am TuneSupport Operations AI. I am loaded with the full context for <strong>Administrator</strong> and the entire platform catalog. How can I assist you with Wall of Fame inductions, user roles, CRM leads, or split cascades?
+      <div class="ai-chat-bubble bubble-assistant" id="mavenAdminWelcome">
+        Hi there! I'm <strong>Maven</strong>, your persistent intelligence across the Admin Console, TuneMavens, TuneStream, SyncMavens, and Intermaven. How can I assist you today?
         <div class="ai-quick-chips">
           <span class="ai-chip" onclick="askAiPrompt('How do I induct an icon to Wall of Fame?')">Induct an Icon</span>
+          <span class="ai-chip" onclick="askAiPrompt('Explain Featured Events & Waitlist')">Events & Waitlist</span>
           <span class="ai-chip" onclick="askAiPrompt('Explain Persona RBAC permissions')">RBAC Permissions</span>
-          <span class="ai-chip" onclick="askAiPrompt('How does the Smart CRM WhatsApp protocol work?')">WhatsApp CRM</span>
           <span class="ai-chip" onclick="askAiPrompt('Explain Master vs Composition splits')">Dual Splits</span>
         </div>
       </div>
     </div>
     <div class="ai-input-area">
-      <input type="text" id="aiInputPrompt" class="form-input" style="flex: 1;" placeholder="Ask AI about admin operations, CRM, splits, RBAC..." onkeydown="if(event.key==='Enter') submitAiQuestion()">
-      <button class="btn btn-primary" onclick="submitAiQuestion()">Ask</button>
+      <input type="text" id="aiInputPrompt" class="form-input" style="flex: 1;" placeholder="Ask Maven about admin operations, CRM, splits, RBAC..." onkeydown="if(event.key==='Enter') submitAiQuestion()">
+      <button class="btn btn-primary" onclick="submitAiQuestion()">Ask Maven</button>
     </div>
   </div>
 
@@ -3165,13 +3169,66 @@
     }
 
     // ===================================================================
-    // ASK AI ASSISTANT
+    // ASK MAVEN PERSISTENT ASSISTANT
     // ===================================================================
+    function getMavenAdminFirstName() {
+      try {
+        const saved = sessionStorage.getItem('tunemavens_session') || localStorage.getItem('tunemavens_saved_user');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          const raw = (parsed.first_name || parsed.name || parsed.brand_name || '').trim();
+          if (raw) {
+            const first = raw.split(/\s+/)[0];
+            if (first && first.toLowerCase() !== 'creator' && first.toLowerCase() !== 'guest') return first;
+          }
+        }
+      } catch (_) {}
+      return 'there';
+    }
+
+    (function initMavenAdminOverlay() {
+      const firstName = getMavenAdminFirstName();
+      const welcome = document.getElementById('mavenAdminWelcome');
+      if (welcome && firstName !== 'there') {
+        welcome.innerHTML = `Hi ${escapeHtml(firstName)}! I'm <strong>Maven</strong>, your persistent intelligence across the Admin Console, TuneMavens, TuneStream, SyncMavens, and Intermaven. How can I assist you today?
+        <div class="ai-quick-chips">
+          <span class="ai-chip" onclick="askAiPrompt('How do I induct an icon to Wall of Fame?')">Induct an Icon</span>
+          <span class="ai-chip" onclick="askAiPrompt('Explain Featured Events & Waitlist')">Events & Waitlist</span>
+          <span class="ai-chip" onclick="askAiPrompt('Explain Persona RBAC permissions')">RBAC Permissions</span>
+          <span class="ai-chip" onclick="askAiPrompt('Explain Master vs Composition splits')">Dual Splits</span>
+        </div>`;
+      }
+      // Restore persisted chat history across Admin reloads
+      try {
+        const savedHistory = JSON.parse(localStorage.getItem('maven_admin_chat_history') || '[]');
+        const chatBody = document.getElementById('aiChatBody');
+        if (chatBody && Array.isArray(savedHistory) && savedHistory.length > 0) {
+          savedHistory.forEach(item => {
+            const b = document.createElement('div');
+            b.className = 'ai-chat-bubble ' + (item.sender === 'user' ? 'bubble-user' : 'bubble-assistant');
+            b.innerText = item.text;
+            chatBody.appendChild(b);
+          });
+        }
+      } catch (_) {}
+      // Auto-popup after 25 seconds of browsing if not dismissed
+      if (sessionStorage.getItem('maven_overlay_dismissed_v1') !== 'true') {
+        setTimeout(() => {
+          const drawer = document.getElementById('aiDrawer');
+          if (drawer && !drawer.classList.contains('open')) {
+            drawer.classList.add('open');
+          }
+        }, 25000);
+      }
+    })();
+
     function toggleAiDrawer() {
       const drawer = document.getElementById('aiDrawer');
       drawer.classList.toggle('open');
       if (drawer.classList.contains('open')) {
         document.getElementById('aiInputPrompt').focus();
+      } else {
+        sessionStorage.setItem('maven_overlay_dismissed_v1', 'true');
       }
     }
 
@@ -3186,6 +3243,7 @@
       if (!prompt) return;
 
       const chatBody = document.getElementById('aiChatBody');
+      const firstName = getMavenAdminFirstName();
 
       // Append user bubble
       const userBubble = document.createElement('div');
@@ -3194,10 +3252,16 @@
       chatBody.appendChild(userBubble);
       input.value = '';
 
+      try {
+        const hist = JSON.parse(localStorage.getItem('maven_admin_chat_history') || '[]');
+        hist.push({ sender: 'user', text: prompt });
+        localStorage.setItem('maven_admin_chat_history', JSON.stringify(hist.slice(-30)));
+      } catch (_) {}
+
       // Typing placeholder
       const loadingBubble = document.createElement('div');
       loadingBubble.className = 'ai-chat-bubble bubble-assistant';
-      loadingBubble.innerText = 'Consulting TuneSupport AI...';
+      loadingBubble.innerText = 'Maven is thinking...';
       chatBody.appendChild(loadingBubble);
       chatBody.scrollTop = chatBody.scrollHeight;
 
@@ -3205,9 +3269,19 @@
         const res = await fetch('/api/admin/console/ask-ai', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt, persona: currentPersona })
+          body: JSON.stringify({
+            prompt,
+            persona: currentPersona,
+            first_name: firstName,
+            active_route: 'Admin Console'
+          })
         });
         const data = await res.json();
+        try {
+          const hist = JSON.parse(localStorage.getItem('maven_admin_chat_history') || '[]');
+          hist.push({ sender: 'assistant', text: data.reply });
+          localStorage.setItem('maven_admin_chat_history', JSON.stringify(hist.slice(-30)));
+        } catch (_) {}
         
         // Render assistant bubble with suggested chips
         loadingBubble.innerHTML = `
@@ -3220,7 +3294,7 @@
         `;
         chatBody.scrollTop = chatBody.scrollHeight;
       } catch (err) {
-        loadingBubble.innerText = 'AI service temporarily unavailable. Please try again.';
+        loadingBubble.innerText = 'Maven service temporarily unavailable. Please try again.';
       }
     }
 

@@ -1770,6 +1770,24 @@ Every communication logged in your **Communications Vault** includes an embedded
 * **Verifiable Airplay Certificates**: Broadcast spins generate cryptographically signed proof-of-airplay certificates (\`TM-BROADCAST-YYYY-XXXX\`) certifying verified transmission for artist royalites.`
       }
     ]
+  },
+  {
+    id: 'maven-persistent-ecosystem-ai',
+    title: 'Maven: Persistent Ecosystem AI & 25-Second Assistant Overlay',
+    category: 'Platform Guides',
+    readTime: '4 min read',
+    summary: 'Meet Maven — your first-name personalized, persistently aware AI assistant across TuneMavens, TuneStream, SyncMavens, Intermaven, and the Admin Console.',
+    sections: [
+      {
+        heading: 'First-Name Personalization & Live Lifecycle Awareness',
+        content: `Maven automatically resolves your first name (for example, "Hi Tim!") and continuously tracks your active workspace, persona role, credit balance, catalog stats, and recent ecosystem activity across every route.`
+      },
+      {
+        heading: '25-Second Pop-Up Overlay & Cross-App Memory',
+        content: `* **25-Second Browsing Trigger**: After 25 seconds of browsing, Maven smoothly opens as a floating dark-glass overlay (unless minimized during the current session).
+* **Full Ecosystem Persistence**: Available across TuneMavens Portal, TuneStream, SyncMavens, Intermaven, and the backend Admin Console, with conversation history persisted across route changes and page reloads.`
+      }
+    ]
   }
 ];
 

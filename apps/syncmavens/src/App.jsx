@@ -16,6 +16,7 @@ import {
 import { FaAmazon } from 'react-icons/fa';
 import smLogo from './assets/syncmavens-logo.png';
 import smIcon from './assets/syncmavens-icon.png';
+import MavenAssistantOverlay from './components/MavenAssistantOverlay.jsx';
 import './App.css';
 
 // Import local hero backgrounds copied and generated for syncmavens
@@ -3249,6 +3250,7 @@ function AppContent() {
           </Routes>
         </div>
       )}
+      <MavenAssistantOverlay sessionUser={sessionUser} appName="SyncMavens" />
     </div>
   );
 }

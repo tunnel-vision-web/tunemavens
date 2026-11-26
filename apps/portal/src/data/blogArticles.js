@@ -491,6 +491,27 @@ Unlike a sterile link list, an EPK Web World features:
 - **Dynamic Spectral Reference Matching**: Acoustic curve optimization to target LUFS standards without compromising human musicality.`
       }
     ]
+  },
+  {
+    id: "maven-persistent-ecosystem-intelligence",
+    slug: "maven-persistent-ecosystem-intelligence-and-vps-readiness",
+    title: "Introducing Maven: Persistent First-Name Intelligence Across Intermaven, TuneMavens, TuneStream & SyncMavens",
+    category: "Platform Updates",
+    author: "TuneMavens Engineering",
+    date: "Nov 26, 2026",
+    readTime: "4 min read",
+    excerpt: "Meet Maven — the 25-second persistent AI overlay that knows your first name, tracks your active workspace across front-end and backend, and ships alongside our production VPS deployment stack.",
+    coverImage: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=900&q=80",
+    sections: [
+      {
+        heading: "Personal Intelligence That Knows What You Are Working On",
+        content: "Rather than greeting creators with generic prompts, Maven addresses you by your first name and maintains live awareness of your role, route, credits, Featured Events, Multi-EPK profiles, Smart CRM campaigns, and split cascades."
+      },
+      {
+        heading: "Always-On Across Front-End & Backend + VPS Ready",
+        content: "Maven pops up automatically after 25 seconds of browsing on TuneMavens Portal, TuneStream, SyncMavens, Intermaven, and the FastAPI Admin Console. Our new deploy/vps/ Docker + Nginx stack also prepares all four domains for single-command production VPS deployment."
+      }
+    ]
   }
 ];
 

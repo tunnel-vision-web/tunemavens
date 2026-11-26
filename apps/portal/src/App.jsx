@@ -16,6 +16,7 @@ if (typeof window !== 'undefined') {
 }
 
 import './App.css'
+import MavenAssistantOverlay from './components/common/MavenAssistantOverlay.jsx'
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { 
   HashRouter as Router, Routes, Route, Link, useLocation, useNavigate, useParams, Navigate
@@ -11881,6 +11882,7 @@ function App() {
         creatorEpk={creatorEpk}
         setCreatorEpk={setCreatorEpk}
       />
+      <MavenAssistantOverlay sessionUser={sessionUser} appName="TuneMavens Portal" />
     </Router>
   );
 }

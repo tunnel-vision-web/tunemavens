@@ -769,14 +769,20 @@ class AskAiPayload(BaseModel):
     prompt: str
     persona: Optional[str] = "admin"
     context: Optional[str] = None
+    user_name: Optional[str] = None
+    first_name: Optional[str] = None
+    active_route: Optional[str] = None
 
 
 @router.post("/api/admin/console/ask-ai")
 def ask_ai_admin_assistant(payload: AskAiPayload):
-    """Intelligent operational AI assistant for TuneMavens admin and operators."""
+    """Maven — Persistent Ecosystem Intelligence for TuneMavens, TuneStream, SyncMavens, Intermaven & Admin."""
     prompt = payload.prompt.strip().lower()
     persona = payload.persona or "admin"
     persona_info = PERSONA_CAPABILITIES.get(persona, PERSONA_CAPABILITIES["admin"])
+    raw_name = (payload.first_name or payload.user_name or "").strip()
+    first_name = raw_name.split()[0] if raw_name and raw_name.lower() not in ("creator", "guest") else "there"
+    active_ctx = payload.active_route or payload.context or "Ecosystem Console"
 
     # Contextual knowledge retrieval
     matching_articles = []
@@ -831,11 +837,12 @@ def ask_ai_admin_assistant(payload: AskAiPayload):
         actions = ["Read Sync Licensing Masterclass", "Review Licensing Escrow"]
     else:
         reply = (
-            f"Hello! I am TuneSupport Operations AI. I am configured with complete context for the '{persona_info['name']}' persona. "
-            "I can assist you with Wall of Fame inductions, user role provisioning, Smart CRM communications, split cascades, "
-            "and ecosystem health monitoring."
+            f"Hi {first_name}! I'm Maven, your persistent intelligence across TuneMavens, TuneStream, SyncMavens, Intermaven, and the Admin Console. "
+            f"I can see you're currently in {active_ctx} under the '{persona_info['name']}' persona. "
+            "Ask me anything about Wall of Fame inductions, Featured Events & FIFO waitlists, Multi-EPK management, Smart CRM campaigns, "
+            "split cascades, or live ecosystem health."
         )
-        actions = ["How do I induct an icon?", "Explain Persona RBAC", "Inspect System Telemetry"]
+        actions = ["How do I induct an icon?", "Explain Featured Events & Waitlist", "Explain Persona RBAC", "Inspect System Telemetry"]
 
     return {
         "reply": reply,
