@@ -11571,9 +11571,13 @@ function App() {
     return () => window.removeEventListener('tunemavens:catalog_updated', handleCatUpdate);
   }, []);
 
-  // Persistent catalogue track synchronization from backend API
+  // Persistent catalogue track synchronization from backend API (scoped when signed into workspace)
   useEffect(() => {
-    fetch(`${BASE}/api/catalog/tracks?all=true`)
+    const token = tokenStore.get();
+    const isAdmin = sessionUser?.role === 'admin' || sessionUser?.is_admin === true;
+    const scopeParam = (sessionUser && !isAdmin) ? '&scope=workspace' : '';
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    fetch(`${BASE}/api/catalog/tracks?all=true${scopeParam}`, { credentials: 'include', headers })
       .then(res => {
         const ct = res.headers.get('content-type');
         if (res.ok && ct && ct.includes('application/json')) {

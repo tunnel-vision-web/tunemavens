@@ -147,9 +147,13 @@
 /* Sub-Tab Navigation */
 .aff-subnav-bar {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
+  row-gap: 6px;
+  max-width: 100%;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   margin-bottom: 24px;
+  padding-bottom: 4px;
 }
 
 .aff-subnav-btn {
@@ -157,13 +161,15 @@
   border: none;
   border-bottom: 2px solid transparent;
   color: #94a3b8;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
-  padding: 10px 16px;
+  padding: 8px 12px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.2s;
 }
 

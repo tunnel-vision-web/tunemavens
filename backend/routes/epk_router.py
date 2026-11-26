@@ -112,11 +112,66 @@ def get_default_videos(artist_name: str = "Ndufo") -> List[Dict[str, Any]]:
     ]
 
 
+def _get_allowed_epk_scope(current_user: dict) -> Optional[Dict[str, Any]]:
+    """Return allowed user_ids, emails, and subdomains for the current user (None = admin unrestricted)."""
+    if (
+        current_user.get("role") == "admin"
+        or current_user.get("is_admin") is True
+        or "admin" in (current_user.get("roles") or [])
+    ):
+        return None
+
+    uid = str(current_user.get("_id", ""))
+    email = (current_user.get("email") or "").strip().lower()
+    sub = (current_user.get("username") or current_user.get("subdomain") or "").strip().lower()
+    allowed_ids = {uid} if uid else set()
+    allowed_emails = {email} if email else set()
+    allowed_subs = {sub} if sub else set()
+
+    if current_user.get("role") == "affiliate" and email:
+        aff = db.affiliates.find_one({"email": email})
+        if aff and aff.get("ref_code"):
+            linked = list(db.affiliate_linked_users.find({"ref_code": aff["ref_code"]}))
+            for lu in linked:
+                lu_email = (lu.get("email") or "").strip().lower()
+                if lu_email:
+                    allowed_emails.add(lu_email)
+                    u_doc = db.users.find_one({"email": lu_email}, {"_id": 1, "username": 1, "subdomain": 1})
+                    if u_doc:
+                        allowed_ids.add(str(u_doc["_id"]))
+                        for k in ("username", "subdomain"):
+                            if u_doc.get(k):
+                                allowed_subs.add(str(u_doc[k]).strip().lower())
+                if lu.get("id"):
+                    allowed_ids.add(str(lu["id"]))
+                if lu.get("handle"):
+                    allowed_subs.add(str(lu["handle"]).lstrip("@").strip().lower())
+
+    if current_user.get("role") == "label" and uid:
+        for art in db.artists.find({"$or": [{"owner_id": uid}, {"label_id": uid}]}):
+            if art.get("subdomain"):
+                allowed_subs.add(str(art["subdomain"]).strip().lower())
+            if art.get("owner_id"):
+                allowed_ids.add(str(art["owner_id"]))
+
+    return {"user_ids": list(allowed_ids), "emails": list(allowed_emails), "subdomains": list(allowed_subs)}
+
+
 @router.get("/my-list", response_model=Dict[str, Any])
 def list_my_epks(current_user: dict = Depends(get_current_user)):
-    """Retrieve all EPK profiles owned by the authenticated user (multi-EPK support)."""
-    user_id = str(current_user["_id"])
-    docs = list(db.epks.find({"user_id": user_id}).sort("updated_at", -1))
+    """Retrieve EPK profiles scoped strictly to the user's account (or linked roster for affiliates/labels)."""
+    scope = _get_allowed_epk_scope(current_user)
+    if scope is None:
+        docs = list(db.epks.find({}).sort("updated_at", -1))
+    else:
+        or_clauses = []
+        if scope["user_ids"]:
+            or_clauses.append({"user_id": {"$in": scope["user_ids"]}})
+        if scope["emails"]:
+            or_clauses.append({"owner_email": {"$in": scope["emails"]}})
+        if scope["subdomains"]:
+            or_clauses.append({"subdomain": {"$in": scope["subdomains"]}})
+        docs = list(db.epks.find({"$or": or_clauses}).sort("updated_at", -1)) if or_clauses else []
     out = []
     for d in docs:
         d["_id"] = str(d["_id"])
@@ -128,12 +183,23 @@ def list_my_epks(current_user: dict = Depends(get_current_user)):
 
 @router.get("/me", response_model=Dict[str, Any])
 def get_my_epk(subdomain: Optional[str] = None, current_user: dict = Depends(get_current_user)):
-    """Retrieve authenticated creator's EPK profile (optionally by subdomain)."""
+    """Retrieve authenticated user's (or linked roster's) EPK profile."""
+    scope = _get_allowed_epk_scope(current_user)
     user_id = str(current_user["_id"])
-    query: Dict[str, Any] = {"user_id": user_id}
     if subdomain:
-        query["subdomain"] = subdomain.lower().strip().replace(" ", "")
-    epk_doc = db.epks.find_one(query)
+        clean_sub = subdomain.lower().strip().replace(" ", "")
+        epk_doc = db.epks.find_one({"subdomain": clean_sub})
+        if epk_doc and scope is not None:
+            owner_id = str(epk_doc.get("user_id") or "")
+            owner_email = (epk_doc.get("owner_email") or "").lower()
+            if (
+                owner_id not in scope["user_ids"]
+                and owner_email not in scope["emails"]
+                and clean_sub not in scope["subdomains"]
+            ):
+                raise HTTPException(status_code=403, detail="Access denied: EPK belongs to another account.")
+    else:
+        epk_doc = db.epks.find_one({"user_id": user_id})
     if not epk_doc:
         default_subdomain = (current_user.get("name") or "artist").lower().replace(" ", "")
         return {
@@ -149,12 +215,25 @@ def get_my_epk(subdomain: Optional[str] = None, current_user: dict = Depends(get
 
 @router.post("/me", response_model=Dict[str, Any])
 def save_my_epk(payload: EPKProfileModel, current_user: dict = Depends(get_current_user)):
-    """Save or publish current creator's EPK configuration."""
+    """Save or publish current creator's (or linked roster's) EPK configuration."""
     user_id = str(current_user["_id"])
     clean_subdomain = payload.subdomain.lower().strip().replace(" ", "")
-    
+    scope = _get_allowed_epk_scope(current_user)
+    existing = db.epks.find_one({"subdomain": clean_subdomain})
+    if existing and scope is not None:
+        owner_id = str(existing.get("user_id") or "")
+        owner_email = (existing.get("owner_email") or "").lower()
+        if (
+            owner_id
+            and owner_id not in scope["user_ids"]
+            and owner_email not in scope["emails"]
+            and clean_subdomain not in scope["subdomains"]
+        ):
+            raise HTTPException(status_code=403, detail="Access denied: cannot modify another account's EPK.")
+
     data = payload.model_dump()
-    data["user_id"] = user_id
+    data["user_id"] = existing.get("user_id", user_id) if existing else user_id
+    data["owner_email"] = (current_user.get("email") or "").lower()
     data["subdomain"] = clean_subdomain
     data["updated_at"] = datetime.now(timezone.utc)
     data["artist_name"] = payload.artist_name or current_user.get("name") or clean_subdomain.capitalize()

@@ -314,8 +314,33 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
     return id.replace(/[^a-z0-9]/gi, '_') || name.replace(/[^a-z0-9]/gi, '_');
   };
 
+  const isAdminUser = Boolean(
+    sessionUser?.role === 'admin' ||
+    sessionUser?.is_admin === true ||
+    sessionUser?.original_role === 'admin' ||
+    (Array.isArray(sessionUser?.roles) && sessionUser.roles.includes('admin'))
+  );
+  const isAffiliateUser = sessionUser?.role === 'affiliate';
+  const isLabelUser = sessionUser?.role === 'label';
+
   const [dynamicUsers, setDynamicUsers] = useState({});
   useEffect(() => {
+    if (!isAdminUser) {
+      const ownSlug = (sessionUser?.username || sessionUser?.email?.split('@')[0] || 'my_account').toLowerCase().replace(/[^a-z0-9_]/g, '_');
+      const ownMap = {
+        [ownSlug]: {
+          name: `${sessionUser?.name || ownSlug} (${sessionUser?.role || 'account'})`,
+          email: sessionUser?.email || '',
+          role: sessionUser?.role || 'creator',
+          genre: `${(sessionUser?.role || 'Member').toUpperCase()} Account`,
+          contacts: [],
+          campaigns: [],
+          playlists: [],
+        }
+      };
+      setDynamicUsers(ownMap);
+      return;
+    }
     fetch('/api/admin/console/users', { credentials: 'include' })
       .then(r => (r.ok ? r.json() : { users: [] }))
       .then(data => {
@@ -338,13 +363,16 @@ export default function SmartCrmStudioPanel({ sessionUser, onClose, onNavigateTa
         setDynamicUsers(map);
       })
       .catch(() => {});
-  }, []);
+  }, [isAdminUser, sessionUser?.email, sessionUser?.role]);
 
-  const allProfiles = { ...CREATOR_PROFILES, ...dynamicUsers };
+  const ownProfileKey = (sessionUser?.username || sessionUser?.email?.split('@')[0] || 'my_account').toLowerCase().replace(/[^a-z0-9_]/g, '_');
+  const allProfiles = isAdminUser ? { ...CREATOR_PROFILES, ...dynamicUsers } : { ...dynamicUsers };
   const contractedKeys = isVc ? activeVcContracts.map(mapContractToKey) : Object.keys(allProfiles);
-  const availableCreatorKeys = isVc
-    ? Object.keys(allProfiles).filter(k => contractedKeys.includes(k))
-    : Object.keys(allProfiles);
+  const availableCreatorKeys = isAdminUser
+    ? Object.keys(allProfiles)
+    : isVc
+      ? Object.keys({ ...CREATOR_PROFILES, ...dynamicUsers }).filter(k => contractedKeys.includes(k))
+      : [ownProfileKey].filter(k => allProfiles[k]);
 
   const [activeTab, setActiveTab] = useState('reachout') // 'reachout' | 'contacts' | 'broadcasts' | 'playlists' | 'pipeline'
   const [selectedSubdomain, setSelectedSubdomain] = useState(() => {

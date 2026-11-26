@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { BASE, tokenStore, affiliatesApi } from '../lib/api.js';
 import {
   RiUserVoiceFill, RiArrowDownSLine, RiAddLine, RiCheckLine,
   RiEditLine, RiDeleteBin6Line, RiCloseLine, RiSearchLine,
@@ -11,8 +12,10 @@ export default function ArtistRosterSelector({
   compact = false,
   sessionUser = null
 }) {
-  const currentRole = sessionUser?.role || (typeof localStorage !== 'undefined' ? localStorage.getItem('tunemavens_active_persona') : null);
+  const currentRole = sessionUser?.role || (typeof localStorage !== 'undefined' ? localStorage.getItem('tunemavens_active_persona') : null) || 'creator';
+  const isAdmin = currentRole === 'admin' || sessionUser?.is_admin === true;
   const isLabel = currentRole === 'label';
+  const isAffiliate = currentRole === 'affiliate';
   const [artists, setArtists] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -50,6 +53,21 @@ export default function ArtistRosterSelector({
   }, []);
 
   const loadArtists = async () => {
+    const ownSub = (
+      sessionUser?.username ||
+      sessionUser?.subdomain ||
+      (sessionUser?.name || sessionUser?.email?.split('@')[0] || 'artist').toLowerCase().replace(/[^a-z0-9_-]/g, '')
+    ).toLowerCase();
+
+    const ownFallback = [{
+      id: `art_${ownSub}`,
+      name: sessionUser?.brand_name || sessionUser?.name || ownSub,
+      subdomain: ownSub,
+      role: currentRole === 'affiliate' ? 'Affiliate Account' : (isLabel ? 'Label Roster' : 'Primary Account'),
+      genre: 'Original IP',
+      avatar: sessionUser?.avatar || ''
+    }];
+
     // If Record Label persona, restrict strictly to label's signed roster
     if (isLabel) {
       try {
@@ -65,37 +83,85 @@ export default function ArtistRosterSelector({
     }
 
     try {
-      const res = await fetch('/api/catalog/artists');
+      const token = tokenStore.get();
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${BASE}/api/catalog/artists?scope=${isAdmin ? 'public' : 'workspace'}`, {
+        credentials: 'include',
+        headers
+      });
+      let scopedArtists = [];
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data.artists)) {
-          // If label, filter out artists that don't belong to the label roster
-          if (isLabel) {
-            const labelRosterSubs = ['ndufo', 'aisha', 'brian-omondi'];
-            const filtered = data.artists.filter(a => labelRosterSubs.includes((a.subdomain || '').toLowerCase()));
-            setArtists(filtered.length > 0 ? filtered : data.artists.slice(0, 3));
-          } else {
-            setArtists(data.artists);
-          }
+          scopedArtists = data.artists;
         }
       }
+
+      if (isAdmin) {
+        setArtists(scopedArtists);
+        return;
+      }
+
+      if (isAffiliate) {
+        // Merge affiliate's linked network personas so affiliate only pulls EPKs/Catalog for users under their account
+        const refCode = sessionUser?.affiliate_ref_code || sessionUser?.ref_code || '';
+        let linked = [];
+        if (refCode) {
+          try {
+            const netRes = await affiliatesApi.getNetwork(refCode);
+            if (Array.isArray(netRes?.users)) {
+              linked = netRes.users.map(u => {
+                const sub = (u.handle || u.email?.split('@')[0] || u.name || 'talent').replace(/^@/, '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+                return {
+                  id: u.id,
+                  name: u.name,
+                  subdomain: sub,
+                  role: u.role_label || u.role || 'Linked Persona',
+                  genre: u.region || 'Linked Account',
+                  avatar: ''
+                };
+              });
+            }
+          } catch (_) {}
+        }
+        const merged = [...scopedArtists, ...linked];
+        const unique = Array.from(new Map(merged.map(a => [String(a.subdomain || a.id).toLowerCase(), a])).values());
+        setArtists(unique.length > 0 ? unique : ownFallback);
+        return;
+      }
+
+      if (isLabel) {
+        const filtered = scopedArtists.filter(a => String(a.owner_id || '') === String(sessionUser?.id || sessionUser?._id || '') || ['ndufo', 'aisha', 'brian-omondi'].includes((a.subdomain || '').toLowerCase()));
+        setArtists(filtered.length > 0 ? filtered : ownFallback);
+        return;
+      }
+
+      // Standard creator / DJ / podcaster / consumer / etc.: strictly own account EPK & catalog only
+      const ownOnly = scopedArtists.filter(a => {
+        const sub = (a.subdomain || '').toLowerCase();
+        const ownerId = String(a.owner_id || '');
+        const uid = String(sessionUser?.id || sessionUser?._id || '');
+        return (uid && ownerId === uid) || sub === ownSub;
+      });
+      setArtists(ownOnly.length > 0 ? ownOnly : ownFallback);
     } catch (err) {
       console.warn('Failed to load roster artists:', err);
+      setArtists(ownFallback);
     }
   };
 
-  const activeArtist = (activeSubdomain === 'all') ? {
-    name: isLabel ? 'All Roster Artists (Label Catalogue)' : 'All Artists (Entire Catalogue)',
+  const activeArtist = (activeSubdomain === 'all' && (isAdmin || isLabel || isAffiliate)) ? {
+    name: isLabel ? 'All Roster Artists (Label Catalogue)' : (isAffiliate ? 'All Linked Account Talent' : 'All Artists (Entire Catalogue)'),
     subdomain: 'all',
-    role: isLabel ? 'Signed Label Roster' : 'Entire Platform Catalogue',
+    role: isLabel ? 'Signed Label Roster' : (isAffiliate ? 'Affiliate Linked Roster' : 'Entire Platform Catalogue'),
     genre: 'All Genres',
     avatar: ''
   } : (artists.find(
     a => (a.subdomain || '').toLowerCase() === (activeSubdomain || '').toLowerCase()
   ) || artists[0] || {
-    name: 'Ndufo',
-    subdomain: 'ndufo',
-    role: isLabel ? 'Artist' : 'Primary Artist',
+    name: sessionUser?.name || 'My Account',
+    subdomain: (sessionUser?.username || 'artist').toLowerCase(),
+    role: isLabel ? 'Artist' : 'Primary Account',
     genre: 'Afro-House',
     avatar: '/heroes/ndufo_hero_slide1_retina.jpg'
   });
@@ -318,20 +384,21 @@ export default function ArtistRosterSelector({
 
           {/* Artists List */}
           <div style={{ maxHeight: '240px', overflowY: 'auto', padding: '6px' }}>
-            {/* All Artists Option */}
-            <div
-              onClick={() => {
-                if (typeof onSelectArtist === 'function') {
-                  onSelectArtist({
-                    subdomain: 'all',
-                    name: isLabel ? 'All Roster Artists (Label Catalog)' : 'All Artists (Entire Catalogue)',
-                    role: isLabel ? 'Signed Label Roster' : 'Full Platform Catalogue',
-                    genre: 'All Genres',
-                    avatar: ''
-                  });
-                }
-                setIsOpen(false);
-              }}
+            {/* Scoped All Option (Admin = Entire Platform, Label = Signed Roster, Affiliate = Linked Account Talent) */}
+            {(isAdmin || isLabel || isAffiliate) && (
+              <div
+                onClick={() => {
+                  if (typeof onSelectArtist === 'function') {
+                    onSelectArtist({
+                      subdomain: 'all',
+                      name: isLabel ? 'All Roster Artists (Label Catalog)' : (isAffiliate ? 'All Linked Account Talent' : 'All Artists (Entire Catalogue)'),
+                      role: isLabel ? 'Signed Label Roster' : (isAffiliate ? 'Affiliate Linked Roster' : 'Full Platform Catalogue'),
+                      genre: 'All Genres',
+                      avatar: ''
+                    });
+                  }
+                  setIsOpen(false);
+                }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -357,19 +424,20 @@ export default function ArtistRosterSelector({
                   fontWeight: 900,
                   fontSize: '10px'
                 }}>
-                  {isLabel ? 'LBL' : 'ALL'}
+                  {isLabel ? 'LBL' : (isAffiliate ? 'AFF' : 'ALL')}
                 </div>
                 <div>
                   <div style={{ fontSize: '11.5px', fontWeight: 800, color: activeSubdomain === 'all' ? (isLabel ? '#c084fc' : '#00f0ff') : '#fff' }}>
-                    {isLabel ? 'All Roster Artists (Label Catalog)' : 'All Artists (Entire Catalogue)'}
+                    {isLabel ? 'All Roster Artists (Label Catalog)' : (isAffiliate ? 'All Linked Account Talent' : 'All Artists (Entire Catalogue)')}
                   </div>
                   <div style={{ fontSize: '9.5px', color: '#94a3b8' }}>
-                    {isLabel ? 'Aggregated catalogue across artists' : 'Full platform discography across all creators'}
+                    {isLabel ? 'Aggregated catalogue across artists' : (isAffiliate ? 'EPKs & IP belonging to users under your affiliate account' : 'Full platform discography across all creators')}
                   </div>
                 </div>
               </div>
               {activeSubdomain === 'all' && <RiCheckLine size={15} color={isLabel ? '#a855f7' : '#00f0ff'} />}
             </div>
+            )}
 
             {filteredArtists.map(artist => {
               const isSelected = (artist.subdomain || '').toLowerCase() === (activeArtist.subdomain || '').toLowerCase();

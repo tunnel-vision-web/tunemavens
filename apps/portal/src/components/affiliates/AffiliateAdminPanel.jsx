@@ -595,34 +595,52 @@ export default function AffiliateAdminPanel({ sessionUser, setActiveTab, initial
           onClick={() => setActiveSubTab('portal')}
           data-testid="subnav-affiliate-portal"
         >
-          <RiCoinsFill /> Partner Console &amp; Verification
+          <RiCoinsFill /> Partner Console &amp; Wizard
         </button>
         <button 
           className={`aff-subnav-btn ${activeSubTab === 'network' ? 'active' : ''}`}
           onClick={() => setActiveSubTab('network')}
           data-testid="subnav-affiliate-network"
         >
-          <RiTeamFill /> Linked Network &amp; Onboarding ({networkUsers.length})
+          <RiTeamFill /> Persona Onboarding &amp; Roster ({networkUsers.length})
         </button>
         <button 
           className={`aff-subnav-btn ${activeSubTab === 'academy' ? 'active' : ''}`}
           onClick={() => setActiveSubTab('academy')}
           data-testid="subnav-affiliate-academy"
         >
-          <RiGraduationCapFill /> Academy &amp; Recommended Reading
+          <RiGraduationCapFill /> Academy &amp; Reading
           <span className={`academy-subnav-pill ${academyStatus.all_completed ? 'completed' : 'pending'}`}>
-            {academyStatus.completed_count}/{academyStatus.total_required} Read
+            {academyStatus.completed_count}/{academyStatus.total_required}
           </span>
         </button>
         {typeof setActiveTab === 'function' && (
-          <button
-            className="aff-subnav-btn"
-            onClick={() => setActiveTab('crm')}
-            data-testid="subnav-affiliate-smart-crm"
-            style={{ borderColor: 'rgba(34, 211, 238, 0.35)', color: '#67e8f9' }}
-          >
-            <RiShareLine /> Smart CRM &amp; Reachout
-          </button>
+          <>
+            <button
+              className="aff-subnav-btn"
+              onClick={() => setActiveTab('crm')}
+              data-testid="subnav-affiliate-smart-crm"
+              style={{ borderColor: 'rgba(34, 211, 238, 0.35)', color: '#67e8f9' }}
+            >
+              <RiShareLine /> Smart CRM
+            </button>
+            <button
+              className="aff-subnav-btn"
+              onClick={() => setActiveTab('catalog')}
+              data-testid="subnav-affiliate-catalog"
+              style={{ borderColor: 'rgba(168, 85, 247, 0.35)', color: '#d8b4fe' }}
+            >
+              <RiDiscFill /> Catalogue Machine
+            </button>
+            <button
+              className="aff-subnav-btn"
+              onClick={() => setActiveTab('epk-builder')}
+              data-testid="subnav-affiliate-epk"
+              style={{ borderColor: 'rgba(16, 185, 129, 0.35)', color: '#6ee7b7' }}
+            >
+              <RiMicFill /> EPK Builder
+            </button>
+          </>
         )}
         {isAdminUser && (
           <>
@@ -654,6 +672,87 @@ export default function AffiliateAdminPanel({ sessionUser, setActiveTab, initial
       {/* ================= SubTab 1: Partner Console & Verification ================= */}
       {activeSubTab === 'portal' && (
         <div className="aff-partner-portal-section">
+
+          {/* Guided Affiliate Setup Wizard & Quick-Action Hub */}
+          <div style={{
+            background: 'rgba(9, 14, 28, 0.9)',
+            border: '1px solid rgba(34, 211, 238, 0.25)',
+            borderRadius: '3px',
+            padding: '18px',
+            marginBottom: '20px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#22d3ee' }}>
+                  Affiliate Guided Workflow Wizard
+                </div>
+                <h3 style={{ margin: '2px 0 0', fontSize: '16px', fontWeight: 800, color: '#f8fafc' }}>
+                  4-Step Partner Launch &amp; Roster Management
+                </h3>
+              </div>
+              <span style={{ fontSize: '11.5px', color: '#94a3b8' }}>
+                Ref Code: <strong style={{ color: '#22d3ee' }}>{currentRef}</strong> • {networkUsers.length} Linked Personas
+              </span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={() => handleCopyInviteUrl(`https://tunemavens.com/#/join?ref=${currentRef}`)}
+                style={{
+                  textAlign: 'left', padding: '12px', borderRadius: '3px',
+                  background: 'rgba(15, 23, 42, 0.85)', border: '1px solid rgba(34, 211, 238, 0.28)',
+                  color: '#f8fafc', cursor: 'pointer'
+                }}
+              >
+                <div style={{ fontSize: '10.5px', fontWeight: 800, color: '#22d3ee', marginBottom: '4px' }}>STEP 1 • SHARE LINK</div>
+                <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '4px' }}>Copy 90-Day Referral URL</div>
+                <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>Earn 3%–12% across streams, events, syncs &amp; credits.</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setActiveSubTab('network'); setShowOnboardModal(true); setOnboardSuccessData(null); }}
+                style={{
+                  textAlign: 'left', padding: '12px', borderRadius: '3px',
+                  background: 'rgba(15, 23, 42, 0.85)', border: '1px solid rgba(16, 185, 129, 0.28)',
+                  color: '#f8fafc', cursor: 'pointer'
+                }}
+              >
+                <div style={{ fontSize: '10.5px', fontWeight: 800, color: '#10b981', marginBottom: '4px' }}>STEP 2 • ONBOARD TALENT</div>
+                <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '4px' }}>Onboard &amp; Edit Personas</div>
+                <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>Add or edit artists, labels, DJs, podcasters &amp; VCs under your account.</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => typeof setActiveTab === 'function' && setActiveTab('crm')}
+                style={{
+                  textAlign: 'left', padding: '12px', borderRadius: '3px',
+                  background: 'rgba(15, 23, 42, 0.85)', border: '1px solid rgba(168, 85, 247, 0.28)',
+                  color: '#f8fafc', cursor: 'pointer'
+                }}
+              >
+                <div style={{ fontSize: '10.5px', fontWeight: 800, color: '#c084fc', marginBottom: '4px' }}>STEP 3 • REACH OUT</div>
+                <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '4px' }}>Launch Smart CRM Campaign</div>
+                <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>Send attributed email campaigns for events, EPKs &amp; releases.</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => typeof setActiveTab === 'function' && setActiveTab('catalog')}
+                style={{
+                  textAlign: 'left', padding: '12px', borderRadius: '3px',
+                  background: 'rgba(15, 23, 42, 0.85)', border: '1px solid rgba(245, 158, 11, 0.28)',
+                  color: '#f8fafc', cursor: 'pointer'
+                }}
+              >
+                <div style={{ fontSize: '10.5px', fontWeight: 800, color: '#fbbf24', marginBottom: '4px' }}>STEP 4 • CATALOG &amp; EPK</div>
+                <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '4px' }}>Manage Account IP &amp; EPKs</div>
+                <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>Access Catalogue Machine &amp; EPK Builder strictly for your linked roster.</div>
+              </button>
+            </div>
+          </div>
           
           {/* Zero Credits Affiliate Assurance Banner */}
           <div className="aff-credit-assurance-banner">

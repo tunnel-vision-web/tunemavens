@@ -641,11 +641,12 @@ def _sync_tracks_to_all_collections(subdomain: str, tracks: List[Dict[str, Any]]
 def get_catalog_tracks(
     subdomain: str = Query("ndufo"),
     all: bool = Query(False),
+    scope: str = Query("public"),
     page: int = Query(1, ge=1),
     limit: int = Query(100, ge=1, le=500),
     current_user: Optional[dict] = Depends(get_optional_user)
 ):
-    """Retrieve catalog tracks for an artist, or full platform catalogue when all=True."""
+    """Retrieve catalog tracks for an artist, or full/scoped catalogue when all=True."""
     clean_sub = subdomain if isinstance(subdomain, str) else getattr(subdomain, "default", "ndufo")
     is_all = all if isinstance(all, bool) else (str(all).lower() in ("true", "1") if isinstance(all, str) else getattr(all, "default", False))
     page_num = page if isinstance(page, int) and not isinstance(page, bool) else getattr(page, "default", 1)
@@ -655,12 +656,15 @@ def get_catalog_tracks(
     if not isinstance(limit_num, int):
         limit_num = 100
 
+    acct_scope = _get_catalog_account_scope(current_user) if (scope == "workspace" and current_user) else None
+    sub_filter = {"subdomain": {"$in": acct_scope["subdomains"]}} if (acct_scope is not None and acct_scope["subdomains"]) else ({"_id": None} if acct_scope is not None else {})
+
     if is_all or clean_sub == "all":
         all_tracks = []
         seen_isrcs = set()
 
         # 1. Pull from db.catalog_tracks
-        for doc in db.catalog_tracks.find({}):
+        for doc in db.catalog_tracks.find(sub_filter):
             for t in doc.get("tracks", []):
                 cover = t.get("coverArt") or t.get("cover")
                 if not cover or "picsum.photos" in cover:
@@ -678,7 +682,7 @@ def get_catalog_tracks(
                     all_tracks.append(t)
 
         # 2. Pull from db.epks for any creators not in catalog_tracks
-        for epk in db.epks.find({}):
+        for epk in db.epks.find(sub_filter):
             for t in epk.get("tracks", []):
                 if not t.get("audioUrl") and not t.get("fileUrl"):
                     ident = t.get("isrc") or t.get("id") or t.get("title")
@@ -692,7 +696,8 @@ def get_catalog_tracks(
                     all_tracks.append(t)
 
         # 3. Pull from db.cms_layouts
-        for cms in db.cms_layouts.find({}):
+        cms_filter = {"layout_id": {"$in": [f"epk_{s}" for s in acct_scope["subdomains"]]}} if (acct_scope is not None and acct_scope["subdomains"]) else ({"_id": None} if acct_scope is not None else {})
+        for cms in db.cms_layouts.find(cms_filter):
             tracks = (cms.get("data") or {}).get("tracks", [])
             for t in tracks:
                 if not t.get("audioUrl") and not t.get("fileUrl"):
@@ -704,7 +709,7 @@ def get_catalog_tracks(
                     seen_isrcs.add(isrc)
                     all_tracks.append(t)
 
-        if not all_tracks:
+        if not all_tracks and acct_scope is None:
             # Seed from default artists if empty
             for artist in DEFAULT_ARTISTS:
                 for t in get_default_catalog_tracks(artist["name"]):
@@ -1273,24 +1278,71 @@ class ArtistPayload(BaseModel):
     owner_id: Optional[str] = None
 
 
+def _get_catalog_account_scope(current_user: Optional[dict]) -> Optional[Dict[str, Any]]:
+    """Return allowed user_ids, emails, and subdomains for workspace-scoped catalog access (None = admin/unrestricted)."""
+    if not current_user:
+        return None
+    if (
+        current_user.get("role") == "admin"
+        or current_user.get("is_admin") is True
+        or "admin" in (current_user.get("roles") or [])
+    ):
+        return None
+
+    uid = str(current_user.get("_id", ""))
+    email = (current_user.get("email") or "").strip().lower()
+    sub = (current_user.get("username") or current_user.get("subdomain") or "").strip().lower()
+    allowed_ids = {uid} if uid else set()
+    allowed_emails = {email} if email else set()
+    allowed_subs = {sub} if sub else set()
+
+    if current_user.get("role") == "affiliate" and email:
+        aff = db.affiliates.find_one({"email": email})
+        if aff and aff.get("ref_code"):
+            for lu in db.affiliate_linked_users.find({"ref_code": aff["ref_code"]}):
+                lu_email = (lu.get("email") or "").strip().lower()
+                if lu_email:
+                    allowed_emails.add(lu_email)
+                    u_doc = db.users.find_one({"email": lu_email}, {"_id": 1, "username": 1, "subdomain": 1})
+                    if u_doc:
+                        allowed_ids.add(str(u_doc["_id"]))
+                        for k in ("username", "subdomain"):
+                            if u_doc.get(k):
+                                allowed_subs.add(str(u_doc[k]).strip().lower())
+                if lu.get("id"):
+                    allowed_ids.add(str(lu["id"]))
+                if lu.get("handle"):
+                    allowed_subs.add(str(lu["handle"]).lstrip("@").strip().lower())
+
+    if current_user.get("role") == "label" and uid:
+        for art in db.artists.find({"$or": [{"owner_id": uid}, {"label_id": uid}]}):
+            if art.get("subdomain"):
+                allowed_subs.add(str(art["subdomain"]).strip().lower())
+            if art.get("owner_id"):
+                allowed_ids.add(str(art["owner_id"]))
+
+    return {"user_ids": list(allowed_ids), "emails": list(allowed_emails), "subdomains": list(allowed_subs)}
+
+
 @router.get("/artists", response_model=Dict[str, Any])
 def get_artists_roster(
     all: bool = Query(False),
+    scope: str = Query("public"),
     current_user: Optional[dict] = Depends(get_optional_user)
 ):
-    """Retrieve roster artists managed by labels, publishers, or managers. Restricts to current user's roster unless admin."""
+    """Retrieve roster artists scoped to current user's account (or linked roster for affiliates/labels) when scope='workspace'."""
     seed_artists_if_empty()
     query = {}
-    if current_user and current_user.get("role") != "admin" and not all:
-        user_id = str(current_user.get("_id", ""))
-        user_sub = (current_user.get("username") or current_user.get("subdomain") or "").lower()
-        query = {
-            "$or": [
-                {"owner_id": user_id},
-                {"subdomain": user_sub},
-                {"is_default": True}
-            ]
-        }
+    acct_scope = _get_catalog_account_scope(current_user) if (current_user and (scope == "workspace" or not all)) else None
+    if acct_scope is not None:
+        or_clauses = []
+        if acct_scope["user_ids"]:
+            or_clauses.append({"owner_id": {"$in": acct_scope["user_ids"]}})
+        if acct_scope["emails"]:
+            or_clauses.append({"owner_email": {"$in": acct_scope["emails"]}})
+        if acct_scope["subdomains"]:
+            or_clauses.append({"subdomain": {"$in": acct_scope["subdomains"]}})
+        query = {"$or": or_clauses} if or_clauses else {"_id": None}
     cursor = db.artists.find(query).sort("created_at", 1)
     artists = []
     for doc in cursor:
