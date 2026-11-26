@@ -25,6 +25,7 @@ import TuneStreamNativeApp from './components/native/TuneStreamNativeApp.jsx';
 import AppDownloadModal from './components/common/AppDownloadModal.jsx';
 import ExplicitBadge, { isExplicit, isReleaseExplicit } from './components/common/ExplicitBadge.jsx';
 import LiveEventsSection from './components/events/LiveEventsSection.jsx'
+import FeaturedEventRow from './components/events/FeaturedEventRow.jsx'
 import ToursView from './views/landing/ToursView.jsx';
 import TourCapitalView from './views/landing/TourCapitalView.jsx';
 
@@ -3968,7 +3969,12 @@ export default function NativeAppLandingView({
           );
         case 'listen':
         default:
-          return renderListen();
+          return (
+            <>
+              <FeaturedEventRow onSelectEvent={() => setView('tours')} />
+              {renderListen()}
+            </>
+          );
       }
     };
 

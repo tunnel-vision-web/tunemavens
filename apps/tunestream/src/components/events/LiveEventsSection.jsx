@@ -46,12 +46,18 @@ export default function LiveEventsSection({ sessionUser }) {
   // Dedicated Comprehensive Event Detail Page State
   const [selectedEventDetail, setSelectedEventDetail] = useState(null);
 
-  // Featured Events Carousel State
+  // Featured Events Carousel State (Admin-selected is_featured event always comes first)
   const [featuredIndex, setFeaturedIndex] = useState(0);
+  const adminFeaturedEvent = useMemo(() => events.find(e => e.is_featured) || null, [events]);
   const featuredEvents = useMemo(() => {
-    const list = events.filter(e => e.status === 'in-progress' || (e.sold_percentage && e.sold_percentage > 50) || e.status === 'upcoming');
-    return list.length > 0 ? list.slice(0, 5) : events.slice(0, 3);
-  }, [events]);
+    const others = events.filter(e => !e.is_featured && (e.status === 'in-progress' || (e.sold_percentage && e.sold_percentage > 50) || e.status === 'upcoming'));
+    const combined = adminFeaturedEvent ? [adminFeaturedEvent, ...others] : others;
+    return combined.length > 0 ? combined.slice(0, 5) : events.slice(0, 3);
+  }, [events, adminFeaturedEvent]);
+
+  useEffect(() => {
+    setFeaturedIndex(0);
+  }, [adminFeaturedEvent?.id]);
 
   useEffect(() => {
     if (featuredEvents.length <= 1) return;
@@ -141,9 +147,24 @@ export default function LiveEventsSection({ sessionUser }) {
     }
   };
 
+  const location = useLocation();
+
   useEffect(() => {
     fetchEvents();
   }, []);
+
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(location.search || window.location.search);
+      const eventParam = sp.get('event');
+      if (eventParam && events && events.length > 0) {
+        const found = events.find(e => e.id === eventParam || e.id === `event-${eventParam}` || String(e.id).includes(eventParam));
+        if (found && selectedEventDetail?.id !== found.id) {
+          handleOpenEventPage(found);
+        }
+      }
+    } catch (_) {}
+  }, [events, location.search]);
 
   // Filtered Events
   const filteredEvents = useMemo(() => {

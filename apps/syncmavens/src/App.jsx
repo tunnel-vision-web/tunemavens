@@ -27,6 +27,7 @@ import headerPricing from './assets/images/header_pricing.png';
 import headerPricingWestern from './assets/images/header_pricing_western.png';
 import interstellarHeader from './assets/images/interstellar_header.png';
 import SyncMarketplacePanel from './SyncMarketplacePanel.jsx';
+import FeaturedEventRow from './components/FeaturedEventRow.jsx';
 import CreditReloadModal from './components/common/CreditReloadModal.jsx';
 import AppHelpAiControls, { GetHelpAskAiButtons } from './components/common/AppHelpAiControls.jsx';
 import {
@@ -2941,6 +2942,8 @@ function AppContent() {
                 </div>
               </div>
             </div>
+
+            <FeaturedEventRow />
 
             {/* Brand partners */}
             <section className="landing-partners">
