@@ -112,11 +112,28 @@ def get_default_videos(artist_name: str = "Ndufo") -> List[Dict[str, Any]]:
     ]
 
 
-@router.get("/me", response_model=Dict[str, Any])
-def get_my_epk(current_user: dict = Depends(get_current_user)):
-    """Retrieve authenticated creator's EPK profile."""
+@router.get("/my-list", response_model=Dict[str, Any])
+def list_my_epks(current_user: dict = Depends(get_current_user)):
+    """Retrieve all EPK profiles owned by the authenticated user (multi-EPK support)."""
     user_id = str(current_user["_id"])
-    epk_doc = db.epks.find_one({"user_id": user_id})
+    docs = list(db.epks.find({"user_id": user_id}).sort("updated_at", -1))
+    out = []
+    for d in docs:
+        d["_id"] = str(d["_id"])
+        if isinstance(d.get("updated_at"), datetime):
+            d["updated_at"] = d["updated_at"].isoformat()
+        out.append(d)
+    return {"epks": out, "total": len(out)}
+
+
+@router.get("/me", response_model=Dict[str, Any])
+def get_my_epk(subdomain: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    """Retrieve authenticated creator's EPK profile (optionally by subdomain)."""
+    user_id = str(current_user["_id"])
+    query: Dict[str, Any] = {"user_id": user_id}
+    if subdomain:
+        query["subdomain"] = subdomain.lower().strip().replace(" ", "")
+    epk_doc = db.epks.find_one(query)
     if not epk_doc:
         default_subdomain = (current_user.get("name") or "artist").lower().replace(" ", "")
         return {
@@ -165,10 +182,22 @@ def save_my_epk(payload: EPKProfileModel, current_user: dict = Depends(get_curre
         upsert=True
     )
 
-    saved = db.epks.find_one({"user_id": user_id})
+    saved = db.epks.find_one({"user_id": user_id, "subdomain": clean_subdomain})
     if saved:
         saved["_id"] = str(saved["_id"])
     return saved or data
+
+
+@router.delete("/me/{subdomain}", response_model=Dict[str, Any])
+def delete_my_epk(subdomain: str, current_user: dict = Depends(get_current_user)):
+    """Delete one of the authenticated user's own EPK profiles by subdomain."""
+    user_id = str(current_user["_id"])
+    clean_subdomain = subdomain.lower().strip().replace(" ", "")
+    res = db.epks.delete_one({"user_id": user_id, "subdomain": clean_subdomain})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="EPK profile not found for your account.")
+    db.cms_layouts.delete_one({"layout_id": f"epk_{clean_subdomain}"})
+    return {"status": "deleted", "subdomain": clean_subdomain}
 
 
 @router.get("/{subdomain}", response_model=Dict[str, Any])

@@ -159,6 +159,7 @@ export default function ToursView({ sessionUser, initialTab }) {
       <div className="landing-body tours-container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '24px 20px 80px' }}>
         <div style={{ marginBottom: '20px' }}>
           <AppHelpAiControls 
+            activeContext="tours"
             context="global-tours-live-concerts-ticketing" 
             title="Global Tours, Live Events, EPKs & Capacity Waitlist Guide" 
           />

@@ -73,6 +73,29 @@ export default function HomeView({ sessionUser }) {
     return `${symbol} ${Math.round(usdVal * rate).toLocaleString()}`;
   };
 
+  const renderTalentLinks = (rawNames, fallbackRole, color, evt) => {
+    const parts = String(rawNames || '').split(/\s*(?:,|&)\s*/).map(s => s.trim()).filter(Boolean);
+    if (!parts.length) return null;
+    const epkLinks = Array.isArray(evt?.epk_links) ? evt.epk_links : [];
+    return parts.map((name, idx) => {
+      const matched = epkLinks.find(x => String(x?.name || '').trim().toLowerCase() === name.toLowerCase());
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'artist';
+      const url = (matched?.epk_url || `/epk/${slug}`).replace(/^#/, '');
+      return (
+        <React.Fragment key={`${name}-${idx}`}>
+          {idx > 0 && <span style={{ color: '#64748b' }}> &amp; </span>}
+          <Link
+            to={url}
+            title={`View ${name} EPK (${matched?.role || fallbackRole})`}
+            style={{ color, fontWeight: 700, fontSize: '14.5px', textDecoration: 'underline', textDecorationColor: `${color}66`, textUnderlineOffset: '3px' }}
+          >
+            {name}
+          </Link>
+        </React.Fragment>
+      );
+    });
+  };
+
   const resolveLink = (link) => {
     if (sessionUser && (link === '/register' || link === '/login' || link === '/apps')) {
       return '/dashboard';
@@ -443,25 +466,19 @@ export default function HomeView({ sessionUser }) {
                       <strong style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'block', marginBottom: '2px' }}>
                         <RiUserVoiceFill size={13} style={{ verticalAlign: 'middle', marginRight: '5px', color: '#22d3ee' }} />Hosts
                       </strong>
-                      <span style={{ color: '#22d3ee', fontWeight: 700, fontSize: '14.5px' }}>
-                        {featuredEvent.hosts || featuredEvent.artist || 'TuneMavens Live'}
-                      </span>
+                      {renderTalentLinks(featuredEvent.hosts || featuredEvent.artist || 'TuneMavens Live', 'Host', '#22d3ee', featuredEvent)}
                     </div>
                     <div>
                       <strong style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'block', marginBottom: '2px' }}>
                         <RiMicFill size={13} style={{ verticalAlign: 'middle', marginRight: '5px', color: '#c084fc' }} />MC
                       </strong>
-                      <span style={{ color: '#c084fc', fontWeight: 700, fontSize: '14.5px' }}>
-                        {featuredEvent.mc || 'TuneMavens Live Host'}
-                      </span>
+                      {renderTalentLinks(featuredEvent.mc || 'TuneMavens Live Host', 'MC', '#c084fc', featuredEvent)}
                     </div>
                     <div>
                       <strong style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'block', marginBottom: '2px' }}>
                         Entertainers
                       </strong>
-                      <span style={{ color: '#f59e0b', fontWeight: 700, fontSize: '14.5px' }}>
-                        {featuredEvent.entertainers || featuredEvent.artist}
-                      </span>
+                      {renderTalentLinks(featuredEvent.entertainers || featuredEvent.artist, 'Entertainer', '#f59e0b', featuredEvent)}
                     </div>
                     <div>
                       <strong style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'block', marginBottom: '2px' }}>

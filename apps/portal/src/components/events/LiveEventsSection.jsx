@@ -626,10 +626,32 @@ export default function LiveEventsSection({ sessionUser }) {
               <p style={{ fontSize: '13.5px', color: '#cbd5e1', lineHeight: 1.7, margin: '0 0 14px' }}>
                 {evt.description || `${evt.title} brings ${evt.artist} to ${evt.venue} in ${evt.city} for an immersive live showcase powered by TuneMavens Tour Capital and 24-bit spatial soundstage engineering.`}
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px', marginBottom: '12px', fontSize: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '3px', padding: '10px 12px' }}>
-                <div style={{ color: '#94a3b8' }}><strong style={{ color: '#e2e8f0' }}>Hosts:</strong> {evt.hosts || evt.artist}</div>
-                <div style={{ color: '#94a3b8' }}><strong style={{ color: '#e2e8f0' }}>MC:</strong> {evt.mc || 'TuneMavens Live Host'}</div>
-                <div style={{ color: '#94a3b8' }}><strong style={{ color: '#e2e8f0' }}>Entertainers:</strong> {evt.entertainers || evt.artist}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px', marginBottom: '12px', fontSize: '12.5px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '3px', padding: '10px 12px' }}>
+                {[
+                  { label: 'Hosts', raw: evt.hosts || evt.artist, color: '#22d3ee', role: 'Host' },
+                  { label: 'MC', raw: evt.mc || 'TuneMavens Live Host', color: '#c084fc', role: 'MC' },
+                  { label: 'Entertainers', raw: evt.entertainers || evt.artist, color: '#f59e0b', role: 'Entertainer' },
+                ].map(item => {
+                  const parts = String(item.raw || '').split(/\s*(?:,|&)\s*/).map(s => s.trim()).filter(Boolean);
+                  return (
+                    <div key={item.label} style={{ color: '#94a3b8' }}>
+                      <strong style={{ color: '#e2e8f0' }}>{item.label}:</strong>{' '}
+                      {parts.map((nm, i) => {
+                        const matched = (evt.epk_links || []).find(x => String(x?.name || '').trim().toLowerCase() === nm.toLowerCase());
+                        const slug = nm.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'artist';
+                        const url = (matched?.epk_url || `/epk/${slug}`).replace(/^#/, '');
+                        return (
+                          <React.Fragment key={`${nm}-${i}`}>
+                            {i > 0 && ' & '}
+                            <Link to={url} style={{ color: item.color, fontWeight: 700, textDecoration: 'underline', textDecorationColor: `${item.color}66` }}>
+                              {nm}
+                            </Link>
+                          </React.Fragment>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
               </div>
               {isAdmin && (
                 <div style={{ marginBottom: '12px' }}>

@@ -1211,7 +1211,8 @@ Every tour mounted through TuneMavens connects directly to our verified global v
         heading: 'Featured Events, Multi-Talent EPKs & Capacity-Gated FIFO Waitlist',
         content: `Every live event on TuneMavens, TuneStream, and SyncMavens now supports unified promotion, talent discovery, and automated waitlist recovery:
 * **Single Admin-Selected Featured Event**: Administrators can designate one active show as the **Featured Event** (\`POST /api/events/{id}/feature\`), placing it as the top content row across the Portal Home page, TuneStream, SyncMavens, and all Event showcases—complete with Hosts, MC, Entertainers, flyer thumbnail, direct confirmation CTA, and event page deep-link.
-* **Multi-Talent Event EPK Links**: Event pages and the Admin Events & RSVP Manager support individual EPK links (\`epk_links\`) for every **Main Performer**, **Host**, **MC**, and **Entertainer** on the bill.
+* **Multi-Talent Event EPK Links & Clickable Lineup**: Event pages and the Admin Events & RSVP Manager support individual EPK links (\`epk_links\`) for every **Main Performer**, **Host**, **MC**, and **Entertainer** on the bill—clickable directly from both the Featured Event card and the Event Detail Page.
+* **Multiple EPK Profiles per Account**: Creators, agencies, and labels can create and manage multiple independent EPKs under one account (e.g., *Tim Waindi*, *Maven Global*, *TCE*) via **My EPK Profiles** in the EPK Builder (\`GET /api/epk/my-list\`).
 * **Capacity-Gated FIFO Waitlist & Communication Protocol Alerts**: Once an event reaches full Seating/Standing or Ticket capacity, a **Join Waitlist** button activates. If additional capacity is added or a reservation/ticket is canceled, the next waitlisted attendee in FIFO order is automatically notified via **TuneMavens Email-Only Communication Protocol** (\`hello@tunemavens.com\` + In-App Inbox) with a direct priority link to RSVP or purchase.`
       },
       {

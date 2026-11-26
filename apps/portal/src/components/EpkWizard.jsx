@@ -2426,7 +2426,61 @@ function EpkWizardInner({ tracks = [], epk, setEpk, sessionUser, activeArtist })
   }, [epk?.subdomain, epk?.artist_name, epk?.headline, epk?.bio]);
 
   const TOTAL = 8
+  const [myEpks, setMyEpks] = useState([])
+  const [showNewEpkForm, setShowNewEpkForm] = useState(false)
+  const [newEpkName, setNewEpkName] = useState('')
+  const [newEpkSubdomain, setNewEpkSubdomain] = useState('')
   const [isSubdomainAvailable, setIsSubdomainAvailable] = useState(true)
+
+  const loadMyEpkList = async () => {
+    try {
+      const headers = {}
+      const tok = tokenStore.get()
+      if (tok) headers['Authorization'] = `Bearer ${tok}`
+      const res = await fetch('/api/epk/my-list', { headers, credentials: 'include' })
+      if (res.ok) {
+        const d = await res.json()
+        setMyEpks(Array.isArray(d.epks) ? d.epks : [])
+      }
+    } catch (_) {}
+  }
+
+  useEffect(() => {
+    loadMyEpkList()
+  }, [sessionUser?.id, sessionUser?.email])
+
+  const handleSelectOwnedEpk = (epkItem) => {
+    if (!epkItem?.subdomain) return
+    localStorage.setItem('last_saved_epk_subdomain', epkItem.subdomain)
+    fetchLiveEpkForWizard(epkItem.subdomain)
+    setStep(1)
+  }
+
+  const handleCreateNewEpkProfile = (e) => {
+    e.preventDefault()
+    const nm = newEpkName.trim()
+    if (!nm) return
+    const sub = (newEpkSubdomain.trim() || nm).toLowerCase().replace(/[^a-z0-9-]/g, '')
+    if (sub.length < 3) return
+    setData(prev => ({
+      ...prev,
+      artist_name: nm,
+      siteName: nm,
+      subdomain: sub,
+      customDomain: '',
+      headline: `${nm} — Official EPK Web World`,
+      bio: '',
+    }))
+    localStorage.setItem('last_saved_epk_subdomain', sub)
+    setMyEpks(prev => {
+      if (prev.some(x => x.subdomain === sub)) return prev
+      return [{ subdomain: sub, artist_name: nm, headline: `${nm} — Official EPK Web World` }, ...prev]
+    })
+    setNewEpkName('')
+    setNewEpkSubdomain('')
+    setShowNewEpkForm(false)
+    setStep(1)
+  }
   const [lastSavedTime, setLastSavedTime] = useState(null)
   const [savingDraft, setSavingDraft] = useState(false)
   const [saveToast, setSaveToast] = useState(false)
@@ -2543,13 +2597,15 @@ function EpkWizardInner({ tracks = [], epk, setEpk, sessionUser, activeArtist })
       sessionStorage.setItem('preferred_dashboard_tab', 'epk-builder')
 
       const token = tokenStore.get()
-      if (token) {
-        await fetch('/api/epk/me', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify(payload)
-        })
-      }
+      const headers = { 'Content-Type': 'application/json' }
+      if (token) headers['Authorization'] = `Bearer ${token}`
+      await fetch('/api/epk/me', {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      })
+      loadMyEpkList()
       if (setEpk) setEpk(payload)
       alert(`Your Creator Web World for ${cleanSubdomain}.tunemavens.com has been published and synchronised!`)
     } catch (e) {
@@ -2578,6 +2634,80 @@ function EpkWizardInner({ tracks = [], epk, setEpk, sessionUser, activeArtist })
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:0, position:'relative' }}>
+      {/* Multi-EPK Switcher & New EPK Creator */}
+      <div style={{ background: '#090e1c', border: `1px solid ${C.border}`, borderRadius: '3px', padding: '12px 16px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: C.cyan, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+              My EPK Profiles ({Math.max(1, myEpks.length)}):
+            </span>
+            {myEpks.map(item => {
+              const isSelected = (data.subdomain || '').toLowerCase() === (item.subdomain || '').toLowerCase()
+              return (
+                <button
+                  key={item.subdomain}
+                  type="button"
+                  onClick={() => handleSelectOwnedEpk(item)}
+                  style={{
+                    padding: '5px 11px',
+                    borderRadius: '3px',
+                    border: isSelected ? `1px solid ${C.cyan}` : '1px solid rgba(255,255,255,0.14)',
+                    background: isSelected ? 'rgba(0,240,255,0.16)' : 'rgba(255,255,255,0.04)',
+                    color: isSelected ? '#ffffff' : '#94a3b8',
+                    fontSize: '12px',
+                    fontWeight: isSelected ? 800 : 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {item.artist_name || item.subdomain} <span style={{ opacity: 0.7, fontSize: '10.5px' }}>(/{item.subdomain})</span>
+                </button>
+              )
+            })}
+            {!myEpks.some(x => (x.subdomain || '').toLowerCase() === (data.subdomain || '').toLowerCase()) && data.subdomain && (
+              <span style={{ padding: '5px 11px', borderRadius: '3px', border: `1px solid ${C.cyan}`, background: 'rgba(0,240,255,0.16)', color: '#fff', fontSize: '12px', fontWeight: 800 }}>
+                {data.artist_name || data.subdomain} <span style={{ opacity: 0.7, fontSize: '10.5px' }}>(/{data.subdomain})</span>
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowNewEpkForm(v => !v)}
+            style={{ padding: '6px 12px', borderRadius: '3px', border: '1px solid rgba(16,185,129,0.45)', background: 'rgba(16,185,129,0.14)', color: '#10b981', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}
+          >
+            + Create New EPK
+          </button>
+        </div>
+
+        {showNewEpkForm && (
+          <form onSubmit={handleCreateNewEpkProfile} style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            <input
+              type="text"
+              required
+              value={newEpkName}
+              onChange={e => {
+                setNewEpkName(e.target.value)
+                if (!newEpkSubdomain) {}
+              }}
+              placeholder="EPK Name (e.g. Tim Waindi, Maven Global, TCE)"
+              style={{ flex: '1 1 220px', padding: '7px 10px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.15)', background: '#050814', color: '#fff', fontSize: '12.5px' }}
+            />
+            <input
+              type="text"
+              value={newEpkSubdomain}
+              onChange={e => setNewEpkSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+              placeholder="Handle / subdomain (e.g. timwaindi)"
+              style={{ flex: '1 1 180px', padding: '7px 10px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.15)', background: '#050814', color: '#fff', fontSize: '12.5px' }}
+            />
+            <button type="submit" style={{ padding: '7px 14px', borderRadius: '3px', border: 'none', background: '#10b981', color: '#04141a', fontWeight: 800, fontSize: '12px', cursor: 'pointer' }}>
+              Start New EPK
+            </button>
+            <button type="button" onClick={() => setShowNewEpkForm(false)} style={{ padding: '7px 10px', borderRadius: '3px', border: 'none', background: 'transparent', color: '#94a3b8', fontSize: '12px', cursor: 'pointer' }}>
+              Cancel
+            </button>
+          </form>
+        )}
+      </div>
+
       {/* Resumed from Saved Draft Banner */}
       {resumedNotice && (
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'9px 16px', background:'rgba(0,240,255,0.08)', border:`1px solid ${C.cyan}44`, borderRadius:6, marginBottom:16, fontSize:12, color:C.text }}>

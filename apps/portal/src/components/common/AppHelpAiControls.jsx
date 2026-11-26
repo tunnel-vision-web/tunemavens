@@ -35,12 +35,13 @@ import './AppHelpAiControls.css'
 
 export default function AppHelpAiControls({
   activeContext,
+  context,
   activeTab,
   sessionUser,
   onNavigateTab,
   floating = false
 }) {
-  const currentContext = activeTab || activeContext || 'home';
+  const currentContext = activeTab || activeContext || context || 'home';
 
   // Modal states: both modals render via createPortal into document.body to remain strictly within viewport
   const [aiOverlayOpen, setAiOverlayOpen] = useState(false);
@@ -319,6 +320,9 @@ export default function AppHelpAiControls({
       case 'communications':
       case 'communications-vault':
         return ['How are audit logs preserved?', 'How does the WhatsApp notification protocol work?', 'How to filter automated compliance notices?'];
+      case 'tours':
+      case 'global-tours-live-concerts-ticketing':
+        return ['How does the capacity-gated FIFO waitlist work?', 'How do Admin Featured Events and multi-talent EPKs work?', 'How do Free-with-RSVP reservations and guest limits work?'];
       case 'dj-mixes':
       case 'djpool':
         return ['Explain 100% prior copyright clearance for DJ sets', 'How does camelot harmonic key matching work?', 'How to export setlist crates to CDJs?'];
