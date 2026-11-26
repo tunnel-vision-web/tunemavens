@@ -520,13 +520,19 @@ export default function LiveEventsSection({ sessionUser }) {
             <RiArrowLeftSLine size={16} /> Back to All Events &amp; Tours
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <Link
-              to={`/epk/${artistSlug}`}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: 'rgba(0,242,254,0.12)', color: '#00f2fe', border: '1px solid rgba(0,242,254,0.35)', borderRadius: '3px', fontSize: '12px', fontWeight: 800, textDecoration: 'none' }}
-            >
-              🌐 View {evt.artist} EPK
-            </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {((evt.epk_links && evt.epk_links.length > 0) ? evt.epk_links : [{ name: evt.artist, role: 'Main Performer', epk_url: `/epk/${artistSlug}` }]).map((epkItem, idx) => (
+              <Link
+                key={`${epkItem.name}-${idx}`}
+                to={epkItem.epk_url || `/epk/${artistSlug}`}
+                data-testid={`event-epk-link-${idx}`}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '7px 12px', background: 'rgba(0,242,254,0.08)', color: '#e2e8f0', border: '1px solid rgba(0,242,254,0.32)', borderRadius: '3px', fontSize: '12px', fontWeight: 700, textDecoration: 'none' }}
+              >
+                <span style={{ fontSize: '10px', fontWeight: 800, color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{epkItem.role || 'Talent'}</span>
+                <span style={{ color: 'rgba(255,255,255,0.25)' }}>|</span>
+                <span>{epkItem.name} EPK</span>
+              </Link>
+            ))}
             {(Boolean(evt.is_at_capacity) || (isFreeRsvp ? Number(rsvpSummary.total_remaining ?? 0) <= 0 : (Number(evt.capacity || 0) > 0 && Number(evt.tickets_sold || 0) >= Number(evt.capacity || 0)))) && (
               <button
                 type="button"

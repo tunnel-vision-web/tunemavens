@@ -157,6 +157,12 @@ export default function ToursView({ sessionUser, initialTab }) {
       />
 
       <div className="landing-body tours-container" style={{ maxWidth: '1240px', margin: '0 auto', padding: '24px 20px 80px' }}>
+        <div style={{ marginBottom: '20px' }}>
+          <AppHelpAiControls 
+            context="global-tours-live-concerts-ticketing" 
+            title="Global Tours, Live Events, EPKs & Capacity Waitlist Guide" 
+          />
+        </div>
         <div className="tours-mode-tabs" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '28px' }}>
           <button 
             className={`tours-mode-tab-btn ${activeTab === 'concerts' ? 'active-live' : ''}`}
@@ -556,13 +562,6 @@ export default function ToursView({ sessionUser, initialTab }) {
           </div>
         )}
 
-        {/* Contextual In-App Doc Controls */}
-        <div style={{ marginTop: '40px' }}>
-          <AppHelpAiControls 
-            context="global-tours-live-concerts-ticketing" 
-            title="Global Tours & Live Concerts Production Guide" 
-          />
-        </div>
       </div>
 
       {/* Full Size Screenshot Lightbox Modal */}

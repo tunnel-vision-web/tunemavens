@@ -277,6 +277,7 @@ The TuneMavens Wall of Fame is the authoritative hall of icons honoring trailbla
 - **Pre-built cohorts**: `All Registered Platform Users` and 10 role cohorts auto-sync for Admins.
 - **Rich Composer & Sender Identity**: Visual/HTML/Split editor with API-backed image uploads (`/api/crm/images/...`), custom-linked `+ CTA Button` insertion, and outbound emails sent from `TuneMavens <hello@tunemavens.com>` with a legal disclaimers & preferences footer.
 - **Event campaigns & Reservation Flow**: Live site events embed the event flyer; `free_rsvp` events automatically hide `Buy Ticket Now` and route `RSVP Now (Reserve Spot)` to a full reservation page (Seating/Standing capacities, attendee role, accompanying guest names, Email-Only communication opt-ins, and post-RSVP onboarding). Use the scrollable 1:1 **Preview Email** before dispatch.
+- **Featured Event, Multi-Talent EPKs & Capacity Waitlist**: Admins can set a single **Featured Event** (`POST /api/events/{id}/feature`) across Home, TuneStream, SyncMavens & Event pages, configure individual EPK links (`epk_links`) for every Entertainer, Host, and MC in the Event Backend, and rely on the capacity-gated FIFO Waitlist (`POST /api/events/{id}/waitlist`) to automatically notify the next waitlisted user via Email + In-App Inbox whenever capacity expands or a reservation is canceled.
 - **Affiliate attribution**: Admins see all affiliates; affiliates see only their own data. 90-day spend attribution with in-app inbox + email notifications.
 - **Learning engine**: 10 persona introductory playbooks (EPK and catalogue CTAs) that adapt from conversion telemetry.
 - **Audit Trails**: Dispatches are stored in `db.communication_logs` and `db.email_outbox`.
@@ -807,6 +808,14 @@ def ask_ai_admin_assistant(payload: AskAiPayload):
             "Clicks, onboarding and 90-day spend are attributed to the initiating affiliate, who is notified in their in-app inbox and registered email."
         )
         actions = ["Read Email Reachout Guide", "Open Smart CRM", "Inspect Communication Logs"]
+    elif "waitlist" in prompt or "featured" in prompt or "epk" in prompt or "event" in prompt:
+        reply = (
+            "TuneMavens Events support an Admin-only single Featured Event across Portal Home, TuneStream, SyncMavens, and all Event pages. "
+            "Each event's backend configuration supports individual EPK links (epk_links) for every Entertainer, Host, MC, and Main Performer. "
+            "When an event reaches full capacity, Join Waitlist activates in FIFO order; if capacity expands or an RSVP/ticket is canceled, "
+            "the next waitlisted user is automatically notified via Email (hello@tunemavens.com) and In-App Inbox with a direct claim link."
+        )
+        actions = ["Open Events & RSVP Manager", "Read Touring & Waitlist Guide"]
     elif "split" in prompt or "cascade" in prompt or "royalty" in prompt:
         reply = (
             "TuneLedger automates the split cascade for Master (SR) and Composition (PA) rights. "

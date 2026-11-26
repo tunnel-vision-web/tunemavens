@@ -655,6 +655,7 @@ class EventCreateRequest(BaseModel):
     mc: Optional[str] = Field(default=None)
     entertainers: Optional[str] = Field(default=None)
     is_featured: bool = Field(default=False)
+    epk_links: Optional[List[Dict[str, Any]]] = Field(default=None)
     tiers: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
 
 
@@ -676,6 +677,7 @@ class EventConfigUpdateRequest(BaseModel):
     mc: Optional[str] = None
     entertainers: Optional[str] = None
     is_featured: Optional[bool] = None
+    epk_links: Optional[List[Dict[str, Any]]] = None
 
 
 class GuestInviteItem(BaseModel):
@@ -751,6 +753,56 @@ def _normalize_policy(policy: Optional[str], max_additional: Optional[int] = Non
     return p, max_additional
 
 
+def _slugify_epk(name: str) -> str:
+    import re
+    clean = re.sub(r"[^a-z0-9]+", "_", (name or "").strip().lower()).strip("_")
+    return clean or "artist"
+
+
+def _build_default_epk_links(doc: Dict[str, Any]) -> List[Dict[str, str]]:
+    """Build deduplicated EPK links for Main Performer, Hosts, MC, and Entertainers."""
+    explicit = doc.get("epk_links")
+    if isinstance(explicit, list) and len(explicit) > 0:
+        cleaned = []
+        for item in explicit:
+            if not isinstance(item, dict):
+                continue
+            nm = str(item.get("name") or "").strip()
+            if not nm:
+                continue
+            role = str(item.get("role") or "Entertainer").strip()
+            url = str(item.get("epk_url") or f"/epk/{_slugify_epk(nm)}").strip().lstrip("#")
+            if not url.startswith("/"):
+                url = f"/epk/{_slugify_epk(url)}"
+            cleaned.append({"name": nm, "role": role, "epk_url": url})
+        if cleaned:
+            return cleaned
+
+    links: List[Dict[str, str]] = []
+    seen = set()
+
+    def _add(name_str: str, role_label: str, custom_url: Optional[str] = None):
+        nm = (name_str or "").strip()
+        if not nm:
+            return
+        key = nm.lower()
+        if key in seen:
+            return
+        seen.add(key)
+        url = (custom_url or f"/epk/{_slugify_epk(nm)}").strip().lstrip("#")
+        if not url.startswith("/"):
+            url = f"/epk/{_slugify_epk(url)}"
+        links.append({"name": nm, "role": role_label, "epk_url": url})
+
+    _add(doc.get("artist") or "", "Main Performer", doc.get("epk_url"))
+    for raw_part in str(doc.get("hosts") or "").replace("&", ",").split(","):
+        _add(raw_part, "Host")
+    _add(doc.get("mc") or "", "MC")
+    for raw_part in str(doc.get("entertainers") or "").replace("&", ",").split(","):
+        _add(raw_part, "Entertainer")
+    return links
+
+
 def _normalize_event_fields(event: Dict[str, Any]) -> Dict[str, Any]:
     """Ensure every event document carries the unified payment_mode, capacity & RSVP policy fields."""
     doc = dict(event)
@@ -781,6 +833,7 @@ def _normalize_event_fields(event: Dict[str, Any]) -> Dict[str, Any]:
     doc["hosts"] = (doc.get("hosts") or doc.get("artist") or "TuneMavens Live").strip()
     doc["mc"] = (doc.get("mc") or "TuneMavens Live Host").strip()
     doc["entertainers"] = (doc.get("entertainers") or doc.get("artist") or "Featured Live Talent").strip()
+    doc["epk_links"] = _build_default_epk_links(doc)
     return doc
 
 
@@ -1438,6 +1491,11 @@ def create_live_event(payload: EventCreateRequest, user=Depends(get_optional_use
         "is_live_stream_active": False,
         "stream_url": None,
         "epk_url": f"#/epk/{payload.artist_id or 'creator_custom'}",
+        "hosts": payload.hosts or payload.artist.strip(),
+        "mc": payload.mc or "TuneMavens Live Host",
+        "entertainers": payload.entertainers or payload.artist.strip(),
+        "epk_links": payload.epk_links or [],
+        "is_featured": bool(payload.is_featured),
         "description": payload.description or "",
         "tiers": tiers,
         "created_at": now_iso,
@@ -1501,7 +1559,7 @@ def update_event_config(event_id: str, payload: EventConfigUpdateRequest, user=D
         updates["guest_limit_policy"] = policy
         updates["max_additional_guests"] = max_add
 
-    for field in ("title", "venue", "city", "date_display", "description", "hosts", "mc", "entertainers"):
+    for field in ("title", "venue", "city", "date_display", "description", "hosts", "mc", "entertainers", "epk_links"):
         val = getattr(payload, field, None)
         if val is not None:
             updates[field] = val

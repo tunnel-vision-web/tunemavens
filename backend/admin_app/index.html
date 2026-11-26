@@ -1525,6 +1525,22 @@
                 <option value="strict_plus_2">Strict +2 Limit (Max 2 guests)</option>
               </select>
             </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Hosts</label>
+              <input id="evInputHosts" type="text" placeholder="Event Hosts" style="width: 100%; padding: 8px; background: #060813; border: 1px solid var(--border-color); color: #fff; border-radius: 3px;" />
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">MC</label>
+              <input id="evInputMc" type="text" placeholder="Event MC" style="width: 100%; padding: 8px; background: #060813; border: 1px solid var(--border-color); color: #fff; border-radius: 3px;" />
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Entertainers</label>
+              <input id="evInputEntertainers" type="text" placeholder="Entertainers / Lineup" style="width: 100%; padding: 8px; background: #060813; border: 1px solid var(--border-color); color: #fff; border-radius: 3px;" />
+            </div>
+          </div>
+          <div style="margin-bottom: 14px;">
+            <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Talent EPK Links (one per line: <code>Name | Role | /epk/slug</code>)</label>
+            <textarea id="evInputEpkLinks" rows="3" placeholder="Ndufo | Main Performer | /epk/creator_ndufo&#10;MC Jayden | MC | /epk/mc_jayden" style="width: 100%; padding: 8px; background: #060813; border: 1px solid var(--border-color); color: #fff; border-radius: 3px; font-family: monospace; font-size: 11.5px;"></textarea>
           </div>
           <div style="display: flex; gap: 10px; justify-content: flex-end;">
             <button class="btn" onclick="closeEventModal()">Cancel</button>
@@ -2291,6 +2307,10 @@
         document.getElementById('evInputSeating').value = 60;
         document.getElementById('evInputStanding').value = 40;
         document.getElementById('evInputGuestLimit').value = 'strict_plus_1';
+        document.getElementById('evInputHosts').value = '';
+        document.getElementById('evInputMc').value = '';
+        document.getElementById('evInputEntertainers').value = '';
+        document.getElementById('evInputEpkLinks').value = '';
         return;
       }
       const ev = adminEventsCache.find(x => x.id === eventId);
@@ -2305,6 +2325,10 @@
       document.getElementById('evInputSeating').value = ev.seating_capacity ?? ev.capacity ?? 0;
       document.getElementById('evInputStanding').value = ev.standing_capacity ?? 0;
       document.getElementById('evInputGuestLimit').value = ev.guest_limit_policy || 'open';
+      document.getElementById('evInputHosts').value = ev.hosts || '';
+      document.getElementById('evInputMc').value = ev.mc || '';
+      document.getElementById('evInputEntertainers').value = ev.entertainers || '';
+      document.getElementById('evInputEpkLinks').value = (ev.epk_links || []).map(x => `${x.name} | ${x.role || 'Entertainer'} | ${x.epk_url || ''}`).join('\n');
     }
 
     function closeEventModal() {
@@ -2313,6 +2337,11 @@
 
     async function saveAdminEvent() {
       const editId = document.getElementById('evEditId').value;
+      const epkLines = (document.getElementById('evInputEpkLinks').value || '').split('\n').map(l => l.trim()).filter(Boolean);
+      const parsedEpkLinks = epkLines.map(line => {
+        const parts = line.split('|').map(p => p.trim());
+        return { name: parts[0] || '', role: parts[1] || 'Entertainer', epk_url: parts[2] || '' };
+      }).filter(x => x.name);
       const body = {
         title: document.getElementById('evInputTitle').value.trim(),
         artist: document.getElementById('evInputArtist').value.trim() || 'TuneMavens Artist',
@@ -2322,6 +2351,10 @@
         seating_capacity: Number(document.getElementById('evInputSeating').value) || 0,
         standing_capacity: Number(document.getElementById('evInputStanding').value) || 0,
         guest_limit_policy: document.getElementById('evInputGuestLimit').value,
+        hosts: document.getElementById('evInputHosts').value.trim() || undefined,
+        mc: document.getElementById('evInputMc').value.trim() || undefined,
+        entertainers: document.getElementById('evInputEntertainers').value.trim() || undefined,
+        epk_links: parsedEpkLinks.length ? parsedEpkLinks : undefined,
       };
       const url = editId ? `/api/events/${editId}` : '/api/events';
       const method = editId ? 'PATCH' : 'POST';

@@ -1208,12 +1208,11 @@ Because there are no recurring subscriptions, support claims regarding billing a
 Every tour mounted through TuneMavens connects directly to our verified global venue network (The Alchemist Nairobi, Village Underground London, SO36 Berlin, La Gaîté Lyrique Paris, Contact Shibuya Tokyo). Routing is algorithmic: listener density from TuneStream and superfan telemetry from Smart CRM dictate venue sizes, reducing un-ticketed seat risk.`
       },
       {
-        heading: 'Integrated Ticketing: Onsale, VIP Passes & M-Pesa STK Push',
-        content: `Fans can reserve passes directly on the platform with local payment rails:
-* **M-Pesa STK Mobile Push**: Instant checkout across East Africa with automatic mobile confirmation and SMS pass dispatch.
-* **TunePay Card & Apple Pay**: Low-friction global checkout with zero hidden currency fees.
-* **Cryptographic QR Passes**: Every ticket contains a cryptographically signed QR code hash that prevents duplicate door admissions.
-* **Smart CRM Integration**: Purchasing a ticket or joining a tour waitlist automatically updates fan lifetime value and adds the superfan to the artist's priority communication segment.`
+        heading: 'Featured Events, Multi-Talent EPKs & Capacity-Gated FIFO Waitlist',
+        content: `Every live event on TuneMavens, TuneStream, and SyncMavens now supports unified promotion, talent discovery, and automated waitlist recovery:
+* **Single Admin-Selected Featured Event**: Administrators can designate one active show as the **Featured Event** (\`POST /api/events/{id}/feature\`), placing it as the top content row across the Portal Home page, TuneStream, SyncMavens, and all Event showcases—complete with Hosts, MC, Entertainers, flyer thumbnail, direct confirmation CTA, and event page deep-link.
+* **Multi-Talent Event EPK Links**: Event pages and the Admin Events & RSVP Manager support individual EPK links (\`epk_links\`) for every **Main Performer**, **Host**, **MC**, and **Entertainer** on the bill.
+* **Capacity-Gated FIFO Waitlist & Communication Protocol Alerts**: Once an event reaches full Seating/Standing or Ticket capacity, a **Join Waitlist** button activates. If additional capacity is added or a reservation/ticket is canceled, the next waitlisted attendee in FIFO order is automatically notified via **TuneMavens Email-Only Communication Protocol** (\`hello@tunemavens.com\` + In-App Inbox) with a direct priority link to RSVP or purchase.`
       },
       {
         heading: 'Live Door Operations & Merch Box Office POS Terminals',

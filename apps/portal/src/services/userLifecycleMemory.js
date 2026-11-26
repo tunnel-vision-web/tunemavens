@@ -1082,6 +1082,26 @@ Here is what TuneCompanion coordinates for your catalog:
     };
   }
 
+  if (
+    q.includes('event') ||
+    q.includes('waitlist') ||
+    q.includes('featured') ||
+    q.includes('tour') ||
+    activeTab === 'tours'
+  ) {
+    return {
+      reply: `Here is how **Live Events, Featured Shows, Multi-Talent EPKs & Capacity Waitlists** work on TuneMavens:
+* **Featured Event Across All Hubs**: Admins can mark a single event as the **Featured Event**—appearing as the first content row on the TuneMavens Home page, TuneStream, SyncMavens, and all Event showcases with Hosts, MC, Entertainers, and direct RSVP/Purchase + Event Page deep-links.
+* **Multi-Talent EPK Links**: Each Event Detail page displays classy EPK buttons for every **Main Performer**, **Host**, **MC**, and **Entertainer** configured in the Event Backend.
+* **Capacity-Gated FIFO Waitlist**: When an event reaches full capacity, **Join Waitlist** unlocks. If capacity expands or a reservation/ticket is canceled, TuneMavens' Email-Only Communication Protocol (\`hello@tunemavens.com\` + In-App Inbox) automatically notifies the next user on the waitlist with a direct link to claim the spot.
+* **Free-with-RSVP vs. Paid Events**: Free-with-RSVP shows hide **Buy Ticket Now** and route to the full reservation page with Seating/Standing capacity, guest names, role selection, and post-RSVP onboarding.`,
+      suggestedActions: [
+        { label: 'Read Tours & Waitlist Guide', link: '/#/help?article=global-tours-live-concerts-ticketing' },
+        { label: 'Browse Live Events', link: '/#/events' }
+      ]
+    };
+  }
+
   if (q.includes('split') || q.includes('ledger') || activeTab === 'splits') {
     return {
       reply: `I see from your lifecycle history that you recently configured a **50/50 songwriter & producer split** in TuneLedger for your upcoming single release.
