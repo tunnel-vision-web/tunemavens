@@ -14,7 +14,8 @@ import {
   RiDiscFill,
   RiEqualizerFill,
   RiCloseFill,
-  RiCheckboxCircleFill
+  RiCheckboxCircleFill,
+  RiShieldCheckFill
 } from 'react-icons/ri'
 
 import './RoleLandingShared.css'
