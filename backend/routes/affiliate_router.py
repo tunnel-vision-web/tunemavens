@@ -1382,6 +1382,83 @@ def onboard_user_by_affiliate(payload: UserOnboardingRequest):
     }
 
 
+class UpdateLinkedPersonaRequest(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    role: Optional[str] = None
+    handle: Optional[str] = None
+    region: Optional[str] = None
+    status: Optional[str] = None
+    notes: Optional[str] = None
+
+
+@router.put("/network/user/{user_id}")
+def update_affiliate_linked_user(user_id: str, payload: UpdateLinkedPersonaRequest):
+    """Edit the persona/role or profile details of a linked user under an affiliate account."""
+    existing = db.affiliate_linked_users.find_one({"id": user_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Linked persona not found")
+
+    role_labels = {
+        "creator": "Recording Artist & Producer",
+        "podcaster": "Podcaster & Show Host",
+        "vc": "Tour Venture Capital & Syndicate",
+        "label": "Independent Record Label",
+        "dj": "DJ & Curated Playlist Curator",
+        "supervisor": "Music Supervisor & Studio",
+        "corporate": "Corporate Brand / Ad Agency",
+        "media_house": "Media House & Broadcast Network",
+        "consumer": "Listener & Superfan",
+        "affiliate": "Sub-Affiliate / Scout",
+    }
+    avatar_colors = {
+        "creator": "#22d3ee",
+        "podcaster": "#ec4899",
+        "vc": "#00f2fe",
+        "label": "#a855f7",
+        "dj": "#f59e0b",
+        "supervisor": "#06b6d4",
+        "corporate": "#f97316",
+        "media_house": "#8b5cf6",
+        "consumer": "#3b82f6",
+        "affiliate": "#10b981",
+    }
+
+    updates = {}
+    if payload.name is not None and payload.name.strip():
+        updates["name"] = payload.name.strip()
+    if payload.email is not None and payload.email.strip():
+        updates["email"] = payload.email.strip().lower()
+    if payload.handle is not None:
+        updates["handle"] = payload.handle.strip()
+    if payload.region is not None:
+        updates["region"] = payload.region.strip()
+    if payload.status is not None and payload.status.strip():
+        updates["status"] = payload.status.strip()
+    if payload.notes is not None:
+        updates["notes"] = payload.notes
+    if payload.role is not None and payload.role.strip():
+        r = payload.role.strip()
+        updates["role"] = r
+        updates["role_label"] = role_labels.get(r, r.replace("_", " ").title())
+        updates["avatar_color"] = avatar_colors.get(r, "#22d3ee")
+
+    if updates:
+        db.affiliate_linked_users.update_one({"id": user_id}, {"$set": updates})
+
+    updated = db.affiliate_linked_users.find_one({"id": user_id}, {"_id": 0})
+    return {"status": "success", "user": updated}
+
+
+@router.delete("/network/user/{user_id}")
+def delete_affiliate_linked_user(user_id: str):
+    """Remove a linked persona from an affiliate's network roster."""
+    res = db.affiliate_linked_users.delete_one({"id": user_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Linked persona not found")
+    return {"status": "success", "deleted_id": user_id}
+
+
 # ======================================================================
 # Affiliate Academy & Required Reading Endpoints
 # ======================================================================

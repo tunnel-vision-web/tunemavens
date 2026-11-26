@@ -46,7 +46,7 @@ import { affiliatesApi } from '../../lib/api.js'
 import InAppDocModal from '../common/InAppDocModal.jsx'
 import './AffiliateAdminPanel.css'
 
-export default function AffiliateAdminPanel({ sessionUser, setActiveTab }) {
+export default function AffiliateAdminPanel({ sessionUser, setActiveTab, initialSubTab = null }) {
   const isAffiliateRole = sessionUser?.role === 'affiliate';
   const isAdminUser = Boolean(
     sessionUser?.role === 'admin' ||
@@ -57,7 +57,10 @@ export default function AffiliateAdminPanel({ sessionUser, setActiveTab }) {
   );
 
   // SubTab Navigation: 'portal' | 'network' | 'academy' | 'roster' | 'ledger' | 'matrix'
-  const [activeSubTab, setActiveSubTab] = useState(isAffiliateRole ? 'portal' : 'roster');
+  const [activeSubTab, setActiveSubTab] = useState(initialSubTab || (isAffiliateRole ? 'portal' : 'roster'));
+  useEffect(() => {
+    if (initialSubTab) setActiveSubTab(initialSubTab);
+  }, [initialSubTab]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -109,6 +112,43 @@ export default function AffiliateAdminPanel({ sessionUser, setActiveTab }) {
   });
   const [onboardingSubmitting, setOnboardingSubmitting] = useState(false);
   const [onboardSuccessData, setOnboardSuccessData] = useState(null);
+  const [editingNetworkUser, setEditingNetworkUser] = useState(null);
+  const [savingNetworkEdit, setSavingNetworkEdit] = useState(false);
+
+  const handleSaveNetworkEdit = async (e) => {
+    e.preventDefault();
+    if (!editingNetworkUser) return;
+    setSavingNetworkEdit(true);
+    try {
+      const res = await affiliatesApi.updateNetworkUser(editingNetworkUser.id, {
+        name: editingNetworkUser.name,
+        email: editingNetworkUser.email,
+        role: editingNetworkUser.role,
+        handle: editingNetworkUser.handle,
+        region: editingNetworkUser.region,
+        status: editingNetworkUser.status
+      });
+      if (res?.user) {
+        setNetworkUsers(prev => prev.map(u => (u.id === editingNetworkUser.id ? { ...u, ...res.user } : u)));
+      }
+      setEditingNetworkUser(null);
+      if (currentRef) loadLinkedNetwork(currentRef);
+    } catch (err) {
+      alert(err?.message || 'Failed to update persona details');
+    } finally {
+      setSavingNetworkEdit(false);
+    }
+  };
+
+  const handleDeleteNetworkUser = async (userObj) => {
+    if (!window.confirm(`Remove ${userObj.name} (${userObj.role_label || userObj.role}) from your linked personas?`)) return;
+    try {
+      await affiliatesApi.removeNetworkUser(userObj.id);
+      setNetworkUsers(prev => prev.filter(u => u.id !== userObj.id));
+    } catch (err) {
+      alert(err?.message || 'Failed to remove persona');
+    }
+  };
   const [copiedInviteUrl, setCopiedInviteUrl] = useState(false);
 
   // Affiliate Academy & Required Reading State
@@ -1069,14 +1109,33 @@ export default function AffiliateAdminPanel({ sessionUser, setActiveTab }) {
                         <span className="last-active-sub">{user.last_active || 'Recent'}</span>
                       </td>
                       <td>
-                        <button 
-                          type="button" 
-                          className="btn-secondary btn-copy-invite-row"
-                          onClick={() => handleCopyInviteUrl(`https://tunemavens.com/#/join?ref=${currentRef}&invite=${user.invitation_token || 'DIRECT'}&role=${user.role}`)}
-                          title="Copy Direct Invitation Link for this Creator"
-                        >
-                          <RiShareLine size={13} /> Invite Link
-                        </button>
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                          <button
+                            type="button"
+                            className="btn-secondary btn-copy-invite-row"
+                            onClick={() => setEditingNetworkUser({ ...user })}
+                            title="Edit Persona / Role Details"
+                          >
+                            Edit Persona
+                          </button>
+                          <button 
+                            type="button" 
+                            className="btn-secondary btn-copy-invite-row"
+                            onClick={() => handleCopyInviteUrl(`https://tunemavens.com/#/join?ref=${currentRef}&invite=${user.invitation_token || 'DIRECT'}&role=${user.role}`)}
+                            title="Copy Direct Invitation Link for this Creator"
+                          >
+                            <RiShareLine size={13} /> Invite Link
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-secondary btn-copy-invite-row"
+                            style={{ borderColor: 'rgba(239,68,68,0.35)', color: '#fca5a5' }}
+                            onClick={() => handleDeleteNetworkUser(user)}
+                            title="Remove Persona from Network"
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -1084,6 +1143,111 @@ export default function AffiliateAdminPanel({ sessionUser, setActiveTab }) {
               </tbody>
             </table>
           </div>
+
+          {/* Edit Linked Persona Modal */}
+          {editingNetworkUser && (
+            <div className="aff-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setEditingNetworkUser(null); }}>
+              <div className="aff-modal-card onboard-modal-card">
+                <div className="aff-modal-header">
+                  <div className="aff-modal-title-box">
+                    <span className="modal-eyebrow">Affiliate Roster Management</span>
+                    <h3>Edit Persona Under Your Account</h3>
+                  </div>
+                  <button className="aff-modal-close" onClick={() => setEditingNetworkUser(null)}>
+                    <RiCloseLine size={20} />
+                  </button>
+                </div>
+                <div className="aff-modal-body">
+                  <form onSubmit={handleSaveNetworkEdit} className="aff-onboard-form">
+                    <div className="form-group-2">
+                      <div className="form-group">
+                        <label>Full Name / Brand *</label>
+                        <input
+                          type="text"
+                          required
+                          value={editingNetworkUser.name || ''}
+                          onChange={(e) => setEditingNetworkUser({ ...editingNetworkUser, name: e.target.value })}
+                          className="aff-form-input"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Contact Email *</label>
+                        <input
+                          type="email"
+                          required
+                          value={editingNetworkUser.email || ''}
+                          onChange={(e) => setEditingNetworkUser({ ...editingNetworkUser, email: e.target.value })}
+                          className="aff-form-input"
+                        />
+                      </div>
+                    </div>
+                    <div className="form-group-2" style={{ marginTop: '12px' }}>
+                      <div className="form-group">
+                        <label>Account Type / Persona</label>
+                        <select
+                          value={editingNetworkUser.role || 'creator'}
+                          onChange={(e) => setEditingNetworkUser({ ...editingNetworkUser, role: e.target.value })}
+                          className="aff-form-select"
+                        >
+                          <option value="creator">Recording Artist &amp; Producer</option>
+                          <option value="podcaster">Podcaster &amp; Audio Show Host</option>
+                          <option value="vc">Tour Venture Capitalist (VC) &amp; Syndicate</option>
+                          <option value="label">Independent Record Label</option>
+                          <option value="dj">DJ &amp; Curated Playlist Curator</option>
+                          <option value="supervisor">Music Supervisor / Post House</option>
+                          <option value="corporate">Corporate Brand Sponsor</option>
+                          <option value="media_house">Media House &amp; Broadcast Network</option>
+                          <option value="consumer">Listener &amp; Superfan Pass</option>
+                          <option value="affiliate">Sub-Affiliate / Campus Scout</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Status</label>
+                        <select
+                          value={editingNetworkUser.status || 'invited'}
+                          onChange={(e) => setEditingNetworkUser({ ...editingNetworkUser, status: e.target.value })}
+                          className="aff-form-select"
+                        >
+                          <option value="invited">Invited</option>
+                          <option value="active">Active</option>
+                          <option value="catalog_live">Catalog Live</option>
+                          <option value="paused">Paused</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="form-group-2" style={{ marginTop: '12px' }}>
+                      <div className="form-group">
+                        <label>Handle</label>
+                        <input
+                          type="text"
+                          value={editingNetworkUser.handle || ''}
+                          onChange={(e) => setEditingNetworkUser({ ...editingNetworkUser, handle: e.target.value })}
+                          className="aff-form-input"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Region</label>
+                        <input
+                          type="text"
+                          value={editingNetworkUser.region || ''}
+                          onChange={(e) => setEditingNetworkUser({ ...editingNetworkUser, region: e.target.value })}
+                          className="aff-form-input"
+                        />
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '18px' }}>
+                      <button type="button" className="btn-secondary" onClick={() => setEditingNetworkUser(null)}>
+                        Cancel
+                      </button>
+                      <button type="submit" className="btn-primary" disabled={savingNetworkEdit}>
+                        {savingNetworkEdit ? 'Saving...' : 'Save Persona Changes'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Onboarding Modal Overlay */}
           {showOnboardModal && (

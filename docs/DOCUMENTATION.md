@@ -3840,6 +3840,7 @@ esend_response metadata fields, enabling real-time inspection of delivery attemp
   - **Streamlined Affiliate Sign-Up & Universal Smart CRM Access**:
     - Removed the redundant Role / Audience Category selector from the Affiliate Application modal (`AffiliatesView.jsx`) and skipped the Role selection step in `RegisterView.jsx` when registering specifically for an Affiliate account.
     - Enabled **Smart CRM & Reachout** across all user roles (including `affiliate` and `consumer` listener workspaces in `apps/portal/src/App.jsx`) and added a direct **Smart CRM & Reachout** button inside the Affiliate Programme sub-navigation (`AffiliateAdminPanel.jsx`).
+    - Audited and aligned `visibleKeys` and `roleAllowed` across all personas (`affiliate`, `vc`, `corporate`, `media_house`, `label`, `dj`, `supervisor`, `podcaster`, `consumer`, `creator`, `admin`), adding **Catalogue Machine**, **EPK Builder**, **Sync Marketplace**, **Social AI Studio**, and a dedicated **Persona Onboarding & Roster** (`affiliate-personas`) app to Affiliate accounts with full backend `PUT /api/affiliates/network/user/{user_id}` and `DELETE /api/affiliates/network/user/{user_id}` persona editing (`backend/routes/affiliate_router.py`).
 
 
 

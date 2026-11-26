@@ -360,6 +360,8 @@ export const affiliatesApi = {
   simulateConversion: (payload) => request('/api/affiliates/simulate-conversion', { method: 'POST', body: payload }),
   getNetwork: (refCode) => request(`/api/affiliates/network/${encodeURIComponent(refCode)}`),
   onboardUser: (payload) => request('/api/affiliates/onboard-user', { method: 'POST', body: payload }),
+  updateNetworkUser: (userId, payload) => request(`/api/affiliates/network/user/${encodeURIComponent(userId)}`, { method: 'PUT', body: payload }),
+  removeNetworkUser: (userId) => request(`/api/affiliates/network/user/${encodeURIComponent(userId)}`, { method: 'DELETE' }),
   getAcademy: (refCode) => request(`/api/affiliates/academy/${encodeURIComponent(refCode)}`),
   acknowledgeReading: (payload) => request('/api/affiliates/academy/acknowledge', { method: 'POST', body: payload }),
   admin: {

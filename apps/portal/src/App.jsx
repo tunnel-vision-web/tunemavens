@@ -2068,20 +2068,20 @@ function DashboardView({
     // Role-based permission guard ensuring users only access authorized apps
     const userRole = activeUser?.role || 'creator';
     const roleAllowed = {
-      vc: ['home', 'dj-mixes', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'profile', 'settings', 'support'],
-      investor: ['home', 'dj-mixes', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'profile', 'settings', 'support'],
-      admin: ['home', 'backend-admin', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'corporate-ads', 'affiliates', 'communications', 'communications-vault', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support', 'media-house', 'media', 'broadcast', 'syndication', 'inbox', 'catalogue-acquisitions'],
-      corporate: ['home', 'dj-mixes', 'corporate-ads', 'affiliates', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
+      vc: ['home', 'dj-mixes', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'inbox', 'app-marketplace', 'affiliates', 'profile', 'settings', 'support'],
+      investor: ['home', 'dj-mixes', 'vc-discover', 'vc-portfolio', 'vc-sponsorship', 'tours-vault', 'splits', 'crm', 'escrow', 'inbox', 'app-marketplace', 'affiliates', 'profile', 'settings', 'support'],
+      admin: ['home', 'backend-admin', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'corporate-ads', 'affiliates', 'affiliate-personas', 'communications', 'communications-vault', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'crm', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'mastering', 'stream-controls', 'settings', 'label-team', 'admin-team', 'support', 'media-house', 'media', 'broadcast', 'syndication', 'inbox', 'catalogue-acquisitions'],
+      corporate: ['home', 'dj-mixes', 'corporate-ads', 'affiliates', 'inbox', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
       media_house: ['home', 'media-house', 'media', 'broadcast', 'syndication', 'dj-mixes', 'corporate-ads', 'affiliates', 'inbox', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
       media: ['home', 'media-house', 'media', 'broadcast', 'syndication', 'dj-mixes', 'corporate-ads', 'affiliates', 'inbox', 'sync', 'crm', 'stream-controls', 'social-ai', 'app-marketplace', 'profile', 'settings', 'support', 'domain-mappings', 'hosting-manager'],
-      label: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'dj-mixes', 'djpool', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'label-team', 'affiliates', 'support', 'catalogue-acquisitions'],
-      dj: ['home', 'dj-mixes', 'djpool', 'library', 'tips', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'support'],
-      studio: ['home', 'dj-mixes', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
-      supervisor: ['home', 'dj-mixes', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
-      podcaster: ['home', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'corporate-ads', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'support'],
+      label: ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'dj-mixes', 'djpool', 'sync', 'escrow', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'inbox', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'label-team', 'affiliates', 'support', 'catalogue-acquisitions'],
+      dj: ['home', 'dj-mixes', 'djpool', 'epk-builder', 'splits', 'library', 'tips', 'inbox', 'stream-controls', 'social-ai', 'crm', 'affiliates', 'app-marketplace', 'profile', 'settings', 'support'],
+      studio: ['home', 'dj-mixes', 'sync', 'escrow', 'inbox', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
+      supervisor: ['home', 'dj-mixes', 'sync', 'escrow', 'inbox', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
+      podcaster: ['home', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'corporate-ads', 'social-ai', 'crm', 'inbox', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'support'],
       consumer: ['home', 'dj-mixes', 'explore', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'radio', 'concerts', 'library', 'tips', 'crm', 'inbox', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'settings', 'support'],
-      affiliate: ['home', 'dj-mixes', 'affiliates', 'crm', 'inbox', 'podcasts', 'splits', 'library', 'tips', 'profile', 'settings', 'support'],
-      creator: ['home', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'communications', 'communications-vault', 'support']
+      affiliate: ['home', 'affiliates', 'affiliate-personas', 'crm', 'catalog', 'epk-builder', 'sync', 'splits', 'social-ai', 'dj-mixes', 'podcasts', 'inbox', 'library', 'tips', 'app-marketplace', 'profile', 'settings', 'support'],
+      creator: ['home', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'communications', 'communications-vault', 'inbox', 'support']
     };
     const allowedTabs = roleAllowed[userRole] || roleAllowed.creator;
     // Platform administrators enjoy sovereign unrestricted access to all ecosystem apps
@@ -2421,6 +2421,8 @@ function DashboardView({
         return <MediaHousePanel sessionUser={sessionUser} setActiveTab={setActiveTab} />;
       case 'affiliates':
         return <AffiliateAdminPanel sessionUser={sessionUser} setActiveTab={setActiveTab} />;
+      case 'affiliate-personas':
+        return <AffiliateAdminPanel sessionUser={sessionUser} setActiveTab={setActiveTab} initialSubTab="network" />;
       case 'communications':
       case 'communications-vault':
       case 'audit-vault':
@@ -2549,6 +2551,7 @@ function DashboardView({
       'promoted-acts': { id: 'promoted-acts', label: 'Promoted Acts', icon: RiStarFill, category: 'Admin' },
       'corporate-ads': { id: 'corporate-ads', label: 'Corporate Ads & Rates', icon: RiMegaphoneFill, category: role === 'admin' ? 'Admin' : 'Brand Sponsorships' },
       affiliates: { id: 'affiliates', label: 'Affiliate Programme', icon: RiUserSharedFill, category: role === 'admin' ? 'Admin' : (role === 'affiliate' ? 'Affiliate Partner' : 'Creator Tools') },
+      'affiliate-personas': { id: 'affiliate-personas', label: 'Persona Onboarding & Roster', icon: RiTeamFill, category: role === 'admin' ? 'Admin' : 'Affiliate Partner', desc: 'Onboard any persona under your affiliate account and edit linked persona roles & details' },
       communications: { id: 'communications', label: 'Communications Vault', icon: RiMailSendLine, category: role === 'admin' ? 'Admin' : 'Creator Tools' },
       inbox: { id: 'inbox', label: 'In-App Inbox', icon: RiMailFill, category: 'Community' },
     };
@@ -2559,11 +2562,11 @@ function DashboardView({
         visibleKeys = ['home', 'crm', 'backend-admin', 'dj-mixes', 'djpool', 'admin-team', 'media-house', 'podcaster-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'podcasts', 'corporate-ads', 'affiliates', 'inbox', 'communications', 'cms', 'domain-mappings', 'hosting-manager', 'promoted-acts', 'app-marketplace', 'social-ai', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'profile', 'support', 'label-team', 'catalogue-acquisitions'];
         break;
       case 'affiliate':
-        visibleKeys = ['home', 'affiliates', 'crm', 'dj-mixes', 'inbox', 'splits', 'library', 'tips', 'profile', 'support'];
+        visibleKeys = ['home', 'affiliates', 'affiliate-personas', 'crm', 'catalog', 'epk-builder', 'sync', 'splits', 'social-ai', 'dj-mixes', 'inbox', 'library', 'tips', 'app-marketplace', 'profile', 'support'];
         break;
       case 'vc':
       case 'investor':
-        visibleKeys = ['home', 'vc-discover', 'tours-vault', 'vc-portfolio', 'vc-sponsorship', 'inbox', 'splits', 'crm', 'escrow', 'profile', 'support'];
+        visibleKeys = ['home', 'vc-discover', 'tours-vault', 'vc-portfolio', 'vc-sponsorship', 'inbox', 'splits', 'crm', 'escrow', 'affiliates', 'app-marketplace', 'profile', 'support'];
         break;
       case 'corporate':
         visibleKeys = ['home', 'corporate-ads', 'affiliates', 'inbox', 'sync', 'escrow', 'crm', 'social-ai', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'support'];
@@ -2573,10 +2576,10 @@ function DashboardView({
         visibleKeys = ['home', 'media-house', 'corporate-ads', 'affiliates', 'inbox', 'sync', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'support'];
         break;
       case 'label':
-        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'dj-mixes', 'djpool', 'catalogue-acquisitions', 'sync', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'inbox', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'support', 'label-team', 'affiliates'];
+        visibleKeys = ['home', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'dj-mixes', 'djpool', 'catalogue-acquisitions', 'sync', 'escrow', 'pos-inventory', 'pos-settlement', 'pos-devices', 'pos-terminal', 'social-ai', 'crm', 'inbox', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'support', 'label-team', 'affiliates'];
         break;
       case 'dj':
-        visibleKeys = ['home', 'dj-mixes', 'djpool', 'library', 'tips', 'inbox', 'stream-controls', 'social-ai', 'crm', 'app-marketplace', 'profile', 'support'];
+        visibleKeys = ['home', 'dj-mixes', 'djpool', 'epk-builder', 'splits', 'library', 'tips', 'inbox', 'stream-controls', 'social-ai', 'crm', 'affiliates', 'app-marketplace', 'profile', 'support'];
         break;
       case 'studio':
       case 'supervisor':
@@ -2615,8 +2618,8 @@ function DashboardView({
 
     const categories = {};
     visibleKeys.forEach(k => {
-      // Check if this tab is a marketplace app, and if so, only show if activated (CRM and Corporate Ads are always available). Admin sees all platform apps sovereignly.
-      if (role !== 'consumer' && role !== 'admin' && APP_SLUGS[k] && k !== 'crm' && k !== 'corporate-ads' && k !== 'pos-terminal' && k !== 'distribution-tracker' && k !== 'hosting-manager') {
+      // Check if this tab is a marketplace app, and if so, only show if activated (CRM, Corporate Ads, and core Affiliate/Partner tools are always available). Admin sees all platform apps sovereignly.
+      if (role !== 'consumer' && role !== 'admin' && role !== 'affiliate' && APP_SLUGS[k] && k !== 'crm' && k !== 'corporate-ads' && k !== 'pos-terminal' && k !== 'distribution-tracker' && k !== 'hosting-manager') {
         const activeApps = sessionUser?.apps || getStoredActivatedApps(sessionUser) || [];
         if (!activeApps.includes(APP_SLUGS[k])) {
           return;
