@@ -12,6 +12,7 @@ Handles:
 
 from datetime import datetime, timezone
 import logging
+import os
 from typing import Any, Dict, List, Optional
 import uuid
 
@@ -722,6 +723,20 @@ class EventRsvpRequest(BaseModel):
     ref_code: Optional[str] = Field(default=None, description="Affiliate referral code")
 
 
+class EventWaitlistRequest(BaseModel):
+    fan_name: str = Field(..., min_length=2)
+    fan_email: str = Field(..., min_length=5)
+    city: Optional[str] = Field(default="")
+    preferred_zone: Optional[str] = Field(default="seating")
+    party_size: int = Field(default=1, ge=1, le=6)
+
+
+class EventCancelRequest(BaseModel):
+    rsvp_id: Optional[str] = None
+    ticket_id: Optional[str] = None
+    email: Optional[str] = None
+
+
 # ---------------------------------------------------------
 # Helpers: Policy Normalization, Seeding & Smart CRM Sync
 # ---------------------------------------------------------
@@ -990,6 +1005,18 @@ def build_event_guest_list_and_telemetry(event: Dict[str, Any]) -> Dict[str, Any
     }
 
 
+def _is_event_at_capacity(enriched: Dict[str, Any]) -> bool:
+    """Return True when an event has reached full capacity (no remaining RSVP or ticket spots)."""
+    if enriched.get("payment_mode") == "free_rsvp":
+        summary = enriched.get("rsvp_summary") or {}
+        return int(summary.get("total_remaining", 0)) <= 0
+    cap = int(enriched.get("capacity") or 0)
+    sold = int(enriched.get("tickets_sold") or 0)
+    tiers = enriched.get("tiers") or []
+    tiers_exhausted = bool(tiers) and all(int(t.get("available", 0)) <= 0 for t in tiers)
+    return (cap > 0 and sold >= cap) or tiers_exhausted
+
+
 def _enrich_event_with_rsvp(event: Dict[str, Any], include_lists: bool = False) -> Dict[str, Any]:
     """Attach live RSVP telemetry (and optionally full guest lists) to an event dict."""
     enriched = _normalize_event_fields(event)
@@ -1004,7 +1031,129 @@ def _enrich_event_with_rsvp(event: Dict[str, Any], include_lists: bool = False) 
         if include_lists:
             enriched["invited_guests"] = bundle["invited_guests"]
             enriched["confirmed_guests"] = bundle["confirmed_guests"]
+    enriched["is_at_capacity"] = _is_event_at_capacity(enriched)
+    if db is not None:
+        try:
+            enriched["waitlist_count"] = db.event_waitlist.count_documents({"event_id": enriched["id"], "status": "waiting"})
+        except Exception:
+            enriched["waitlist_count"] = 0
+    else:
+        enriched["waitlist_count"] = 0
     return enriched
+
+
+def _notify_next_waitlist_user(event: Dict[str, Any], freed_spots: int = 1, reason: str = "capacity_released") -> Optional[Dict[str, Any]]:
+    """Notify the next waiting user in FIFO order via TuneMavens Communication Protocols (Email + In-App Inbox)."""
+    if db is None or not event or freed_spots <= 0:
+        return None
+    event_id = event.get("id")
+    next_entry = db.event_waitlist.find_one(
+        {"event_id": event_id, "status": "waiting"},
+        sort=[("created_at", 1)],
+    )
+    if not next_entry:
+        return None
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    fan_name = (next_entry.get("fan_name") or "Guest").strip()
+    fan_email = (next_entry.get("fan_email") or "").strip().lower()
+    is_free = event.get("payment_mode") == "free_rsvp"
+    action = "rsvp" if is_free else "ticket"
+    cta_label = "RSVP Now (Claim Spot)" if is_free else "Purchase Ticket Now"
+
+    from urllib.parse import quote
+    public_url = os.environ.get("PUBLIC_APP_URL", "http://localhost:3000").rstrip("/")
+    rel_url = f"/reachout/direct?action={action}&event_id={quote(str(event_id))}&promo=event&email={quote(fan_email)}&name={quote(fan_name)}"
+    full_url = f"{public_url}/#{rel_url}"
+
+    db.event_waitlist.update_one(
+        {"waitlist_id": next_entry["waitlist_id"]},
+        {"$set": {
+            "status": "notified",
+            "notified_at": now_iso,
+            "notification_reason": reason,
+            "claim_url": rel_url,
+        }},
+    )
+
+    subject = f"Spot Available: {event.get('title')} — {cta_label}"
+    body_text = (
+        f"Hi {fan_name},\n\n"
+        f"Good news! {freed_spots} spot(s) just opened up for {event.get('title')} at {event.get('venue')} "
+        f"({event.get('date_display') or event.get('date_iso')}).\n\n"
+        f"Because you were next on the official TuneMavens waitlist, you now have priority access to "
+        f"{'confirm your free RSVP' if is_free else 'purchase your ticket'} before general capacity fills:\n\n"
+        f"{full_url}\n\n"
+        "TuneMavens Email-Only Communication Protocol applies."
+    )
+
+    # 1. In-App Inbox Notification
+    try:
+        db.user_inbox.insert_one({
+            "user_email": fan_email,
+            "sender": "TuneMavens Event Waitlist Desk",
+            "subject": subject,
+            "body": body_text,
+            "cta_label": cta_label,
+            "cta_url": rel_url,
+            "category": "waitlist_release",
+            "event_id": event_id,
+            "read": False,
+            "created_at": datetime.now(timezone.utc),
+        })
+    except Exception as e:
+        logger.warning(f"Waitlist inbox notification error: {e}")
+
+    # 2. Email Dispatch via TuneMavens Communication Protocol (hello@tunemavens.com)
+    try:
+        from account_setup import send_email
+        is_test_env = bool(os.environ.get("PYTEST_CURRENT_TEST"))
+        is_sandbox = fan_email.endswith("@example.com") or fan_email.endswith("@test.com")
+        html_body = (
+            f'<div style="background:#090d16;padding:28px 16px;font-family:Arial,sans-serif;color:#e2e8f0;">'
+            f'<div style="max-width:580px;margin:0 auto;background:#0d1522;border:1px solid #22d3ee;border-radius:3px;padding:26px;">'
+            f'<div style="font-size:12px;font-weight:800;color:#22d3ee;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">TUNEMAVENS WAITLIST PRIORITY ACCESS</div>'
+            f'<h2 style="margin:0 0 12px;color:#fff;font-size:20px;">A Spot Just Opened for {event.get("title")}</h2>'
+            f'<p style="font-size:14px;line-height:1.6;color:#cbd5e1;">Hi <strong>{fan_name}</strong>, {freed_spots} spot(s) just became available at <strong>{event.get("venue")}</strong>. As the next person on our waitlist, claim your spot now:</p>'
+            f'<div style="margin:20px 0;"><a href="{full_url}" style="display:inline-block;background:#10b981;color:#04141a;padding:12px 22px;border-radius:3px;font-weight:800;text-decoration:none;font-size:14px;">{cta_label}</a></div>'
+            f'<p style="font-size:11px;color:#64748b;">Sent via TuneMavens Email-Only Communication Protocol (hello@tunemavens.com).</p>'
+            f'</div></div>'
+        )
+        if not is_test_env and not is_sandbox:
+            send_email(
+                to=fan_email,
+                subject=subject,
+                html=html_body,
+                text=body_text,
+                recipient_name=fan_name,
+                event_type="waitlist_spot_opened",
+                metadata={"event_id": event_id, "waitlist_id": next_entry["waitlist_id"], "reason": reason},
+            )
+        else:
+            db.communications.insert_one({
+                "id": f"comm_wl_{uuid.uuid4().hex[:8]}",
+                "to": fan_email,
+                "recipient_name": fan_name,
+                "subject": subject,
+                "html": html_body,
+                "text": body_text,
+                "channel": "email",
+                "event_type": "waitlist_spot_opened",
+                "status": "queued_sandbox",
+                "metadata": {"event_id": event_id, "waitlist_id": next_entry["waitlist_id"], "reason": reason, "claim_url": rel_url},
+                "created_at": datetime.now(timezone.utc),
+            })
+    except Exception as e:
+        logger.warning(f"Waitlist email dispatch error: {e}")
+
+    return {
+        "waitlist_id": next_entry["waitlist_id"],
+        "fan_name": fan_name,
+        "fan_email": fan_email,
+        "claim_url": rel_url,
+        "reason": reason,
+        "notified_at": now_iso,
+    }
 
 
 def _route_guest_through_smart_crm(
@@ -1372,9 +1521,22 @@ def update_event_config(event_id: str, payload: EventConfigUpdateRequest, user=D
         db.live_events.update_one({"id": event_id}, {"$set": updates})
 
     merged = dict(event, **updates)
+    enriched_after = _enrich_event_with_rsvp(merged, include_lists=True)
+
+    old_cap = int(event.get("capacity") or 0)
+    new_cap = int(merged.get("capacity") or 0)
+    notified_waitlist = None
+    if new_cap > old_cap:
+        notified_waitlist = _notify_next_waitlist_user(
+            enriched_after,
+            freed_spots=max(1, new_cap - old_cap),
+            reason="capacity_expanded",
+        )
+
     return {
         "status": "success",
-        "event": _enrich_event_with_rsvp(merged, include_lists=True)
+        "event": enriched_after,
+        "notified_waitlist": notified_waitlist,
     }
 
 
@@ -1767,3 +1929,158 @@ def rsvp_to_specific_event(event_id: str, rsvp: EventRsvpRequest, request: Reque
     if not rsvp.ref_code:
         rsvp.ref_code = request.cookies.get("tm_aff_ref")
     return _process_rsvp(rsvp)
+
+
+@router.get("/{event_id}/waitlist", summary="Get FIFO waitlist entries for an event")
+def get_event_waitlist(event_id: str):
+    events = get_or_seed_events()
+    event = next((e for e in events if e.get("id") == event_id), None)
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found.")
+    entries = []
+    if db is not None:
+        entries = list(db.event_waitlist.find({"event_id": event_id}, {"_id": 0}).sort("created_at", 1))
+    return {"status": "success", "event_id": event_id, "waitlist": entries, "waiting_count": len([x for x in entries if x.get("status") == "waiting"])}
+
+
+@router.post("/{event_id}/waitlist", summary="Join event waitlist when capacity is reached")
+def join_event_waitlist(event_id: str, payload: EventWaitlistRequest):
+    events = get_or_seed_events()
+    raw_event = next((e for e in events if e.get("id") == event_id), None)
+    if not raw_event:
+        raise HTTPException(status_code=404, detail="Event not found.")
+
+    enriched = _enrich_event_with_rsvp(raw_event, include_lists=False)
+    if not enriched.get("is_at_capacity"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This event still has open capacity — please RSVP or purchase a ticket directly.",
+        )
+
+    clean_email = payload.fan_email.strip().lower()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    waitlist_id = f"WL-{uuid.uuid4().hex[:8].upper()}"
+
+    existing = db.event_waitlist.find_one({"event_id": event_id, "fan_email": clean_email, "status": "waiting"}) if db is not None else None
+    if existing:
+        pos = db.event_waitlist.count_documents({"event_id": event_id, "status": "waiting", "created_at": {"$lte": existing["created_at"]}})
+        return {
+            "status": "already_waitlisted",
+            "waitlist_id": existing["waitlist_id"],
+            "position": max(1, pos),
+            "message": f"You are already #{max(1, pos)} on the waitlist for {enriched.get('title')}. We will notify you via email and your inbox if a spot opens.",
+        }
+
+    doc = {
+        "waitlist_id": waitlist_id,
+        "event_id": event_id,
+        "event_title": enriched.get("title"),
+        "fan_name": payload.fan_name.strip(),
+        "fan_email": clean_email,
+        "city": (payload.city or "").strip(),
+        "preferred_zone": (payload.preferred_zone or "seating").strip().lower(),
+        "party_size": int(payload.party_size or 1),
+        "status": "waiting",
+        "created_at": now_iso,
+    }
+    if db is not None:
+        db.event_waitlist.insert_one(dict(doc))
+        pos = db.event_waitlist.count_documents({"event_id": event_id, "status": "waiting"})
+    else:
+        pos = 1
+
+    _route_guest_through_smart_crm(
+        event=enriched,
+        name=payload.fan_name.strip(),
+        email=clean_email,
+        city=payload.city or "",
+        action="waitlist_joined",
+        party_size=int(payload.party_size or 1),
+        attendance_type=doc["preferred_zone"],
+        extra_meta={"waitlist_id": waitlist_id, "position": pos},
+    )
+
+    return {
+        "status": "waitlisted",
+        "waitlist_id": waitlist_id,
+        "position": pos,
+        "message": f"Added to the waitlist at position #{pos}. If capacity expands or a reservation is canceled, TuneMavens will notify you automatically.",
+    }
+
+
+@router.post("/{event_id}/rsvp/cancel", summary="Cancel an RSVP reservation and notify the next waitlist user")
+def cancel_event_rsvp(event_id: str, payload: EventCancelRequest):
+    events = get_or_seed_events()
+    raw_event = next((e for e in events if e.get("id") == event_id), None)
+    if not raw_event:
+        raise HTTPException(status_code=404, detail="Event not found.")
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database unavailable.")
+
+    query: Dict[str, Any] = {"event_id": event_id}
+    if payload.rsvp_id:
+        query["rsvp_id"] = payload.rsvp_id.strip()
+    elif payload.email:
+        query["fan_email"] = payload.email.strip().lower()
+    else:
+        raise HTTPException(status_code=400, detail="Provide rsvp_id or email to cancel.")
+
+    existing = db.event_rsvps.find_one(query)
+    if not existing:
+        raise HTTPException(status_code=404, detail="RSVP reservation not found.")
+
+    freed = int(existing.get("party_size") or 1)
+    db.event_rsvps.delete_one({"_id": existing["_id"]})
+    if existing.get("fan_email"):
+        db.event_invitations.update_one(
+            {"event_id": event_id, "guest_email": existing["fan_email"].lower()},
+            {"$set": {"status": "canceled"}},
+        )
+
+    enriched_after = _enrich_event_with_rsvp(raw_event, include_lists=True)
+    notified = _notify_next_waitlist_user(enriched_after, freed_spots=freed, reason="rsvp_canceled")
+    return {
+        "status": "canceled",
+        "freed_spots": freed,
+        "rsvp_summary": enriched_after.get("rsvp_summary"),
+        "notified_waitlist": notified,
+    }
+
+
+@router.post("/{event_id}/tickets/cancel", summary="Cancel a paid ticket booking and notify the next waitlist user")
+def cancel_event_ticket(event_id: str, payload: EventCancelRequest):
+    events = get_or_seed_events()
+    raw_event = next((e for e in events if e.get("id") == event_id), None)
+    if not raw_event:
+        raise HTTPException(status_code=404, detail="Event not found.")
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database unavailable.")
+
+    query: Dict[str, Any] = {"event_id": event_id, "status": {"$ne": "canceled"}}
+    if payload.ticket_id:
+        query["ticket_id"] = payload.ticket_id.strip()
+    elif payload.email:
+        query["customer_email"] = payload.email.strip().lower()
+    else:
+        raise HTTPException(status_code=400, detail="Provide ticket_id or email to cancel.")
+
+    booking = db.ticket_bookings.find_one(query)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Ticket booking not found.")
+
+    qty = int(booking.get("quantity") or 1)
+    db.ticket_bookings.update_one({"_id": booking["_id"]}, {"$set": {"status": "canceled", "canceled_at": datetime.now(timezone.utc).isoformat()}})
+    db.live_events.update_one(
+        {"id": event_id, "tiers.tier_id": booking.get("tier_id")},
+        {"$inc": {"tickets_sold": -qty, "tiers.$.available": qty}},
+    )
+
+    updated_raw = db.live_events.find_one({"id": event_id}, {"_id": 0}) or raw_event
+    enriched_after = _enrich_event_with_rsvp(updated_raw, include_lists=False)
+    notified = _notify_next_waitlist_user(enriched_after, freed_spots=qty, reason="ticket_canceled")
+    return {
+        "status": "canceled",
+        "freed_spots": qty,
+        "event": enriched_after,
+        "notified_waitlist": notified,
+    }

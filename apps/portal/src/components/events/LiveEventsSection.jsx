@@ -398,35 +398,35 @@ export default function LiveEventsSection({ sessionUser }) {
     }
   };
 
-  // Submit RSVP
+  // Submit Capacity Waitlist
   const handleRsvpSubmit = async (e) => {
     e.preventDefault();
     if (!rsvpModalEvent) return;
     setSubmittingRsvp(true);
     try {
       const payload = {
-        event_id: rsvpModalEvent.id,
-        fan_name: rsvpFanName || 'Tour Fan',
+        fan_name: rsvpFanName || 'Attendee',
         fan_email: rsvpFanEmail || 'fan@tunemavens.com',
-        city: rsvpCity,
-        notify_sms: rsvpSms,
-        fan_phone: rsvpPhone
+        city: rsvpCity || rsvpModalEvent.city || '',
+        preferred_zone: rsvpAttendanceType || 'seating',
+        party_size: 1 + (Number(rsvpAdditionalGuests) || 0),
       };
 
-      const res = await fetch('/api/events/rsvp', {
+      const res = await fetch(`/api/events/${encodeURIComponent(rsvpModalEvent.id)}/waitlist`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (res.ok) {
         setRsvpSuccessMessage(data.message);
+        fetchEvents();
       } else {
-        throw new Error(data.detail || 'RSVP failed');
+        setRsvpSuccessMessage(data.detail || 'Could not join waitlist.');
       }
     } catch (err) {
       console.error(err);
-      setRsvpSuccessMessage(`You're confirmed on the priority list for ${rsvpModalEvent.title}! Synced with ${rsvpModalEvent.artist}'s Smart CRM community.`);
+      setRsvpSuccessMessage(`Added to the waitlist for ${rsvpModalEvent.title}. We will notify you via email and your inbox if a spot opens.`);
     } finally {
       setSubmittingRsvp(false);
     }
@@ -527,16 +527,19 @@ export default function LiveEventsSection({ sessionUser }) {
             >
               🌐 View {evt.artist} EPK
             </Link>
-            <button
-              type="button"
-              onClick={() => {
-                setRsvpModalEvent(evt);
-                setRsvpSuccessMessage(null);
-              }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: 'rgba(168,85,247,0.15)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.35)', borderRadius: '3px', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}
-            >
-              <RiSparklingFill size={14} /> Join VIP Waitlist
-            </button>
+            {(Boolean(evt.is_at_capacity) || (isFreeRsvp ? Number(rsvpSummary.total_remaining ?? 0) <= 0 : (Number(evt.capacity || 0) > 0 && Number(evt.tickets_sold || 0) >= Number(evt.capacity || 0)))) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setRsvpModalEvent(evt);
+                  setRsvpSuccessMessage(null);
+                }}
+                data-testid="detail-join-waitlist-btn"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', background: 'rgba(245,158,11,0.16)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.45)', borderRadius: '3px', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}
+              >
+                <RiTimeLine size={14} /> Join Waitlist (Event Full)
+              </button>
+            )}
           </div>
         </div>
 
@@ -1508,18 +1511,20 @@ export default function LiveEventsSection({ sessionUser }) {
                       ? 'RSVP & Smart CRM Guest List (FREE)'
                       : `View Event Page & Passes (${activeFeatured.tiers?.[0] ? formatMoney(activeFeatured.tiers[0].price_usd) : 'Passes'})`}
                   </button>
-                  <button 
-                    type="button"
-                    className="btn-rsvp-waitlist"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setRsvpModalEvent(activeFeatured);
-                      setRsvpSuccessMessage(null);
-                    }}
-                    style={{ padding: '12px 20px', fontSize: '14px' }}
-                  >
-                    <RiSparklingFill size={15} /> Join VIP Waitlist
-                  </button>
+                  {Boolean(activeFeatured.is_at_capacity) && (
+                    <button 
+                      type="button"
+                      className="btn-rsvp-waitlist"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRsvpModalEvent(activeFeatured);
+                        setRsvpSuccessMessage(null);
+                      }}
+                      style={{ padding: '12px 20px', fontSize: '14px', borderColor: 'rgba(245,158,11,0.45)', color: '#f59e0b' }}
+                    >
+                      <RiTimeLine size={15} /> Join Waitlist (Full Capacity)
+                    </button>
+                  )}
                   {activeFeatured.status === 'in-progress' && activeFeatured.stream_url && (
                     <a 
                       href={activeFeatured.stream_url} 
@@ -1738,21 +1743,24 @@ export default function LiveEventsSection({ sessionUser }) {
                     >
                       <RiTicket2Fill size={15} /> {isFreeRsvp ? 'RSVP & Guest List' : 'View Event & Passes'}
                     </button>
-                    <button 
-                      className="btn-rsvp-waitlist"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (isFreeRsvp) {
-                          handleOpenEventPage(evt);
-                        } else {
-                          setRsvpModalEvent(evt);
-                          setRsvpSuccessMessage(null);
-                        }
-                      }}
-                      data-testid={`btn-rsvp-${evt.id}`}
-                    >
-                      <RiSparklingFill size={14} /> {isFreeRsvp ? 'View Invited' : 'Join VIP List'}
-                    </button>
+                    {(isFreeRsvp || Boolean(evt.is_at_capacity)) && (
+                      <button 
+                        className="btn-rsvp-waitlist"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (evt.is_at_capacity) {
+                            setRsvpModalEvent(evt);
+                            setRsvpSuccessMessage(null);
+                          } else {
+                            handleOpenEventPage(evt);
+                          }
+                        }}
+                        data-testid={`btn-rsvp-${evt.id}`}
+                        style={evt.is_at_capacity ? { borderColor: 'rgba(245,158,11,0.45)', color: '#f59e0b' } : undefined}
+                      >
+                        {evt.is_at_capacity ? <><RiTimeLine size={14} /> Join Waitlist</> : <><RiSparklingFill size={14} /> View Invited</>}
+                      </button>
+                    )}
                     {isAdmin && (
                       <button
                         type="button"
@@ -1788,7 +1796,7 @@ export default function LiveEventsSection({ sessionUser }) {
       )}
 
       {/* -------------------------------------------------------------
-          MODAL: FAN RSVP & SMART CRM WAITLIST
+          MODAL: CAPACITY WAITLIST (WHEN EVENT IS FULL)
           ------------------------------------------------------------- */}
       {rsvpModalEvent && (
         <div className="events-modal-overlay" onClick={() => setRsvpModalEvent(null)}>
@@ -1800,20 +1808,20 @@ export default function LiveEventsSection({ sessionUser }) {
             {!rsvpSuccessMessage ? (
               <form onSubmit={handleRsvpSubmit}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <RiSparklingFill color="#38bdf8" size={20} />
-                  <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 800, textTransform: 'uppercase' }}>
-                    VIP FAN WAITLIST &amp; CRM SYNC
+                  <RiTimeLine color="#f59e0b" size={20} />
+                  <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 800, textTransform: 'uppercase' }}>
+                    EVENT AT FULL CAPACITY · FIFO WAITLIST
                   </span>
                 </div>
                 <h3 style={{ color: '#fff', fontSize: '20px', margin: '0 0 6px 0', fontWeight: 700 }}>
-                  Join {rsvpModalEvent.artist} VIP Circle
+                  Join Waitlist — {rsvpModalEvent.title}
                 </h3>
-                <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 20px 0' }}>
-                  Get first access to side-stage soundcheck passes, secret pop-up shows, and vinyl pre-orders for {rsvpModalEvent.venue}.
+                <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 20px 0', lineHeight: 1.55 }}>
+                  Current capacity is full. Join the waitlist and TuneMavens&apos; Email-Only Communication Protocol will automatically notify you first if additional capacity is released or a reservation is canceled so you can {rsvpModalEvent.payment_mode === 'free_rsvp' ? 'RSVP' : 'purchase tickets'}.
                 </p>
 
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Full Name</label>
+                  <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Full Name *</label>
                   <input 
                     type="text" 
                     required
@@ -1826,14 +1834,14 @@ export default function LiveEventsSection({ sessionUser }) {
                 </div>
 
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Email Address</label>
+                  <label style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Email Address *</label>
                   <input 
                     type="email" 
                     required
                     className="form-control" 
                     value={rsvpFanEmail}
                     onChange={(e) => setRsvpFanEmail(e.target.value)}
-                    placeholder="fan@example.com"
+                    placeholder="you@example.com"
                     style={{ width: '100%', background: '#0d1326', border: '1px solid rgba(255,255,255,0.12)', color: '#fff', padding: '8px 12px', borderRadius: '3px' }}
                   />
                 </div>
@@ -1850,31 +1858,26 @@ export default function LiveEventsSection({ sessionUser }) {
                   />
                 </div>
 
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#cbd5e1', marginBottom: '20px', cursor: 'pointer' }}>
-                  <input 
-                    type="checkbox" 
-                    checked={rsvpSms} 
-                    onChange={(e) => setRsvpSms(e.target.checked)} 
-                  />
-                  Send SMS drop alerts when side-stage tickets release
-                </label>
+                <div style={{ fontSize: '11.5px', color: '#22d3ee', background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '3px', padding: '10px 12px', marginBottom: '18px' }}>
+                  Notifications are sent strictly via TuneMavens Email-Only Communication Protocol (hello@tunemavens.com) and your In-App Inbox.
+                </div>
 
                 <button 
                   type="submit" 
                   disabled={submittingRsvp}
                   className="btn-book-ticket" 
-                  style={{ width: '100%', padding: '12px' }}
+                  style={{ width: '100%', padding: '12px', background: '#f59e0b', color: '#04141a' }}
                 >
-                  {submittingRsvp ? 'Syncing to Smart CRM...' : 'Confirm Superfan Registration'}
+                  {submittingRsvp ? 'Joining Waitlist...' : 'Join Capacity Waitlist'}
                 </button>
               </form>
             ) : (
               <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                <div style={{ display: 'inline-flex', padding: '12px', background: 'rgba(56, 189, 248, 0.15)', borderRadius: '50%', color: '#38bdf8', marginBottom: '14px' }}>
+                <div style={{ display: 'inline-flex', padding: '12px', background: 'rgba(245, 158, 11, 0.15)', borderRadius: '50%', color: '#f59e0b', marginBottom: '14px' }}>
                   <RiCheckFill size={32} />
                 </div>
                 <h3 style={{ color: '#fff', fontSize: '20px', margin: '0 0 8px 0', fontWeight: 800 }}>
-                  You're on the Guest List!
+                  Waitlist Status Updated
                 </h3>
                 <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 20px 0', lineHeight: 1.6 }}>
                   {rsvpSuccessMessage}
@@ -1884,7 +1887,7 @@ export default function LiveEventsSection({ sessionUser }) {
                   onClick={() => setRsvpModalEvent(null)}
                   style={{ margin: '0 auto', padding: '10px 24px' }}
                 >
-                  Return to Concerts
+                  Return to Events
                 </button>
               </div>
             )}

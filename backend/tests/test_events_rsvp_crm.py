@@ -254,3 +254,75 @@ def test_featured_event_admin_only_and_guest_reconciliation():
 
     # Restore default featured event so seeded state stays tidy
     admin_client.post("/api/events/evt-ndufo-nairobi-tonight/feature")
+
+
+def test_capacity_waitlist_fifo_and_release_notification():
+    """Verify capacity-gated FIFO waitlist and automatic Communication Protocol notification on cancel or capacity expansion."""
+    # 1. Create a small 2-spot free_rsvp event
+    ev_res = client.post("/api/events", json={
+        "title": "Waitlist Capacity Test Show",
+        "artist": "Test Artist",
+        "payment_mode": "free_rsvp",
+        "seating_capacity": 2,
+        "standing_capacity": 0,
+        "guest_limit_policy": "open",
+        "venue": "Wave Lab",
+        "city": "Nairobi",
+    })
+    assert ev_res.status_code == 201
+    ev_id = ev_res.json()["event"]["id"]
+
+    # 2. Joining waitlist while spots remain MUST be rejected
+    early_wl = client.post(f"/api/events/{ev_id}/waitlist", json={
+        "fan_name": "Early Fan",
+        "fan_email": "early@example.com",
+    })
+    assert early_wl.status_code == 400
+
+    # 3. Fill all 2 spots
+    r1 = client.post(f"/api/events/{ev_id}/rsvp", json={
+        "event_id": ev_id,
+        "fan_name": "Attendee One",
+        "fan_email": "att1@example.com",
+        "attendance_type": "seating",
+        "additional_guests": 1,
+    })
+    assert r1.status_code == 200
+    assert r1.json()["rsvp_summary"]["total_remaining"] == 0
+
+    # 4. Now event is at capacity -> User A & User B join FIFO waitlist
+    wl1 = client.post(f"/api/events/{ev_id}/waitlist", json={
+        "fan_name": "Waitlist User A",
+        "fan_email": "wla@example.com",
+    })
+    assert wl1.status_code == 200
+    assert wl1.json()["position"] == 1
+
+    wl2 = client.post(f"/api/events/{ev_id}/waitlist", json={
+        "fan_name": "Waitlist User B",
+        "fan_email": "wlb@example.com",
+    })
+    assert wl2.status_code == 200
+    assert wl2.json()["position"] == 2
+
+    # 5. Cancel RSVP -> Waitlist User A is automatically notified via Inbox + Communications Protocol
+    cancel_res = client.post(f"/api/events/{ev_id}/rsvp/cancel", json={"email": "att1@example.com"})
+    assert cancel_res.status_code == 200
+    notified_a = cancel_res.json()["notified_waitlist"]
+    assert notified_a is not None
+    assert notified_a["fan_email"] == "wla@example.com"
+    assert f"event_id={ev_id}" in notified_a["claim_url"]
+
+    # 6. Expand capacity -> Waitlist User B (next in FIFO queue) is automatically notified
+    expand_res = client.patch(f"/api/events/{ev_id}", json={"seating_capacity": 5, "standing_capacity": 0})
+    assert expand_res.status_code == 200
+    notified_b = expand_res.json()["notified_waitlist"]
+    assert notified_b is not None
+    assert notified_b["fan_email"] == "wlb@example.com"
+
+    # Cleanup
+    db.live_events.delete_one({"id": ev_id})
+    db.event_rsvps.delete_many({"event_id": ev_id})
+    db.event_waitlist.delete_many({"event_id": ev_id})
+    db.user_inbox.delete_many({"event_id": ev_id})
+    db.communications.delete_many({"metadata.event_id": ev_id})
