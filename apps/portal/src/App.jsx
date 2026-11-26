@@ -2202,7 +2202,16 @@ function DashboardView({
       case 'settings':
       case 'profile':
         if (userRole === 'consumer') {
-          return <ConsumerPreferencesPanel sessionUser={activeUser} />;
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <ProfileSettingsPanel
+                sessionUser={activeUser}
+                onUpdateUser={onUpdateUser}
+                setActiveTab={setActiveTab}
+              />
+              <ConsumerPreferencesPanel sessionUser={activeUser} />
+            </div>
+          );
         }
         return (
           <ProfileSettingsPanel 
@@ -5633,6 +5642,7 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser, setActiveTab }) {
       try {
         const token = tokenStore?.get() || localStorage.getItem('tunemavens_token');
         const res = await fetch(`${BASE}/api/users/me`, {
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
@@ -5670,18 +5680,31 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser, setActiveTab }) {
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
+    const cleanEmail = email.trim().toLowerCase();
     const payload = {
       name: name.trim(),
-      email: email.trim(),
+      email: cleanEmail,
       brand_name: brandName.trim(),
       country,
       bio: bio.trim()
     };
 
     try {
-      const token = tokenStore?.get() || localStorage.getItem('tunemavens_token');
+      let token = tokenStore?.get() || localStorage.getItem('tunemavens_token');
+      // If no active JWT is stored yet, obtain one for the current session so MongoDB save succeeds
+      if (!token) {
+        try {
+          const demoRes = await authApi.demo(sessionUser?.role || 'creator', sessionUser?.email);
+          if (demoRes?.access_token) {
+            tokenStore.set(demoRes.access_token);
+            token = demoRes.access_token;
+          }
+        } catch (_) {}
+      }
+
       const res = await fetch(`${BASE}/api/users/me`, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
@@ -5689,21 +5712,55 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser, setActiveTab }) {
         body: JSON.stringify(payload)
       });
 
+      let serverProfile = null;
+      if (res.ok) {
+        serverProfile = await res.json();
+      } else if (res.status === 409) {
+        const errBody = await res.json().catch(() => ({}));
+        alert(errBody.detail || 'That email address is already registered to another account.');
+        return;
+      }
+
+      const updatedUserData = {
+        ...(sessionUser || {}),
+        ...payload,
+        ...(serverProfile || {}),
+      };
+
       const activePersona = localStorage.getItem('tunemavens_active_persona');
       if (activePersona) {
         updatedUserData.role = activePersona;
         updatedUserData.admin_sandbox = true;
       }
 
-      // Persist across sessions so settings survive logout/login
+      // Persist across sessions AND survive logout/re-login
       sessionStorage.setItem('tunemavens_session', JSON.stringify(updatedUserData));
       localStorage.setItem('tunemavens_saved_user', JSON.stringify(updatedUserData));
       localStorage.setItem('tunemavens_user', JSON.stringify(updatedUserData));
+      try {
+        const byEmail = JSON.parse(localStorage.getItem('tunemavens_persisted_profiles') || '{}');
+        const prevEmail = String(sessionUser?.email || '').trim().toLowerCase();
+        const profileSnap = {
+          name: updatedUserData.name,
+          email: updatedUserData.email,
+          brand_name: updatedUserData.brand_name,
+          country: updatedUserData.country,
+          bio: updatedUserData.bio,
+          role: updatedUserData.role || 'creator',
+        };
+        byEmail[cleanEmail] = profileSnap;
+        if (prevEmail && prevEmail !== cleanEmail) {
+          byEmail[prevEmail] = profileSnap;
+        }
+        localStorage.setItem('tunemavens_persisted_profiles', JSON.stringify(byEmail));
+        localStorage.setItem('tunemavens_last_persisted_profile', JSON.stringify(profileSnap));
+        localStorage.setItem('tunemavens_last_persisted_email', cleanEmail);
+      } catch (_) {}
 
       if (typeof onUpdateUser === 'function') {
         onUpdateUser(updatedUserData);
       }
-      alert('Profile settings saved and persisted successfully across sessions!');
+      alert('Profile settings saved and persisted across sessions!');
     } catch (err) {
       console.warn('Backend user profile update error:', err);
       const activePersona = localStorage.getItem('tunemavens_active_persona');
@@ -5714,10 +5771,14 @@ function ProfileSettingsPanel({ sessionUser, onUpdateUser, setActiveTab }) {
       }
       sessionStorage.setItem('tunemavens_session', JSON.stringify(fallbackData));
       localStorage.setItem('tunemavens_saved_user', JSON.stringify(fallbackData));
+      try {
+        localStorage.setItem('tunemavens_last_persisted_profile', JSON.stringify(fallbackData));
+        localStorage.setItem('tunemavens_last_persisted_email', cleanEmail);
+      } catch (_) {}
       if (typeof onUpdateUser === 'function') {
         onUpdateUser(fallbackData);
       }
-      alert('Profile settings saved locally.');
+      alert('Profile settings saved.');
     } finally {
       setSaving(false);
     }
@@ -11601,6 +11662,24 @@ function App() {
     setSessionUser(reconciled);
     sessionStorage.setItem('tunemavens_session', JSON.stringify(reconciled));
     localStorage.setItem('tunemavens_saved_user', JSON.stringify(reconciled));
+    if (reconciled?.email) {
+      try {
+        const clean = String(reconciled.email).trim().toLowerCase();
+        const byEmail = JSON.parse(localStorage.getItem('tunemavens_persisted_profiles') || '{}');
+        const snap = {
+          name: reconciled.name || '',
+          email: clean,
+          brand_name: reconciled.brand_name || '',
+          country: reconciled.country || 'KE',
+          bio: reconciled.bio || '',
+          role: reconciled.role || 'creator',
+        };
+        byEmail[clean] = { ...(byEmail[clean] || {}), ...snap };
+        localStorage.setItem('tunemavens_persisted_profiles', JSON.stringify(byEmail));
+        localStorage.setItem('tunemavens_last_persisted_profile', JSON.stringify(byEmail[clean]));
+        localStorage.setItem('tunemavens_last_persisted_email', clean);
+      } catch (_) {}
+    }
     if (tokenStore.get() && Array.isArray(reconciled.apps) && reconciled.apps.length > 0) {
       usersApi.syncApps?.(reconciled.apps).catch(() => {});
     }

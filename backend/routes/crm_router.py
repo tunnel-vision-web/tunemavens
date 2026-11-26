@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 from bson import ObjectId
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
 from pydantic import BaseModel, ConfigDict, Field
 
 from auth import get_current_user, get_optional_user
@@ -191,7 +191,7 @@ class CampaignCreateRequest(BaseModel):
     event_id: Optional[str] = None
     event_doc: Optional[Dict[str, Any]] = None
     event_ctas: Optional[List[str]] = None  # ['rsvp'], ['ticket'], or ['rsvp', 'ticket']
-    cta_label: Optional[str] = "Explore Now"
+    cta_label: Optional[str] = None
     cta_url: Optional[str] = None
     affiliate_ref_code: Optional[str] = None
     initiator_email: Optional[str] = None
@@ -384,26 +384,37 @@ def _is_admin_user(user: Optional[dict]) -> bool:
     )
 
 
-def _resolve_user_own_affiliate_ref(user: dict) -> Optional[str]:
+def _resolve_user_own_affiliate_ref(user: Optional[dict], create_if_missing: bool = False) -> Optional[str]:
+    if not user:
+        return None
+    if user.get("ref_code"):
+        return str(user["ref_code"]).strip().upper()
     email = (user.get("email") or "").strip().lower()
     if not email:
         return None
     aff = db.affiliates.find_one({"email": email})
     if aff and aff.get("ref_code"):
         return aff["ref_code"]
-    resolved = resolve_initiator_affiliate(current_user=user)
-    return resolved.get("ref_code")
+    if create_if_missing:
+        resolved = resolve_initiator_affiliate(current_user=user)
+        return resolved.get("ref_code")
+    return None
 
 
 def _assert_group_access(group_doc: Dict[str, Any], current_user: Optional[dict]) -> None:
-    """Ensure non-admin affiliates can only read or mutate their own Target Groups."""
+    """Ensure non-admin users can only read or mutate target groups they have access to."""
     if _is_admin_user(current_user):
         return
-    own_ref = _resolve_user_own_affiliate_ref(current_user)
+    own_ref = _resolve_user_own_affiliate_ref(current_user, create_if_missing=False)
     group_ref = (group_doc.get("affiliate_ref_code") or "").upper()
     group_owner_email = (group_doc.get("created_by_email") or "").strip().lower()
     my_email = (current_user.get("email") or "").strip().lower() if current_user else ""
-    if (own_ref and group_ref == own_ref.upper()) or (my_email and group_owner_email == my_email):
+    shared_emails = [str(x).strip().lower() for x in (group_doc.get("shared_with_emails") or [])]
+    if (
+        (own_ref and group_ref == own_ref.upper())
+        or (my_email and group_owner_email == my_email)
+        or (my_email and my_email in shared_emails)
+    ):
         return
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
@@ -412,22 +423,22 @@ def _assert_group_access(group_doc: Dict[str, Any], current_user: Optional[dict]
 
 
 SYSTEM_USER_COHORTS = [
-    ("sys_all_users", "All Registered Platform Users", "Auto-synced email-only target group of every registered user on TuneMavens", None),
-    ("sys_role_creator", "Registered Creators, Songwriters & Producers", "Auto-synced registered creators, artists, songwriters, and producers", ["creator", "producer", "songwriter"]),
-    ("sys_role_dj", "Registered DJs & Mix Curators", "Auto-synced registered DJs and mix curators", ["dj"]),
-    ("sys_role_label", "Registered Record Labels & Distributors", "Auto-synced registered record labels and distribution accounts", ["label", "distro"]),
-    ("sys_role_podcaster", "Registered Podcasters & Show Hosts", "Auto-synced registered podcasters and show hosts", ["podcaster"]),
-    ("sys_role_supervisor", "Registered Music Supervisors & Sync Buyers", "Auto-synced registered music supervisors and licensing executives", ["supervisor", "studio", "exec"]),
-    ("sys_role_corporate", "Registered Corporate Brands & Agencies", "Auto-synced registered corporate sponsors and agencies", ["corporate"]),
-    ("sys_role_media_house", "Registered Media Houses & Broadcasters", "Auto-synced registered radio, TV, and media house accounts", ["media_house", "media"]),
-    ("sys_role_vc", "Registered Tour VCs & Investors", "Auto-synced registered venture capital and tour investors", ["vc", "investor"]),
-    ("sys_role_affiliate", "Registered Affiliate Partners", "Auto-synced registered affiliate partners and scouts", ["affiliate"]),
-    ("sys_role_consumer", "Registered Listeners & Fans", "Auto-synced registered audiophile listeners and event fans", ["consumer"]),
+    ("sys_all_users", "All Registered Users", "Auto-synced email-only target group of every registered user on TuneMavens", None, 0, None),
+    ("sys_role_creator", "All Creators (Artists, Songwriters & Producers)", "Auto-synced registered creators, artists, songwriters, and producers", ["creator", "producer", "songwriter", "artist"], 1, "creator"),
+    ("sys_role_dj", "All DJs", "Auto-synced registered DJs and mix curators", ["dj"], 2, "dj"),
+    ("sys_role_label", "All Record Labels & Distributors", "Auto-synced registered record labels and distribution accounts", ["label", "distro"], 3, "label"),
+    ("sys_role_podcaster", "All Podcasters & Show Hosts", "Auto-synced registered podcasters and show hosts", ["podcaster"], 4, "podcaster"),
+    ("sys_role_supervisor", "All Music Supervisors & Sync Buyers", "Auto-synced registered music supervisors and licensing executives", ["supervisor", "studio", "exec"], 5, "supervisor"),
+    ("sys_role_corporate", "All Corporate Brands & Agencies", "Auto-synced registered corporate sponsors and agencies", ["corporate"], 6, "corporate"),
+    ("sys_role_media_house", "All Media Houses & Broadcasters", "Auto-synced registered radio, TV, and media house accounts", ["media_house", "media"], 7, "media_house"),
+    ("sys_role_vc", "All Tour VCs & Investors", "Auto-synced registered venture capital and tour investors", ["vc", "investor"], 8, "vc"),
+    ("sys_role_affiliate", "All Affiliates", "Auto-synced registered affiliate partners and scouts", ["affiliate"], 9, "affiliate"),
+    ("sys_role_consumer", "All Listeners & Fans", "Auto-synced registered audiophile listeners and event fans", ["consumer", "listener"], 10, "consumer"),
 ]
 
 
 def sync_registered_user_target_groups() -> None:
-    """Ensure pre-created Email-Only Target Groups exist for All Registered Users and each registered role cohort."""
+    """Ensure pre-created Email-Only Target Groups exist for All Registered Users and each persona cohort."""
     try:
         all_users = list(db.users.find({}, {"name": 1, "first_name": 1, "last_name": 1, "username": 1, "email": 1, "role": 1, "roles": 1}))
         now = datetime.now(timezone.utc)
@@ -456,7 +467,7 @@ def sync_registered_user_target_groups() -> None:
                 "added_at": now_iso,
             }
 
-        for sys_key, title, desc, role_filter in SYSTEM_USER_COHORTS:
+        for sys_key, title, desc, role_filter, sort_order, persona_key in SYSTEM_USER_COHORTS:
             matched_entries: List[Dict[str, Any]] = []
             seen = set()
             for u in all_users:
@@ -468,23 +479,42 @@ def sync_registered_user_target_groups() -> None:
                     seen.add(ent["email"])
                     matched_entries.append(ent)
 
+            group_category = "all_users" if sys_key == "sys_all_users" else "persona"
             existing = db.crm_target_groups.find_one({"system_key": sys_key})
             if existing:
-                # Merge any manually added non-duplicate entries with live registered users
                 manual_extras = [
                     e for e in (existing.get("entries") or [])
                     if e.get("email") and e["email"].lower() not in seen and not str(e.get("id", "")).startswith("sys_")
                 ]
                 merged = matched_entries + manual_extras
-                if len(merged) != len(existing.get("entries") or []):
+                needs_meta_update = (
+                    existing.get("name") != title
+                    or existing.get("sort_order") != sort_order
+                    or existing.get("group_category") != group_category
+                    or existing.get("persona") != persona_key
+                    or len(merged) != len(existing.get("entries") or [])
+                )
+                if needs_meta_update:
                     db.crm_target_groups.update_one(
                         {"_id": existing["_id"]},
-                        {"$set": {"entries": merged, "updated_at": now}},
+                        {"$set": {
+                            "name": title,
+                            "description": desc,
+                            "is_system_group": True,
+                            "group_category": group_category,
+                            "persona": persona_key,
+                            "sort_order": sort_order,
+                            "entries": merged,
+                            "updated_at": now,
+                        }},
                     )
             else:
                 db.crm_target_groups.insert_one({
                     "system_key": sys_key,
                     "is_system_group": True,
+                    "group_category": group_category,
+                    "persona": persona_key,
+                    "sort_order": sort_order,
                     "name": title,
                     "description": desc,
                     "channel_policy": "email_only",
@@ -509,24 +539,37 @@ def list_target_groups(
     affiliate_ref_code: Optional[str] = None,
     current_user: Optional[dict] = Depends(get_optional_user),
 ):
-    """List email-only Smart CRM target groups (Admin sees all or filtered by affiliate; Affiliates see only their own)."""
+    """List email-only Smart CRM target groups.
+    - Admin sees: (a) All Registered Users, (b) One for each persona, and (c) all previously created target groups by all users.
+    - Non-admin users see only the target groups they created or have access to.
+    """
     if _is_admin_user(current_user):
         sync_registered_user_target_groups()
 
     query: Dict[str, Any] = {}
     if not _is_admin_user(current_user):
-        own_ref = _resolve_user_own_affiliate_ref(current_user)
+        own_ref = _resolve_user_own_affiliate_ref(current_user, create_if_missing=False)
         my_email = (current_user.get("email") or "").strip().lower()
         or_conds: List[Dict[str, Any]] = []
         if own_ref:
             or_conds.append({"affiliate_ref_code": own_ref.upper()})
         if my_email:
             or_conds.append({"created_by_email": my_email})
+            or_conds.append({"shared_with_emails": my_email})
         query = {"$or": or_conds} if or_conds else {"affiliate_ref_code": "__NONE__"}
     elif affiliate_ref_code and affiliate_ref_code.strip().upper() != "ALL":
         query["affiliate_ref_code"] = affiliate_ref_code.strip().upper()
 
-    docs = list(db.crm_target_groups.find(query).sort([("is_system_group", -1), ("created_at", -1)]))
+    docs = list(db.crm_target_groups.find(query))
+
+    def _group_sort_key(d: Dict[str, Any]):
+        if d.get("is_system_group"):
+            return (0, int(d.get("sort_order", 50)), 0.0)
+        created = d.get("created_at")
+        ts = created.timestamp() if isinstance(created, datetime) else 0.0
+        return (1, 999, -ts)
+
+    docs.sort(key=_group_sort_key)
     groups = [_serialize_target_group(d) for d in docs]
     return {"groups": groups, "total": len(groups)}
 
@@ -552,7 +595,11 @@ def create_target_group(
         validated_entries.append(ent)
 
     # Non-admin affiliates are strictly locked to their own affiliate account
-    requested_ref = payload.affiliate_ref_code if _is_admin_user(current_user) else _resolve_user_own_affiliate_ref(current_user)
+    requested_ref = (
+        payload.affiliate_ref_code
+        if _is_admin_user(current_user)
+        else _resolve_user_own_affiliate_ref(current_user, create_if_missing=True)
+    )
 
     initiator = resolve_initiator_affiliate(
         current_user=current_user,
@@ -619,7 +666,11 @@ def import_target_group(
 
     # Option B: Create a new target group from the imported file/text
     clean_name = (payload.name or "").strip() or f"Imported Group ({datetime.now(timezone.utc).strftime('%b %d %H:%M')})"
-    requested_ref = payload.affiliate_ref_code if _is_admin_user(current_user) else _resolve_user_own_affiliate_ref(current_user)
+    requested_ref = (
+        payload.affiliate_ref_code
+        if _is_admin_user(current_user)
+        else _resolve_user_own_affiliate_ref(current_user, create_if_missing=True)
+    )
     initiator = resolve_initiator_affiliate(
         current_user=current_user,
         affiliate_ref_code=requested_ref,
@@ -839,19 +890,182 @@ class CampaignPreviewRequest(BaseModel):
     event_id: Optional[str] = None
     event_doc: Optional[Dict[str, Any]] = None
     event_ctas: Optional[List[str]] = None
-    cta_label: Optional[str] = "Explore Now"
+    cta_label: Optional[str] = None
     cta_url: Optional[str] = None
     affiliate_ref_code: Optional[str] = None
     sample_recipient_name: Optional[str] = None
     sample_recipient_email: Optional[str] = None
 
 
+ALLOWED_CRM_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", ".avif"}
+MAX_CRM_IMAGE_BYTES = 10 * 1024 * 1024  # 10 MB
+
+
+@router.post("/api/crm/upload-image")
+@router.post("/api/admin/console/crm-upload-image")
+async def upload_crm_email_image(
+    file: UploadFile = File(...),
+    current_user: Optional[dict] = Depends(get_optional_user),
+):
+    """Upload an image asset for insertion into Smart CRM HTML reachout emails (backed by local disk + MongoDB binary resilience)."""
+    import base64
+    import re as _re
+    from pathlib import Path
+
+    orig_name = (file.filename or "email-image.png").strip()
+    ext = Path(orig_name).suffix.lower()
+    content_type = (file.content_type or "application/octet-stream").lower()
+
+    if ext not in ALLOWED_CRM_IMAGE_EXTENSIONS and not content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported file format. Please upload a PNG, JPG, WEBP, GIF, AVIF, or SVG image.",
+        )
+
+    if not ext:
+        ext = ".png"
+        orig_name = f"{orig_name}.png"
+
+    mime_map = {
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+        ".gif": "image/gif",
+        ".svg": "image/svg+xml",
+        ".avif": "image/avif",
+    }
+    resolved_mime = content_type if content_type.startswith("image/") else mime_map.get(ext, "image/png")
+
+    file_bytes = await file.read()
+    if not file_bytes:
+        raise HTTPException(status_code=400, detail="Uploaded image file is empty.")
+    if len(file_bytes) > MAX_CRM_IMAGE_BYTES:
+        raise HTTPException(status_code=400, detail="Image exceeds maximum 10 MB upload limit.")
+
+    img_id = f"img_{uuid.uuid4().hex[:12]}"
+    safe_stem = _re.sub(r"[^a-zA-Z0-9._-]+", "_", Path(orig_name).stem)[:40] or "image"
+    safe_filename = f"{safe_stem}{ext}"
+
+    # Write to local uploads directories so static mounts can also serve directly
+    disk_rel = f"crm_email_images/{img_id}_{safe_filename}"
+    for root_dir in ("uploads", "backend/uploads"):
+        if os.path.exists(root_dir) or root_dir == "uploads":
+            try:
+                target_path = Path(root_dir) / disk_rel
+                target_path.parent.mkdir(parents=True, exist_ok=True)
+                target_path.write_bytes(file_bytes)
+            except Exception:
+                pass
+
+    # Serve via dedicated API route backed by disk + MongoDB binary so it never breaks on any host/port
+    url = f"/api/crm/images/{img_id}/{safe_filename}"
+
+    now = datetime.now(timezone.utc)
+    img_doc = {
+        "id": img_id,
+        "url": url,
+        "disk_rel": disk_rel,
+        "filename": orig_name,
+        "safe_filename": safe_filename,
+        "content_type": resolved_mime,
+        "size_bytes": len(file_bytes),
+        "data_b64": base64.b64encode(file_bytes).decode("ascii"),
+        "uploaded_by_email": (current_user.get("email") if current_user else "admin@tunemavens.com"),
+        "created_at": now,
+    }
+    db.crm_uploaded_images.insert_one(dict(img_doc))
+
+    return {
+        "status": "success",
+        "id": img_id,
+        "url": url,
+        "filename": orig_name,
+        "size_bytes": len(file_bytes),
+        "content_type": resolved_mime,
+    }
+
+
+@router.get("/api/crm/images/{image_id}")
+@router.get("/api/crm/images/{image_id}/{filename}")
+def serve_crm_uploaded_image(image_id: str, filename: Optional[str] = None):
+    """Serve an uploaded Smart CRM email image from local disk or MongoDB binary store."""
+    import base64
+    from pathlib import Path
+
+    doc = db.crm_uploaded_images.find_one({"id": image_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    content_type = doc.get("content_type") or "image/png"
+    disk_rel = doc.get("disk_rel")
+    if disk_rel:
+        for root_dir in ("uploads", "backend/uploads"):
+            p = Path(root_dir) / disk_rel
+            if p.exists() and p.is_file():
+                return Response(
+                    content=p.read_bytes(),
+                    media_type=content_type,
+                    headers={"Cache-Control": "public, max-age=31536000, immutable"},
+                )
+
+    b64 = doc.get("data_b64")
+    if b64:
+        return Response(
+            content=base64.b64decode(b64),
+            media_type=content_type,
+            headers={"Cache-Control": "public, max-age=31536000, immutable"},
+        )
+
+    raise HTTPException(status_code=404, detail="Image bytes unavailable")
+
+
+@router.delete("/api/crm/uploaded-images/{image_id}")
+def delete_crm_uploaded_image(image_id: str, current_user: Optional[dict] = Depends(get_optional_user)):
+    """Remove an uploaded image from the Smart CRM image tray."""
+    res = db.crm_uploaded_images.delete_one({"id": image_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return {"status": "success", "deleted_id": image_id}
+
+
+@router.get("/api/crm/uploaded-images")
+def list_crm_uploaded_images(
+    limit: int = Query(20, ge=1, le=50),
+    current_user: Optional[dict] = Depends(get_optional_user),
+):
+    """List recently uploaded Smart CRM email images for quick re-insertion (excludes broken legacy URLs)."""
+    # Purge any legacy broken media.tunemavens.com rows lacking binary backup
+    try:
+        db.crm_uploaded_images.delete_many({
+            "url": {"$regex": r"^https?://media\.tunemavens\.com/"},
+            "data_b64": {"$exists": False},
+        })
+    except Exception:
+        pass
+
+    query: Dict[str, Any] = {}
+    if current_user and not _is_admin_user(current_user):
+        email = (current_user.get("email") or "").strip().lower()
+        query["uploaded_by_email"] = email
+    docs = list(
+        db.crm_uploaded_images.find(query, {"_id": 0, "data_b64": 0})
+        .sort("created_at", -1)
+        .limit(limit)
+    )
+    for d in docs:
+        if isinstance(d.get("created_at"), datetime):
+            d["created_at"] = d["created_at"].isoformat()
+    return {"images": docs, "total": len(docs)}
+
+
 @router.post("/api/crm/campaigns/preview")
 def preview_crm_campaign(
     payload: CampaignPreviewRequest,
+    request: Request,
     current_user: Optional[dict] = Depends(get_optional_user),
 ):
-    """Render an exact HTML email preview (including Event Flyer/Poster & direct CTAs) without dispatching."""
+    """Render an exact HTML email preview matching the composer's message body, CTAs & disclaimers footer."""
     sample_name = (payload.sample_recipient_name or "").strip()
     sample_email = (payload.sample_recipient_email or "").strip()
 
@@ -872,7 +1086,7 @@ def preview_crm_campaign(
 
     promo_type = (payload.promotion_type or "persona_intro").strip().lower()
     event_doc = payload.event_doc
-    if promo_type == "event" and not event_doc and payload.event_id:
+    if not event_doc and payload.event_id:
         try:
             from routes.events_router import get_or_seed_events
             event_doc = next((e for e in get_or_seed_events() if e.get("id") == payload.event_id), None)
@@ -900,6 +1114,8 @@ def preview_crm_campaign(
                          .replace("{{event_venue}}", event_doc.get("venue", ""))
         )
 
+    req_origin = request.headers.get("origin") or ""
+
     wrapped_html, tracked_urls = build_reachout_email_html(
         recipient_name=sample_name,
         subject=rendered_subject,
@@ -908,12 +1124,17 @@ def preview_crm_campaign(
         promotion_type=promo_type,
         event_doc=event_doc,
         event_ctas=payload.event_ctas,
-        cta_label=payload.cta_label or "Explore Now",
+        cta_label=payload.cta_label or "",
+        cta_url=payload.cta_url,
+        product_name=payload.product_name,
         affiliate_name=initiator.get("name"),
-        affiliate_ref_code=initiator.get("ref_code"),
+        affiliate_ref_code=initiator.get("ref_code") or payload.affiliate_ref_code or "TM-ADMIN",
         target_persona=payload.target_persona,
         include_epk_cta=bool(payload.include_epk_cta) if payload.include_epk_cta is not None else True,
         include_catalog_cta=bool(payload.include_catalog_cta) if payload.include_catalog_cta is not None else True,
+        recipient_email=sample_email,
+        is_preview=True,
+        app_origin=req_origin or None,
     )
 
     return {
@@ -922,6 +1143,7 @@ def preview_crm_campaign(
         "text": rendered_body,
         "recipient": {"name": sample_name, "email": sample_email},
         "affiliate_ref_code": initiator.get("ref_code") or payload.affiliate_ref_code or "TM-ADMIN",
+        "affiliate_name": initiator.get("name") or "TuneMavens Administration",
         "event_flyer_url": event_doc.get("image_url") if event_doc else None,
         "tracked_urls": tracked_urls,
     }
@@ -976,7 +1198,7 @@ def create_crm_campaign(payload: CampaignCreateRequest, current_user: Optional[d
     requested_ref = (
         (payload.affiliate_ref_code or (target_group_doc.get("affiliate_ref_code") if target_group_doc else None))
         if _is_admin_user(current_user)
-        else _resolve_user_own_affiliate_ref(current_user)
+        else _resolve_user_own_affiliate_ref(current_user, create_if_missing=True)
     )
 
     initiator = resolve_initiator_affiliate(
@@ -1199,11 +1421,15 @@ def dispatch_crm_campaign(campaign_id: str, current_user: Optional[dict] = Depen
             event_doc=event_doc,
             event_ctas=event_ctas,
             cta_label=cta_label,
+            cta_url=cta_url,
+            product_name=campaign_doc.get("product_name"),
             affiliate_name=initiated_by_name,
             affiliate_ref_code=affiliate_ref_code,
             target_persona=campaign_doc.get("target_persona"),
             include_epk_cta=bool(campaign_doc.get("include_epk_cta", True)),
             include_catalog_cta=bool(campaign_doc.get("include_catalog_cta", True)),
+            recipient_email=r_email,
+            is_preview=False,
         )
 
         reachout_link_doc = {
@@ -1400,8 +1626,95 @@ def dispatch_crm_campaign(campaign_id: str, current_user: Optional[dict] = Depen
 # ======================================================================
 # Public Reachout Landing Resolver & Affiliate Funnel Activity Telemetry
 # ======================================================================
+class CommunicationPreferencesUpdateRequest(BaseModel):
+    email: str
+    reachout_token: Optional[str] = None
+    event_invites: bool = True
+    persona_onboarding_updates: bool = True
+    product_service_announcements: bool = True
+    weekly_digest: bool = False
+    frequency: str = "important_only"  # 'all' | 'weekly_digest' | 'important_only'
+    unsubscribed_all: bool = False
+
+
+@router.get("/api/crm/communication-preferences")
+def get_communication_preferences(
+    email: Optional[str] = None,
+    token: Optional[str] = None,
+):
+    """Retrieve a recipient's Smart CRM email communication preferences."""
+    resolved_email = (email or "").strip().lower()
+    if not resolved_email and token and token != "preview_sample_token":
+        lnk = db.crm_reachout_links.find_one({"token": token})
+        if lnk:
+            resolved_email = (lnk.get("recipient_email") or "").strip().lower()
+
+    doc = db.crm_comm_preferences.find_one({"email": resolved_email}, {"_id": 0}) if resolved_email else None
+    if not doc:
+        return {
+            "email": resolved_email or "alex.mwangi@example.com",
+            "event_invites": True,
+            "persona_onboarding_updates": True,
+            "product_service_announcements": True,
+            "weekly_digest": False,
+            "frequency": "important_only",
+            "unsubscribed_all": False,
+            "channel_policy": "email_only",
+        }
+    if isinstance(doc.get("updated_at"), datetime):
+        doc["updated_at"] = doc["updated_at"].isoformat()
+    return doc
+
+
+@router.post("/api/crm/communication-preferences")
+def update_communication_preferences(payload: CommunicationPreferencesUpdateRequest):
+    """Save a recipient's Smart CRM email communication preferences or process 1-click unsubscribe."""
+    try:
+        clean_email = validate_email_address(payload.email)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    now = datetime.now(timezone.utc)
+    unsub_all = bool(payload.unsubscribed_all)
+    prefs_doc = {
+        "email": clean_email,
+        "event_invites": False if unsub_all else bool(payload.event_invites),
+        "persona_onboarding_updates": False if unsub_all else bool(payload.persona_onboarding_updates),
+        "product_service_announcements": False if unsub_all else bool(payload.product_service_announcements),
+        "weekly_digest": False if unsub_all else bool(payload.weekly_digest),
+        "frequency": "none" if unsub_all else (payload.frequency or "important_only"),
+        "unsubscribed_all": unsub_all,
+        "channel_policy": "email_only",
+        "reachout_token": payload.reachout_token,
+        "updated_at": now,
+    }
+    db.crm_comm_preferences.update_one(
+        {"email": clean_email},
+        {"$set": prefs_doc, "$setOnInsert": {"created_at": now}},
+        upsert=True,
+    )
+    out = dict(prefs_doc)
+    out["updated_at"] = now.isoformat()
+    return {
+        "status": "success",
+        "message": (
+            f"{clean_email} has been unsubscribed from Smart CRM promotional reachouts."
+            if unsub_all
+            else f"Communication preferences saved for {clean_email}."
+        ),
+        "preferences": out,
+    }
+
+
 @router.get("/api/crm/reachout/resolve/{token}")
-def resolve_reachout_link(token: str, response: Response):
+def resolve_reachout_link(
+    token: str,
+    response: Response,
+    email: Optional[str] = None,
+    role: Optional[str] = None,
+    event_id: Optional[str] = None,
+    promo: Optional[str] = None,
+):
     """Resolve a tracked reachout link clicked from an email.
 
     - Logs the click under the initiating affiliate account.
@@ -1409,6 +1722,60 @@ def resolve_reachout_link(token: str, response: Response):
     - Returns campaign info, event details (for direct RSVP / Buy Ticket),
       recipient's prefilled name & email, and TuneMavens platform introduction.
     """
+    if token == "preview_sample_token":
+        pb = PERSONA_PLAYBOOKS.get(role or "creator", PERSONA_PLAYBOOKS["creator"])
+        preview_event = None
+        if event_id:
+            try:
+                from routes.events_router import get_or_seed_events, _enrich_event_with_rsvp
+                raw_ev = next((e for e in get_or_seed_events() if e.get("id") == event_id), None)
+                if raw_ev:
+                    preview_event = _enrich_event_with_rsvp(raw_ev, include_lists=False)
+            except Exception:
+                preview_event = None
+        eff_promo = "event" if preview_event else (promo or "persona_intro")
+        ev_ctas = (
+            ["rsvp"]
+            if (preview_event and preview_event.get("payment_mode") == "free_rsvp")
+            else ["rsvp", "ticket"]
+        )
+        return {
+            "token": token,
+            "is_preview": True,
+            "recipient": {
+                "name": "Alex Mwangi",
+                "email": (email or "alex.mwangi@example.com").strip().lower(),
+            },
+            "affiliate": {
+                "ref_code": "TM-ADMIN",
+                "name": "TuneMavens Administration",
+            },
+            "campaign": {
+                "id": "preview",
+                "title": preview_event.get("title") if preview_event else "Smart CRM Email Preview",
+                "subject": pb["default_subject"].replace("{{name}}", "Alex Mwangi"),
+                "body": pb["default_body"].replace("{{name}}", "Alex Mwangi"),
+                "promotion_type": eff_promo,
+                "cta_label": "RSVP Now (Reserve Spot)" if preview_event else pb["cta_label"],
+                "cta_url": pb["cta_url"],
+                "event_ctas": ev_ctas,
+            },
+            "promotion_type": eff_promo,
+            "target_persona": role or "creator",
+            "persona_playbook": pb,
+            "include_epk_cta": bool(pb.get("supports_epk")),
+            "include_catalog_cta": bool(pb.get("supports_catalog")),
+            "event": preview_event,
+            "clicks": 1,
+            "rsvped": False,
+            "onboarded": False,
+            "platform_intro": {
+                "headline": f"Welcome to TuneMavens for {pb['label']}",
+                "subtitle": "Manage your communication preferences below or onboard in seconds to save your profile preferences.",
+                "highlights": pb.get("highlights", []),
+            },
+        }
+
     link = record_reachout_click(token)
     if not link:
         raise HTTPException(status_code=404, detail="Reachout link not found or expired.")
@@ -1435,8 +1802,10 @@ def resolve_reachout_link(token: str, response: Response):
     event_info = None
     if link.get("event_id"):
         try:
-            from routes.events_router import get_or_seed_events
-            event_info = next((e for e in get_or_seed_events() if e.get("id") == link["event_id"]), None)
+            from routes.events_router import get_or_seed_events, _enrich_event_with_rsvp
+            raw_ev = next((e for e in get_or_seed_events() if e.get("id") == link["event_id"]), None)
+            if raw_ev:
+                event_info = _enrich_event_with_rsvp(raw_ev, include_lists=False)
         except Exception:
             event_info = None
 

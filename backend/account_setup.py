@@ -23,7 +23,7 @@ from config import db
 logger = logging.getLogger("tunemavens.email")
 
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "").strip()
-RESEND_FROM = os.environ.get("RESEND_FROM", "TuneMavens <hello@contact.tunemavens.com>")
+RESEND_FROM = os.environ.get("RESEND_FROM", "TuneMavens <hello@tunemavens.com>")
 PUBLIC_APP_URL = os.environ.get("PUBLIC_APP_URL", "https://tunemavens.com").rstrip("/")
 SETUP_TOKEN_HOURS = int(os.environ.get("SETUP_TOKEN_HOURS", "72"))
 
@@ -74,44 +74,72 @@ def setup_link(token: str) -> str:
     return f"{PUBLIC_APP_URL}/#/set-password?token={token}"
 
 
-def _email_wrapper(content_html: str, title: str = "TuneMavens Notification", role: str = "") -> str:
-    """Standardized email layout with dark theme and strict 3px border radius styling."""
+def _email_wrapper(
+    content_html: str,
+    title: str = "TuneMavens Notification",
+    role: str = "",
+    footer_html: Optional[str] = None,
+) -> str:
+    """Standardized email layout with dark theme, strict 3px border radius styling, and compliance footer."""
     role_badge = (
         f'<span style="background:rgba(34,211,238,0.12);color:#22d3ee;border:1px solid rgba(34,211,238,0.25);border-radius:3px;padding:3px 8px;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">{role.upper()}</span>'
         if role else ""
     )
+    default_footer = f"""
+    <div style="margin-top:32px;padding-top:20px;border-top:1px solid #1e293b;font-size:11.5px;color:#64748b;text-align:center;line-height:1.6;">
+      <p style="margin:0 0 6px 0;font-weight:700;color:#94a3b8;">TuneMavens Global Sync, Live Events &amp; Audio Ecosystem</p>
+      <p style="margin:0 0 10px 0;">
+        <a href="{PUBLIC_APP_URL}/#/dashboard?tab=settings" style="color:#22d3ee !important;text-decoration:underline;">Set Communication Preferences</a>
+        &nbsp;&bull;&nbsp;
+        <a href="{PUBLIC_APP_URL}/#/privacy" style="color:#94a3b8 !important;text-decoration:underline;">Privacy Policy</a>
+        &nbsp;&bull;&nbsp;
+        <a href="{PUBLIC_APP_URL}/#/terms" style="color:#94a3b8 !important;text-decoration:underline;">Terms of Service</a>
+        &nbsp;&bull;&nbsp;
+        <a href="{PUBLIC_APP_URL}/#/support" style="color:#94a3b8 !important;text-decoration:underline;">Help &amp; Support</a>
+      </p>
+      <p style="margin:0 0 6px 0;font-size:11px;color:#475569;">
+        Disclaimer: This message was sent in accordance with the Kenya Data Protection Act (ODPC), GDPR, and CAN-SPAM guidelines. TuneMavens strictly enforces opted-in email communications.
+      </p>
+      <p style="margin:0;font-size:11px;color:#475569;">
+        &copy; 2026 TuneMavens (Intermaven Network) &bull; Westlands Commercial Center, Nairobi, Kenya &bull;
+        <a href="mailto:support@tunemavens.com" style="color:#22d3ee !important;text-decoration:none;">support@tunemavens.com</a>
+      </p>
+    </div>"""
+
     return f"""
 <div style="background-color:#090d16;padding:32px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#e2e8f0;line-height:1.6;">
-  <div style="max-width:560px;margin:0 auto;background:#0d1522;border:1px solid #1e293b;border-radius:3px;padding:32px 28px;box-shadow:0 12px 30px rgba(0,0,0,0.55);">
+  <div style="max-width:600px;margin:0 auto;background:#0d1522;border:1px solid #1e293b;border-radius:3px;padding:32px 28px;box-shadow:0 12px 30px rgba(0,0,0,0.55);">
     <div style="border-bottom:1px solid #1e293b;padding-bottom:18px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;">
       <div style="font-size:19px;font-weight:800;letter-spacing:1px;color:#22d3ee;text-transform:uppercase;">TUNEMAVENS</div>
       {role_badge}
     </div>
     {content_html}
-    <div style="margin-top:36px;padding-top:20px;border-top:1px solid #1e293b;font-size:12px;color:#64748b;text-align:center;line-height:1.5;">
-      <p style="margin:0 0 4px 0;font-weight:600;color:#94a3b8;">TuneMavens Global Sync & Audio Ecosystem</p>
-      <p style="margin:0 0 8px 0;">Official Communication Protocol • Automated Audit Trail</p>
-      <p style="margin:0;font-size:11px;color:#475569;">If you have questions, reach us at <a href="mailto:support@tunemavens.com" style="color:#22d3ee;text-decoration:none;">support@tunemavens.com</a>.</p>
-    </div>
+    {footer_html if footer_html is not None else default_footer}
   </div>
 </div>"""
 
 
-def _button(url: str, label: str, variant: str = "primary") -> str:
-    """Strict 3px border-radius CTA button."""
+def _button(url: str, label: str, variant: str = "primary", target_blank: bool = False) -> str:
+    """Strict 3px border-radius CTA button with dark-mode safe contrast."""
+    border_css = "border:1px solid transparent;"
     if variant == "emerald":
         bg = "#10b981"
         color = "#04141a"
+    elif variant == "purple":
+        bg = "#a855f7"
+        color = "#ffffff"
     elif variant == "secondary":
-        bg = "#1e293b"
+        bg = "#131e32"
         color = "#e2e8f0"
+        border_css = "border:1px solid rgba(34,211,238,0.38);"
     else:
         bg = "#22d3ee"
         color = "#04141a"
+    target_attr = ' target="_blank" rel="noopener noreferrer"' if target_blank else ""
     return (
-        f'<a href="{url}" style="display:inline-block;background:{bg};color:{color};'
-        f'text-decoration:none;font-weight:700;font-size:14px;padding:12px 24px;border-radius:3px;'
-        f'margin-top:12px;margin-bottom:8px;">{label}</a>'
+        f'<a href="{url}"{target_attr} style="display:inline-block;background:{bg};color:{color} !important;'
+        f'{border_css}text-decoration:none !important;font-weight:800;font-size:13.5px;padding:11px 20px;'
+        f'border-radius:3px;margin-top:6px;margin-bottom:6px;margin-right:8px;line-height:1.3;">{label}</a>'
     )
 
 

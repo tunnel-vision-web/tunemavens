@@ -99,7 +99,17 @@ async function request(path, { method = 'GET', body, token } = {}) {
 export const authApi = {
   register: (payload) => request('/api/auth/register', { method: 'POST', body: payload }),
   login: (payload) => request('/api/auth/login', { method: 'POST', body: payload }),
-  demo: (role) => request(`/api/auth/demo${role ? `?role=${encodeURIComponent(role)}` : ''}`, { method: 'POST' }),
+  demo: (role, preferredEmail) => {
+    const params = new URLSearchParams();
+    if (role) params.set('role', role);
+    const savedEmail =
+      preferredEmail ||
+      (typeof localStorage !== 'undefined' ? localStorage.getItem('tunemavens_last_persisted_email') : '') ||
+      '';
+    if (savedEmail) params.set('preferred_email', savedEmail);
+    const qs = params.toString();
+    return request(`/api/auth/demo${qs ? `?${qs}` : ''}`, { method: 'POST' });
+  },
   me: (token) => request('/api/auth/me', { token }),
   logout: () => request('/api/auth/logout', { method: 'POST' }),
   verifyEmail: (token) => request('/api/auth/verify-email', { method: 'POST', body: { token } }),

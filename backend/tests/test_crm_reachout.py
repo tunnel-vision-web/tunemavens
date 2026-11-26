@@ -451,17 +451,62 @@ def test_persona_intro_epk_catalog_and_self_learning_crm():
 
 
 def test_system_user_target_groups_event_flyer_and_email_preview():
-    """Pre-created registered-user groups, event flyer embedding and live email preview."""
+    """Pre-created registered-user groups, persona cohorts, event flyer embedding, HTML/image upload, and email preview disclaimers/CTAs."""
     client.cookies.clear()
-    groups_res = client.get("/api/crm/target-groups")
-    # Unauthenticated callers may be rejected; the preview endpoint must work regardless.
-    if groups_res.status_code == 200:
-        payload = groups_res.json()
-        groups = payload if isinstance(payload, list) else payload.get("groups", [])
-        names = [g.get("name") for g in groups if g.get("is_system_group")]
-        if names:
-            assert "All Registered Platform Users" in names
 
+    # 1. Admin affiliate roster puts TM-ADMIN first, followed by registered affiliates
+    roster_res = client.get("/api/affiliates/admin/roster")
+    assert roster_res.status_code == 200
+    affs = roster_res.json()["affiliates"]
+    assert len(affs) >= 1
+    assert affs[0]["ref_code"] == "TM-ADMIN"
+
+    # 2. Target Email Groups include All Registered Users, one for each persona (e.g. All DJs), and custom groups across users
+    uid = uuid.uuid4().hex[:6]
+    custom_grp_res = client.post(
+        "/api/crm/target-groups",
+        json={
+            "name": f"Custom Partner Group {uid}",
+            "affiliate_ref_code": "AFROVIBE",
+            "entries": [{"name": "Sample Lead", "email": f"lead.{uid}@example.com"}],
+        },
+    )
+    assert custom_grp_res.status_code == 201
+    custom_grp_id = custom_grp_res.json()["id"]
+
+    groups_res = client.get("/api/crm/target-groups")
+    assert groups_res.status_code == 200
+    groups = groups_res.json()["groups"]
+    assert groups[0]["name"] == "All Registered Users"
+    sys_names = [g.get("name") for g in groups if g.get("is_system_group")]
+    assert "All DJs" in sys_names
+    assert "All Creators (Artists, Songwriters & Producers)" in sys_names
+    assert "All Record Labels & Distributors" in sys_names
+    assert "All Podcasters & Show Hosts" in sys_names
+    assert "All Music Supervisors & Sync Buyers" in sys_names
+    assert any(g.get("id") == custom_grp_id for g in groups)
+
+    # 3. Upload an image and insert it with rich HTML into the message body
+    png_1x1 = (
+        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+        b"\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01"
+        b"\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
+    )
+    upload_res = client.post(
+        "/api/crm/upload-image",
+        files={"file": ("promo_banner.png", png_1x1, "image/png")},
+    )
+    assert upload_res.status_code == 200, upload_res.text
+    uploaded_id = upload_res.json()["id"]
+    uploaded_url = upload_res.json()["url"]
+    assert "/api/crm/images/" in uploaded_url
+
+    img_get = client.get(uploaded_url)
+    assert img_get.status_code == 200
+    assert img_get.headers["content-type"].startswith("image/png")
+    assert img_get.content == png_1x1
+
+    # 4. Verify Event Preview HTML has HTML + uploaded image, bottom CTA buttons, disclaimers & communication preferences links
     event = {
         "id": "ev_flyer_test",
         "title": "Flyer Test Live",
@@ -470,18 +515,236 @@ def test_system_user_target_groups_event_flyer_and_email_preview():
         "image_url": "/uploads/flyer-test.jpg",
         "price": 20,
     }
+    rich_html_body = (
+        f"<h2>VIP Backstage Invite for {{{{name}}}}</h2>"
+        f"<p>Join us at <strong>{{{{event_venue}}}}</strong> for {{{{event_title}}}}!</p>"
+        f'<div style="margin:12px 0;"><img src="{uploaded_url}" alt="Promo Banner" /></div>'
+        f"<script>alert('xss')</script>"
+    )
     res = client.post(
         "/api/crm/campaigns/preview",
         json={
             "subject": "Join us {{name}}",
-            "body": "Hi {{name}}, {{event_title}} is live.",
+            "body": rich_html_body,
             "promotion_type": "event",
             "event_doc": event,
             "event_ctas": ["rsvp", "ticket"],
+            "affiliate_ref_code": "AFROVIBE",
         },
     )
     assert res.status_code == 200, res.text
     data = res.json()
-    assert "flyer-test.jpg" in data["html"]
+    html = data["html"]
+    assert "flyer-test.jpg" in html
+    assert uploaded_url in html
+    assert "<h2>VIP Backstage Invite for Alex Mwangi</h2>" in html
+    assert "<script>" not in html
     assert data["event_flyer_url"] == "/uploads/flyer-test.jpg"
-    assert "border-radius: 3px" in data["html"] or "border-radius:3px" in data["html"]
+    assert "border-radius: 3px" in html or "border-radius:3px" in html
+    # Bottom CTA buttons
+    assert "RSVP Now (Reserve Spot)" in html
+    assert "Buy Ticket Now" in html
+    assert "View Event Details & Lineup" in html
+    assert "Save Preferences & Complete Free Onboarding" in html
+    # Footer disclaimers & communication preferences links
+    assert "Set Communication Preferences" in html
+    assert "Unsubscribe / Opt Out" in html
+    assert "Privacy Policy" in html
+    assert "Terms of Service" in html
+    assert "Compliance &amp; Legal Disclaimer" in html or "Compliance & Legal Disclaimer" in html
+    assert "Why you received this email" in html
+
+    # 5. Verify Communication Preferences endpoint round-trip
+    pref_save = client.post(
+        "/api/crm/communication-preferences",
+        json={
+            "email": f"lead.{uid}@example.com",
+            "event_invites": True,
+            "persona_onboarding_updates": False,
+            "product_service_announcements": True,
+            "weekly_digest": True,
+            "frequency": "weekly_digest",
+            "unsubscribed_all": False,
+        },
+    )
+    assert pref_save.status_code == 200
+    pref_get = client.get(f"/api/crm/communication-preferences?email=lead.{uid}@example.com")
+    assert pref_get.status_code == 200
+    assert pref_get.json()["frequency"] == "weekly_digest"
+    assert pref_get.json()["persona_onboarding_updates"] is False
+
+    # Cleanup
+    client.delete(f"/api/crm/uploaded-images/{uploaded_id}")
+    client.delete(f"/api/crm/target-groups/{custom_grp_id}")
+    db.crm_comm_preferences.delete_one({"email": f"lead.{uid}@example.com"})
+
+
+def test_body_preview_parity_and_persona_ctas():
+    """Verify 1:1 parity between rich HTML body and Email Preview (no duplicate flyer or uneditable green box) + persona CTAs."""
+    event = {
+        "id": "ev_parity_1",
+        "title": "Nairobi Sync Summit",
+        "date": "2026-12-20",
+        "venue": "Sarit Expo Centre",
+        "image_url": "/headers/header_djkalonje_custom.jpg",
+        "price": 35,
+    }
+    # Event body already embeds flyer image -> preview must NOT render a duplicate poster img
+    event_body = (
+        '<div style="margin:0 0 14px 0;"><img src="/headers/header_djkalonje_custom.jpg" alt="Flyer" /></div>'
+        "<p>Hi <strong>{{name}}</strong>, join us at {{event_venue}} for {{event_title}}!</p>"
+    )
+    ev_res = client.post(
+        "/api/crm/campaigns/preview",
+        json={
+            "subject": "[DJ Set & VIP Invite] {{event_title}}",
+            "body": event_body,
+            "promotion_type": "event",
+            "target_persona": "dj",
+            "event_doc": event,
+            "event_ctas": ["rsvp", "ticket"],
+            "affiliate_ref_code": "TUNEMAVENS",
+        },
+    )
+    assert ev_res.status_code == 200
+    ev_html = ev_res.json()["html"]
+    assert ev_html.count("/headers/header_djkalonje_custom.jpg") == 1
+    assert "Sarit Expo Centre" in ev_html
+    assert "Browse 24-Bit DJ Pool" in ev_html
+
+    # Persona intro with rich HTML body -> preview must NOT append duplicate static green highlights card
+    persona_body = (
+        '<div style="margin:0 0 14px 0;"><img src="/headers/header_sync_licensing.jpg" alt="Sync Banner" /></div>'
+        "<p>Hello <strong>{{name}}</strong>, license pre-cleared African &amp; global tracks instantly.</p>"
+    )
+    p_res = client.post(
+        "/api/crm/campaigns/preview",
+        json={
+            "subject": "Pre-Cleared Stems for {{name}}",
+            "body": persona_body,
+            "promotion_type": "persona_intro",
+            "target_persona": "supervisor",
+            "affiliate_ref_code": "TUNEMAVENS",
+        },
+    )
+    assert p_res.status_code == 200
+    p_html = p_res.json()["html"]
+    assert p_html.count("/headers/header_sync_licensing.jpg") == 1
+    assert "PERSONALIZED INVITATION" not in p_html
+    assert "Activate VIP Supervisor Desk" in p_html
+    assert "Audition Pre-Cleared 24-Bit Stems" in p_html
+
+
+def test_user_profile_update_persists_across_relogin_and_demo():
+    """Verify user profile edits (name, email, brand_name, country, bio) sustain across logout, login, and demo auth."""
+    uid = uuid.uuid4().hex[:6]
+    orig_email = f"orig.{uid}@example.com"
+    updated_email = f"updated.{uid}@example.com"
+
+    auth_client = TestClient(app)
+
+    # 1. Register initial user
+    reg_res = auth_client.post(
+        "/api/auth/register",
+        json={
+            "email": orig_email,
+            "password": "TestPassword123!",
+            "name": "Initial Name",
+            "role": "dj",
+        },
+    )
+    assert reg_res.status_code in (200, 201), reg_res.text
+    user_id = reg_res.json()["user"]["id"]
+
+    # 2. Update profile details including changing email address
+    upd_res = auth_client.put(
+        "/api/users/me",
+        json={
+            "name": "DJ Saved Permanently",
+            "email": updated_email.upper(),  # mixed/upper case input
+            "brand_name": "Saved Sound System",
+            "country": "KE",
+            "bio": "Sustained bio across sessions.",
+        },
+    )
+    assert upd_res.status_code == 200, upd_res.text
+    upd_data = upd_res.json()
+    assert upd_data["name"] == "DJ Saved Permanently"
+    assert upd_data["email"] == updated_email
+    assert upd_data["brand_name"] == "Saved Sound System"
+
+    # 3. Log out and log back in with the NEW email (mixed case) -> details sustain
+    auth_client.post("/api/auth/logout")
+    login_new = auth_client.post(
+        "/api/auth/login",
+        json={"email": f"  {updated_email.upper()}  ", "password": "TestPassword123!"},
+    )
+    assert login_new.status_code == 200, login_new.text
+    logged_user = login_new.json()["user"]
+    assert logged_user["id"] == user_id
+    assert logged_user["name"] == "DJ Saved Permanently"
+    assert logged_user["email"] == updated_email
+    assert logged_user["brand_name"] == "Saved Sound System"
+    assert logged_user["country"] == "KE"
+    assert logged_user["bio"] == "Sustained bio across sessions."
+
+    # 4. Log in with the PREVIOUS email -> still resolves to the updated profile rather than resetting
+    auth_client.post("/api/auth/logout")
+    login_prev = auth_client.post(
+        "/api/auth/login",
+        json={"email": orig_email, "password": "TestPassword123!"},
+    )
+    assert login_prev.status_code == 200, login_prev.text
+    assert login_prev.json()["user"]["id"] == user_id
+    assert login_prev.json()["user"]["name"] == "DJ Saved Permanently"
+    assert login_prev.json()["user"]["email"] == updated_email
+
+    # 5. Demo/Google quick login with preferred_email -> sustains saved profile instead of demo defaults
+    demo_res = auth_client.post(f"/api/auth/demo?role=dj&preferred_email={updated_email}")
+    assert demo_res.status_code == 200, demo_res.text
+    demo_user = demo_res.json()["user"]
+    assert demo_user["id"] == user_id
+    assert demo_user["name"] == "DJ Saved Permanently"
+    assert demo_user["email"] == updated_email
+    assert demo_user["brand_name"] == "Saved Sound System"
+
+    # Cleanup test user
+    db.users.delete_one({"id": user_id})
+    db.affiliates.delete_many({"user_id": user_id})
+
+
+def test_free_rsvp_hides_buy_ticket_and_preview_resolves_event():
+    """Verify free_rsvp events never render Buy Ticket Now and preview_sample_token resolves event details."""
+    events_res = client.get("/api/events?payment_mode=free_rsvp")
+    assert events_res.status_code == 200
+    free_events = events_res.json().get("events", [])
+    assert len(free_events) >= 1
+    free_ev = free_events[0]
+
+    # Even if event_ctas passes 'ticket', free_rsvp MUST omit Buy Ticket Now
+    prev_res = client.post(
+        "/api/crm/campaigns/preview",
+        json={
+            "subject": "RSVP for {{event_title}}",
+            "body": "<p>Hi {{name}}, reserve your spot!</p>",
+            "promotion_type": "event",
+            "event_id": free_ev["id"],
+            "event_doc": free_ev,
+            "event_ctas": ["rsvp", "ticket"],
+        },
+    )
+    assert prev_res.status_code == 200
+    data = prev_res.json()
+    assert "RSVP Now (Reserve Spot)" in data["html"]
+    assert "Buy Ticket Now" not in data["html"]
+    assert f"event_id={free_ev['id']}" in data["tracked_urls"]["rsvp"]
+
+    # Resolving preview_sample_token with event_id returns the enriched event with capacity & guest policy
+    res_resolve = client.get(f"/api/crm/reachout/resolve/preview_sample_token?event_id={free_ev['id']}&promo=event")
+    assert res_resolve.status_code == 200
+    resolved = res_resolve.json()
+    assert resolved["promotion_type"] == "event"
+    assert resolved["event"]["id"] == free_ev["id"]
+    assert resolved["event"]["payment_mode"] == "free_rsvp"
+    assert "rsvp_summary" in resolved["event"]
+    assert "guest_limit_policy" in resolved["event"]

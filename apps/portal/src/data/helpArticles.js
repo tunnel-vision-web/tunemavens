@@ -1342,7 +1342,7 @@ To eliminate missed emails and spam-folder delays, TuneMavens operates a direct 
    * **Eligibility**: Creators who have loaded a cumulative minimum of **KES 500 (or $5.00 USD)** into their TuneLedger wallet or maintain an active credit balance of 500 credits enjoy automated WhatsApp delivery for all deal alerts and payouts.
 
 3. **Unfunded Creators & Free Guest Accounts (Email Fallback)**:
-   * **Delivery Rail**: Automatically routed through high-deliverability transactional email (**hello@contact.tunemavens.com via Resend**).
+   * **Delivery Rail**: Automatically routed through high-deliverability transactional email (**hello@tunemavens.com via Resend**).
    * **Upgrade Path**: You can unlock instant WhatsApp push delivery at any time simply by making a one-time KES 500 or $5.00 wallet reload via M-Pesa STK push or card.`
       },
       {
@@ -1626,11 +1626,12 @@ Every communication logged in your **Communications Vault** includes an embedded
 3. **Custom & Imported Groups**: Create bespoke outreach lists, add/edit/delete individual contacts inline, or append CSV/JSON files into existing groups.`
       },
       {
-        heading: 'Live Event Posters, Direct RSVP / Ticket CTAs & Live Email Preview',
-        content: `Every campaign composed in Smart CRM can be inspected before a single email leaves the server:
-* **Automatic Event Flyer / Poster Embedding**: Selecting any active concert, residency, or Free RSVP event under **Select Live Site Event** automatically embeds the official **Event Flyer / Poster** from the event page right inside the email invitation card.
-* **Direct In-Email Action Buttons**: Event emails include direct **RSVP Now (Reserve Spot)** and/or **Buy Ticket Now** CTA buttons alongside a **Save Preferences & Join TuneMavens** onboarding callout.
-* **Live Email Render Preview**: Click **Preview Email** in the composer to inspect the exact dark-theme HTML layout, sample recipient interpolation (\`{{name}}\`), event poster, and affiliate attribution code before clicking **Dispatch**.`
+        heading: 'Rich HTML Composer, Custom CTA Buttons, Free-with-RSVP Rules & Live Email Preview',
+        content: `Every campaign composed in Smart CRM is tailored dynamically and can be inspected before dispatch:
+* **Visual / HTML / Split Editor, Image Uploads & Custom CTA Buttons**: Format rich HTML, upload & insert images into the message body, and add custom-linked **CTA Buttons** (\`+ CTA Button\` with custom label, URL, color, and alignment). Outbound emails read from **TuneMavens <hello@tunemavens.com>** with legal disclaimers and communication preferences links in the footer.
+* **Dynamic Persona × Theme Targeting & Event Flyers**: Selecting a **Target Group**, **Target Persona Voice**, **Promotion Type**, or **Live Site Event** dynamically updates the subject, embedded banner/poster, body copy, and bottom CTA buttons.
+* **Free-with-RSVP vs. Paid Events & Full Reservation Flow**: For **Free with RSVP** events, **Buy Ticket Now** is automatically hidden. Clicking **RSVP Now (Reserve Spot)** opens the reservation page with live Seating/Standing capacities, attendee role selection, accompanying guest names, Email-Only communication protocol opt-ins, and post-RSVP onboarding.
+* **1:1 Scrollable Live Email Render Preview**: Click **Preview Email** to scroll through the exact rendered HTML email (matching the body editor 1:1) before clicking **Dispatch**.`
       }
     ]
   },
@@ -1689,11 +1690,11 @@ Every communication logged in your **Communications Vault** includes an embedded
 * **Email-Only Reachout Policy**: Target groups use Names and Email addresses only (no phone numbers, SMS, or WhatsApp) to eliminate SMS costs and WhatsApp flagging, with CSV/TSV/JSON import auto-sanitization.`
       },
       {
-        heading: 'Event Flyer Invitations, Persona Playbooks & Live Email Preview',
-        content: `Campaigns adapt dynamically to your promotion goal:
+        heading: 'Rich Composer, Event Flyers, Persona Playbooks & Live Email Preview',
+        content: `Campaigns adapt dynamically to your promotion goal and persona target:
 1. **Persona Introductory Playbooks**: Personalized onboarding invitations across 10 personas with direct **Launch Official EPK** and **Ingest Catalogue** CTAs where applicable.
-2. **Live Event Invitations**: Embeds the official **Event Flyer / Poster** alongside direct **RSVP Now** and **Buy Ticket Now** email buttons.
-3. **Live Email Preview & Adaptive Copy**: Preview the exact rendered HTML email before sending, and use **Smart Auto-Optimize Copy** powered by historical conversion weights.`
+2. **Live Event Invitations**: Embeds the official **Event Flyer / Poster** alongside **RSVP Now (Reserve Spot)** (and **Buy Ticket Now** for paid events—automatically hidden on Free-with-RSVP shows), leading to a full reservation page with guest names, seating/standing zones, and communication protocol opt-ins.
+3. **Rich HTML, Image Uploads, Custom CTA Buttons & 1:1 Preview**: Insert uploaded images and custom-linked CTA buttons directly in the body, preview the full scrollable email sent from **hello@tunemavens.com**, and use **Smart Auto-Optimize Copy** powered by historical conversion weights.`
       },
       {
         heading: 'User-Facing In-App Inbox (/inbox) & Affiliate Alerts',

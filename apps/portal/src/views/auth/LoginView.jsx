@@ -26,28 +26,76 @@ function resolvePersonaRole() {
   } catch { return 'creator'; }
 }
 
+function getPersistedProfile(emailHint = '') {
+  try {
+    const clean = String(emailHint || '').trim().toLowerCase();
+    const byEmail = JSON.parse(localStorage.getItem('tunemavens_persisted_profiles') || '{}');
+    if (clean && byEmail[clean]) return byEmail[clean];
+    const last = JSON.parse(localStorage.getItem('tunemavens_last_persisted_profile') || 'null');
+    if (last && (!clean || String(last.email || '').toLowerCase() === clean)) return last;
+  } catch (_) {}
+  return null;
+}
+
+function savePersistedProfile(u) {
+  if (!u || !u.email) return;
+  try {
+    const clean = String(u.email).trim().toLowerCase();
+    const record = {
+      name: u.name || '',
+      email: clean,
+      brand_name: u.brand_name || '',
+      country: u.country || 'KE',
+      bio: u.bio || '',
+      role: u.role || 'creator',
+    };
+    const byEmail = JSON.parse(localStorage.getItem('tunemavens_persisted_profiles') || '{}');
+    byEmail[clean] = { ...(byEmail[clean] || {}), ...record };
+    localStorage.setItem('tunemavens_persisted_profiles', JSON.stringify(byEmail));
+    localStorage.setItem('tunemavens_last_persisted_profile', JSON.stringify(byEmail[clean]));
+    localStorage.setItem('tunemavens_last_persisted_email', clean);
+  } catch (_) {}
+}
+
 export default function LoginView({ onLogin }) {
   const navigate = useNavigate();
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [emailVal, setEmailVal] = useState('');
+  const [emailVal, setEmailVal] = useState(() => {
+    try {
+      return localStorage.getItem('tunemavens_last_persisted_email') || '';
+    } catch {
+      return '';
+    }
+  });
   const [passwordVal, setPasswordVal] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
+    const remembered = getPersistedProfile();
     try {
-      // In sandbox/dev, /api/auth/demo mints a valid JWT for the built-in
-      // creator account — no 401/409 noise from login-then-register chains.
-      const res = await authApi.demo(resolvePersonaRole());
+      const res = await authApi.demo(resolvePersonaRole(), remembered?.email);
       if (res?.access_token) {
         tokenStore.set(res.access_token);
-        onLogin(reconcileUserApps(res.user || res));
+        const rawUser = res.user || res;
+        const mergedUser = remembered
+          ? {
+              ...rawUser,
+              name: rawUser.name && rawUser.email === remembered.email ? rawUser.name : (remembered.name || rawUser.name),
+              email: rawUser.email || remembered.email,
+              brand_name: rawUser.brand_name || remembered.brand_name,
+              country: rawUser.country || remembered.country,
+              bio: rawUser.bio || remembered.bio,
+            }
+          : rawUser;
+        savePersistedProfile(mergedUser);
+        onLogin(reconcileUserApps(mergedUser));
       } else {
-        onLogin(reconcileUserApps({ email: 'creator_member@tunemavens.com', name: 'Creator Roster Member', role: 'creator', credits: 600 }));
+        onLogin(reconcileUserApps(remembered || { email: 'creator_member@tunemavens.com', name: 'Creator Roster Member', role: 'creator', credits: 600 }));
       }
     } catch {
-      onLogin(reconcileUserApps({
+      onLogin(reconcileUserApps(remembered || {
         email: 'creator_member@tunemavens.com',
         name: 'Creator Roster Member',
         role: 'creator',
@@ -66,11 +114,13 @@ export default function LoginView({ onLogin }) {
     e.preventDefault();
     setErrorMsg('');
     setSubmitting(true);
+    const cleanEmail = (emailVal || '').trim().toLowerCase();
+    const rememberedForEmail = getPersistedProfile(cleanEmail);
     try {
       let loggedInUser = null;
       let loginErr = null;
       try {
-        const { user, access_token } = await authApi.login({ email: emailVal, password: passwordVal });
+        const { user, access_token } = await authApi.login({ email: cleanEmail, password: passwordVal });
         tokenStore.set(access_token);
         loggedInUser = user;
       } catch (err) {
@@ -78,54 +128,57 @@ export default function LoginView({ onLogin }) {
       }
 
       if (!loggedInUser) {
-        // Only attempt registration if login returned 401 (bad creds), not a server error.
-        // If the error isn't 401, it's a server issue — don't try register.
-        // If it IS 401 but the email already exists, register would return 409 —
-        // instead we try demo login for sandbox, or show the appropriate error.
         if (loginErr?.status === 401) {
+          const fallbackName =
+            rememberedForEmail?.name ||
+            (cleanEmail.split('@')[0] || 'Sandbox User').replace(/^\w/, c => c.toUpperCase());
           try {
             const { user, access_token } = await authApi.register({
-              email: emailVal || 'sandbox@tunemavens.com',
+              email: cleanEmail || 'sandbox@tunemavens.com',
               password: passwordVal && passwordVal.length >= 8 ? passwordVal : 'SandboxPass123!',
-              name: (emailVal.split('@')[0] || 'Sandbox User').replace(/^\w/, c => c.toUpperCase()),
-              role: resolvePersonaRole(),
+              name: fallbackName,
+              brand_name: rememberedForEmail?.brand_name || undefined,
+              country: rememberedForEmail?.country || 'KE',
+              role: rememberedForEmail?.role || resolvePersonaRole(),
               sandbox: true,
             });
             tokenStore.set(access_token);
             loggedInUser = user;
           } catch (regErr) {
-            // 409 = email already registered — wrong password was entered
             if (regErr?.status === 409) {
               setErrorMsg('This email already has an account, but the password does not match. Please check your password and try again.');
               return;
             }
-            // Any other register error — use stub session
-            const stubName = (emailVal.split('@')[0] || 'Sandbox User').replace(/^\w/, c => c.toUpperCase());
             loggedInUser = {
-              email: emailVal || 'sandbox@tunemavens.com',
-              name: stubName,
-              role: resolvePersonaRole(),
+              email: cleanEmail || 'sandbox@tunemavens.com',
+              name: fallbackName,
+              role: rememberedForEmail?.role || resolvePersonaRole(),
               credits: 600,
               plan: 'creator',
-              brand_name: `${stubName} Music`,
-              country: 'KE',
+              brand_name: rememberedForEmail?.brand_name || `${fallbackName} Music`,
+              country: rememberedForEmail?.country || 'KE',
+              bio: rememberedForEmail?.bio || '',
             };
           }
         } else {
-          const stubName = (emailVal.split('@')[0] || 'Sandbox User').replace(/^\w/, c => c.toUpperCase());
+          const fallbackName =
+            rememberedForEmail?.name ||
+            (cleanEmail.split('@')[0] || 'Sandbox User').replace(/^\w/, c => c.toUpperCase());
           loggedInUser = {
-            email: emailVal || 'sandbox@tunemavens.com',
-            name: stubName,
-            role: resolvePersonaRole(),
+            email: cleanEmail || 'sandbox@tunemavens.com',
+            name: fallbackName,
+            role: rememberedForEmail?.role || resolvePersonaRole(),
             credits: 600,
             plan: 'creator',
-            brand_name: `${stubName} Music`,
-            country: 'KE',
+            brand_name: rememberedForEmail?.brand_name || `${fallbackName} Music`,
+            country: rememberedForEmail?.country || 'KE',
+            bio: rememberedForEmail?.bio || '',
           };
         }
       }
 
       if (loggedInUser) {
+        savePersistedProfile(loggedInUser);
         onLogin(reconcileUserApps(loggedInUser));
         const targetTab = sessionStorage.getItem('preferred_dashboard_tab'); navigate(targetTab ? `/dashboard?tab=${targetTab}` : '/dashboard');
       }

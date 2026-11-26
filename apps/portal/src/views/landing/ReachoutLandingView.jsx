@@ -65,11 +65,15 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
   // RSVP form state
   const [rsvpName, setRsvpName] = useState('');
   const [rsvpEmail, setRsvpEmail] = useState('');
+  const [rsvpPersona, setRsvpPersona] = useState(searchParams.get('role') || 'consumer');
   const [rsvpZone, setRsvpZone] = useState('seating');
   const [rsvpGuests, setRsvpGuests] = useState(0);
+  const [rsvpGuestNames, setRsvpGuestNames] = useState([]);
+  const [rsvpNotes, setRsvpNotes] = useState('');
   const [rsvpCity, setRsvpCity] = useState('Nairobi');
   const [rsvpSubmitting, setRsvpSubmitting] = useState(false);
   const [rsvpResult, setRsvpResult] = useState(null);
+  const onbCardRef = React.useRef(null);
 
   // Ticket booking form state
   const [selectedTierId, setSelectedTierId] = useState('');
@@ -89,13 +93,38 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
   const [onbResult, setOnbResult] = useState(null);
   const [onbError, setOnbError] = useState('');
 
+  // Email Communication Preferences & Unsubscribe state
+  const [showCommPrefs, setShowCommPrefs] = useState(
+    initialAction === 'preferences' || initialAction === 'unsubscribe'
+  );
+  const [commEmail, setCommEmail] = useState(searchParams.get('email') || '');
+  const [commEventInvites, setCommEventInvites] = useState(true);
+  const [commPersonaUpdates, setCommPersonaUpdates] = useState(true);
+  const [commProductNews, setCommProductNews] = useState(true);
+  const [commWeeklyDigest, setCommWeeklyDigest] = useState(false);
+  const [commFrequency, setCommFrequency] = useState('important_only');
+  const [commUnsubAll, setCommUnsubAll] = useState(initialAction === 'unsubscribe');
+  const [commSaving, setCommSaving] = useState(false);
+  const [commStatusMsg, setCommStatusMsg] = useState('');
+
   useEffect(() => {
     let active = true;
     async function loadReachout() {
       setLoading(true);
       setError('');
       try {
-        const res = await fetch(`${API_BASE}/api/crm/reachout/resolve/${encodeURIComponent(token)}`, {
+        const qsEmail = searchParams.get('email') || '';
+        const qsRole = searchParams.get('role') || '';
+        const qsEventId = searchParams.get('event_id') || '';
+        const qsPromo = searchParams.get('promo') || '';
+        const qsParams = new URLSearchParams();
+        if (qsEmail) qsParams.set('email', qsEmail);
+        if (qsRole) qsParams.set('role', qsRole);
+        if (qsEventId) qsParams.set('event_id', qsEventId);
+        if (qsPromo) qsParams.set('promo', qsPromo);
+        const qsStr = qsParams.toString();
+        const resolveUrl = `${API_BASE}/api/crm/reachout/resolve/${encodeURIComponent(token)}${qsStr ? `?${qsStr}` : ''}`;
+        const res = await fetch(resolveUrl, {
           credentials: 'include',
         });
         if (!res.ok) {
@@ -113,22 +142,48 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
         }
 
         const recName = payload.recipient?.name || '';
-        const recEmail = payload.recipient?.email || '';
+        const recEmail = payload.recipient?.email || qsEmail || '';
         setRsvpName(recName);
         setRsvpEmail(recEmail);
         setOnbName(recName);
         setOnbEmail(recEmail);
+        setCommEmail(recEmail);
+
+        if (recEmail) {
+          fetch(`${API_BASE}/api/crm/communication-preferences?email=${encodeURIComponent(recEmail)}&token=${encodeURIComponent(token)}`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then((prefs) => {
+              if (!active || !prefs) return;
+              setCommEventInvites(Boolean(prefs.event_invites));
+              setCommPersonaUpdates(Boolean(prefs.persona_onboarding_updates));
+              setCommProductNews(Boolean(prefs.product_service_announcements));
+              setCommWeeklyDigest(Boolean(prefs.weekly_digest));
+              if (prefs.frequency) setCommFrequency(prefs.frequency);
+              if (initialAction !== 'unsubscribe') {
+                setCommUnsubAll(Boolean(prefs.unsubscribed_all));
+              }
+            })
+            .catch(() => {});
+        }
 
         const invitedRole = payload.target_persona || searchParams.get('role');
         if (invitedRole && ROLE_OPTIONS.some((r) => r.key === invitedRole)) {
           setOnbRole(invitedRole);
+          setRsvpPersona(invitedRole);
         }
 
         if (payload.event) {
           const tiers = payload.event.tiers || [];
           if (tiers.length > 0) setSelectedTierId(tiers[0].tier_id);
-          if (activeTab === 'auto') {
-            setActiveTab(payload.event.payment_mode === 'free_rsvp' ? 'rsvp' : 'ticket');
+          if (payload.event.city) setRsvpCity(payload.event.city);
+          const sum = payload.event.rsvp_summary;
+          if (sum && sum.seating_remaining === 0 && sum.standing_remaining > 0) {
+            setRsvpZone('standing');
+          }
+          if (payload.event.payment_mode === 'free_rsvp') {
+            setActiveTab('rsvp');
+          } else if (activeTab === 'auto' || initialAction === 'event') {
+            setActiveTab('ticket');
           }
         }
       } catch (err) {
@@ -153,6 +208,19 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
     setRsvpSubmitting(true);
     setError('');
     try {
+      const guestCount = Number(rsvpGuests) || 0;
+      const cleanedGuestNames = rsvpGuestNames
+        .slice(0, guestCount)
+        .map((g) => String(g || '').trim())
+        .filter(Boolean);
+      const roleLabel = ROLE_OPTIONS.find((r) => r.key === rsvpPersona)?.label || rsvpPersona;
+      const combinedNotes = [
+        roleLabel ? `Attendee Role: ${roleLabel}` : '',
+        rsvpNotes.trim(),
+      ]
+        .filter(Boolean)
+        .join(' | ');
+
       const res = await fetch(`${API_BASE}/api/events/${encodeURIComponent(data.event.id)}/rsvp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -163,7 +231,9 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
           fan_email: rsvpEmail.trim(),
           city: rsvpCity.trim(),
           attendance_type: rsvpZone,
-          additional_guests: Number(rsvpGuests) || 0,
+          additional_guests: guestCount,
+          guest_names: cleanedGuestNames,
+          notes: combinedNotes || undefined,
           reachout_token: data.token,
           ref_code: data.affiliate?.ref_code || undefined,
         }),
@@ -171,6 +241,29 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
       const out = await res.json();
       if (!res.ok) throw new Error(out.detail || 'Could not confirm RSVP');
       setRsvpResult(out);
+
+      // Sync email-only communication preferences from RSVP form
+      if (rsvpEmail.trim()) {
+        setCommEmail(rsvpEmail.trim());
+        setOnbName((prev) => prev || rsvpName.trim());
+        setOnbEmail((prev) => prev || rsvpEmail.trim());
+        setOnbCity(rsvpCity.trim() || 'Nairobi');
+        setOnbRole(rsvpPersona);
+        fetch(`${API_BASE}/api/crm/communication-preferences`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: rsvpEmail.trim(),
+            reachout_token: data.token,
+            event_invites: commUnsubAll ? false : commEventInvites,
+            persona_onboarding_updates: commUnsubAll ? false : commPersonaUpdates,
+            product_service_announcements: commUnsubAll ? false : commProductNews,
+            weekly_digest: commUnsubAll ? false : commWeeklyDigest,
+            frequency: commUnsubAll ? 'none' : commFrequency,
+            unsubscribed_all: commUnsubAll,
+          }),
+        }).catch(() => {});
+      }
     } catch (err) {
       setError(err.message || 'RSVP failed');
     } finally {
@@ -278,11 +371,30 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
 
   const ev = data?.event;
   const isEvent = data?.promotion_type === 'event' && Boolean(ev);
-  const canRsvp = isEvent && (ev.payment_mode === 'free_rsvp' || ev.payment_mode === 'both' || (data.campaign?.event_ctas || []).includes('rsvp'));
-  const canBuyTicket = isEvent && ev.payment_mode !== 'free_rsvp' && (ev.tiers || []).length > 0;
+  const isFreeRsvpEvent = isEvent && ev.payment_mode === 'free_rsvp';
+  const canRsvp = isEvent && (isFreeRsvpEvent || ev.payment_mode === 'both' || (data.campaign?.event_ctas || []).includes('rsvp'));
+  const canBuyTicket = isEvent && !isFreeRsvpEvent && (ev.tiers || []).length > 0;
+  const maxAllowedGuests = !isEvent
+    ? 0
+    : ev.guest_limit_policy === 'strict_plus_1'
+    ? 1
+    : ev.guest_limit_policy === 'strict_plus_2'
+    ? 2
+    : ev.max_additional_guests !== null && ev.max_additional_guests !== undefined
+    ? Number(ev.max_additional_guests)
+    : 5;
+  const rsvpSummary = ev?.rsvp_summary || null;
+  const guestPolicyLabel =
+    ev?.guest_limit_policy === 'strict_plus_1'
+      ? 'Strict +1 Guest Max'
+      : ev?.guest_limit_policy === 'strict_plus_2'
+      ? 'Strict +2 Guests Max'
+      : maxAllowedGuests === 0
+      ? 'Solo Invite Only'
+      : `Up to +${maxAllowedGuests} Guests`;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#060813', color: '#e2e8f0', padding: '36px 20px 72px' }}>
+    <div style={{ minHeight: '100vh', background: '#060813', color: '#e2e8f0', padding: '108px 20px 72px' }}>
       <div style={{ maxWidth: '1040px', margin: '0 auto' }}>
         {/* Header / Personalized Greeting */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
@@ -398,38 +510,156 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
                   rsvpResult ? (
                     <div style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid #10b981', borderRadius: '3px', padding: '16px' }}>
                       <div style={{ fontWeight: 800, color: '#10b981', fontSize: '15px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <RiCheckboxCircleFill color="#10b981" /> RSVP Confirmed!
+                        <RiCheckboxCircleFill color="#10b981" /> Reservation Confirmed!
                       </div>
                       <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#e2e8f0' }}>{rsvpResult.message}</p>
-                      <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-                        Pass Code: <strong style={{ color: '#fff' }}>{rsvpResult.rsvp_id}</strong>
+                      <div style={{ fontSize: '12px', color: '#94a3b8', display: 'grid', gap: '4px' }}>
+                        <div>Pass Code: <strong style={{ color: '#fff' }}>{rsvpResult.rsvp_id}</strong> · Zone: <strong style={{ color: '#22d3ee', textTransform: 'uppercase' }}>{rsvpResult.attendance_type || rsvpZone}</strong> · Party Size: <strong style={{ color: '#fff' }}>{rsvpResult.party_size || (1 + (Number(rsvpGuests) || 0))}</strong></div>
+                        {Array.isArray(rsvpResult.guest_names) && rsvpResult.guest_names.length > 0 && (
+                          <div>Guests: <strong style={{ color: '#e2e8f0' }}>{rsvpResult.guest_names.join(', ')}</strong></div>
+                        )}
                       </div>
+                      {!sessionUser && !onbResult && (
+                        <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(16,185,129,0.25)' }}>
+                          <div style={{ fontSize: '12px', color: '#cbd5e1', marginBottom: '8px' }}>
+                            Want faster 1-tap access, QR pass storage, and tailored show alerts next time?
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOnbName(rsvpName);
+                              setOnbEmail(rsvpEmail);
+                              setOnbCity(rsvpCity || 'Nairobi');
+                              setOnbRole(rsvpPersona);
+                              onbCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }}
+                            style={{ padding: '9px 14px', background: '#22d3ee', color: '#060813', fontWeight: 800, border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '12.5px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                          >
+                            <RiUserAddFill color="#060813" /> Complete Quick Onboarding with My RSVP Details
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <form onSubmit={handleRsvpSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Full Name</label>
-                        <input value={rsvpName} onChange={(e) => setRsvpName(e.target.value)} required style={INPUT_STYLE} />
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', fontSize: '11px' }}>
+                        <span style={{ background: 'rgba(16,185,129,0.14)', color: '#10b981', border: '1px solid rgba(16,185,129,0.35)', borderRadius: '3px', padding: '2px 8px', fontWeight: 700 }}>
+                          {isFreeRsvpEvent ? 'FREE WITH RSVP' : 'RSVP RESERVATION'}
+                        </span>
+                        <span style={{ background: 'rgba(34,211,238,0.1)', color: '#22d3ee', border: '1px solid rgba(34,211,238,0.28)', borderRadius: '3px', padding: '2px 8px', fontWeight: 700 }}>
+                          {guestPolicyLabel}
+                        </span>
+                        {rsvpSummary && (
+                          <span style={{ background: '#060813', color: '#cbd5e1', border: '1px solid #1e293b', borderRadius: '3px', padding: '2px 8px' }}>
+                            Seated: {rsvpSummary.seating_remaining} left · Standing: {rsvpSummary.standing_remaining} left
+                          </span>
+                        )}
                       </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Email Address</label>
-                        <input type="email" value={rsvpEmail} onChange={(e) => setRsvpEmail(e.target.value)} required style={INPUT_STYLE} />
-                      </div>
+
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                         <div>
-                          <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Zone</label>
-                          <select value={rsvpZone} onChange={(e) => setRsvpZone(e.target.value)} style={INPUT_STYLE}>
-                            <option value="seating">Seating</option>
-                            <option value="standing">Standing</option>
+                          <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Full Name *</label>
+                          <input value={rsvpName} onChange={(e) => setRsvpName(e.target.value)} required placeholder="Your full name" style={INPUT_STYLE} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Email Address *</label>
+                          <input type="email" value={rsvpEmail} onChange={(e) => setRsvpEmail(e.target.value)} required placeholder="you@example.com" style={INPUT_STYLE} />
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Who Are You? (Role / Persona)</label>
+                          <select value={rsvpPersona} onChange={(e) => setRsvpPersona(e.target.value)} style={INPUT_STYLE}>
+                            {ROLE_OPTIONS.map((r) => (
+                              <option key={r.key} value={r.key}>{r.label}</option>
+                            ))}
                           </select>
                         </div>
                         <div>
-                          <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Additional Guests</label>
-                          <input type="number" min="0" max="5" value={rsvpGuests} onChange={(e) => setRsvpGuests(e.target.value)} style={INPUT_STYLE} />
+                          <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>City / Region</label>
+                          <input value={rsvpCity} onChange={(e) => setRsvpCity(e.target.value)} placeholder="e.g. Nairobi" style={INPUT_STYLE} />
                         </div>
                       </div>
-                      <button type="submit" disabled={rsvpSubmitting} style={{ marginTop: '6px', padding: '12px', background: '#10b981', color: '#060813', fontWeight: 800, border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                        <RiCheckLine color="#060813" /> {rsvpSubmitting ? 'Confirming RSVP...' : 'Confirm My RSVP Now'}
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Attendance Zone</label>
+                          <select value={rsvpZone} onChange={(e) => setRsvpZone(e.target.value)} style={INPUT_STYLE}>
+                            <option value="seating" disabled={rsvpSummary && rsvpSummary.seating_remaining === 0}>
+                              Seating {rsvpSummary ? `(${rsvpSummary.seating_remaining} left)` : ''}
+                            </option>
+                            <option value="standing" disabled={rsvpSummary && rsvpSummary.standing_remaining === 0}>
+                              Standing {rsvpSummary ? `(${rsvpSummary.standing_remaining} left)` : ''}
+                            </option>
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>
+                            Additional Guests {maxAllowedGuests > 0 ? `(0–${maxAllowedGuests})` : '(Solo Only)'}
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            max={maxAllowedGuests}
+                            disabled={maxAllowedGuests === 0}
+                            value={maxAllowedGuests === 0 ? 0 : rsvpGuests}
+                            onChange={(e) => {
+                              const nextVal = Math.max(0, Math.min(maxAllowedGuests, Number(e.target.value) || 0));
+                              setRsvpGuests(nextVal);
+                              setRsvpGuestNames((prev) => Array.from({ length: nextVal }, (_, i) => prev[i] || ''));
+                            }}
+                            style={INPUT_STYLE}
+                          />
+                        </div>
+                      </div>
+
+                      {Number(rsvpGuests) > 0 && maxAllowedGuests > 0 && (
+                        <div style={{ background: '#060813', border: '1px solid #1e293b', borderRadius: '3px', padding: '10px 12px', display: 'grid', gap: '8px' }}>
+                          <div style={{ fontSize: '11.5px', fontWeight: 700, color: '#22d3ee' }}>
+                            Accompanying Guest Details ({Number(rsvpGuests)} {Number(rsvpGuests) === 1 ? 'Guest' : 'Guests'})
+                          </div>
+                          {Array.from({ length: Number(rsvpGuests) }).map((_, idx) => (
+                            <input
+                              key={idx}
+                              value={rsvpGuestNames[idx] || ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setRsvpGuestNames((prev) => {
+                                  const copy = [...prev];
+                                  copy[idx] = val;
+                                  return copy;
+                                });
+                              }}
+                              placeholder={`Guest ${idx + 1} Full Name (optional)`}
+                              style={INPUT_STYLE}
+                            />
+                          ))}
+                        </div>
+                      )}
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Accessibility or Seating Notes (optional)</label>
+                        <input value={rsvpNotes} onChange={(e) => setRsvpNotes(e.target.value)} placeholder="e.g. Wheelchair access, press pass, VIP table" style={INPUT_STYLE} />
+                      </div>
+
+                      <div style={{ background: 'rgba(34,211,238,0.05)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '3px', padding: '10px 12px', fontSize: '11.5px', color: '#cbd5e1', display: 'grid', gap: '6px' }}>
+                        <div style={{ fontWeight: 700, color: '#22d3ee' }}>Communication Protocols (Email-Only Policy)</div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                          <input type="checkbox" checked={commEventInvites && !commUnsubAll} onChange={(e) => { setCommUnsubAll(false); setCommEventInvites(e.target.checked); }} />
+                          <span>Send me email confirmations, QR pass &amp; live event updates</span>
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                          <input type="checkbox" checked={commPersonaUpdates && !commUnsubAll} onChange={(e) => { setCommUnsubAll(false); setCommPersonaUpdates(e.target.checked); }} />
+                          <span>Send me onboarding &amp; curated show recommendations</span>
+                        </label>
+                        <div style={{ fontSize: '10.5px', color: '#64748b' }}>
+                          Strict Email-Only Policy (no unsolicited SMS/WhatsApp). You can manage preferences anytime below.
+                        </div>
+                      </div>
+
+                      <button type="submit" disabled={rsvpSubmitting} style={{ marginTop: '4px', padding: '12px', background: '#10b981', color: '#060813', fontWeight: 800, border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                        <RiCheckLine color="#060813" /> {rsvpSubmitting ? 'Confirming Reservation...' : 'Confirm My Reservation Now'}
                       </button>
                     </form>
                   )
@@ -496,9 +726,16 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
                 <h2 style={{ margin: '0 0 8px', fontSize: '22px', color: '#ffffff' }}>
                   {data?.persona_playbook?.label || data?.campaign?.product_name || data?.campaign?.title || 'TuneMavens Ecosystem'}
                 </h2>
-                <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.65, whiteSpace: 'pre-line' }}>
-                  {data?.campaign?.body || data?.platform_intro?.subtitle}
-                </p>
+                {/<(?:p|div|br|img|h[1-6]|ul|ol|li|strong|b|em|i|u|s|span|a|blockquote|hr)\b/i.test(data?.campaign?.body || '') ? (
+                  <div
+                    style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.65 }}
+                    dangerouslySetInnerHTML={{ __html: data?.campaign?.body || '' }}
+                  />
+                ) : (
+                  <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.65, whiteSpace: 'pre-line' }}>
+                    {data?.campaign?.body || data?.platform_intro?.subtitle}
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={() => navigate(data?.campaign?.cta_url || '/stream')}
@@ -511,7 +748,7 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
           </div>
 
           {/* RIGHT CARD: New User Platform Introduction + Quick Onboarding & Save Preferences */}
-          <div style={{ background: '#0c0f20', border: '1px solid #1e293b', borderRadius: '3px', padding: '24px' }}>
+          <div ref={onbCardRef} style={{ background: '#0c0f20', border: '1px solid #1e293b', borderRadius: '3px', padding: '24px' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(168,85,247,0.15)', color: '#a855f7', padding: '4px 10px', borderRadius: '3px', fontSize: '11px', fontWeight: 700, marginBottom: '12px' }}>
               <RiMusic2Fill color="#a855f7" /> NEW TO TUNEMAVENS?
             </div>
@@ -640,6 +877,116 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
               </form>
             )}
           </div>
+        </div>
+
+        {/* COMMUNICATION PREFERENCES & UNSUBSCRIBE CENTER */}
+        <div style={{ marginTop: '28px', background: '#0c0f20', border: showCommPrefs ? '1px solid #22d3ee' : '1px solid #1e293b', borderRadius: '3px', padding: '20px 24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff' }}>
+                Email &amp; Communication Preferences
+              </div>
+              <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+                TuneMavens Smart CRM strictly uses opted-in Email-Only communications (never unsolicited SMS or WhatsApp). Customize what you receive or opt out anytime.
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowCommPrefs((v) => !v)}
+              style={{ background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.35)', color: '#22d3ee', padding: '7px 14px', borderRadius: '3px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+            >
+              {showCommPrefs ? 'Hide Preferences' : 'Set Communication Preferences / Unsubscribe'}
+            </button>
+          </div>
+
+          {showCommPrefs && (
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setCommSaving(true);
+                setCommStatusMsg('');
+                try {
+                  const res = await fetch(`${API_BASE}/api/crm/communication-preferences`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      email: commEmail.trim(),
+                      reachout_token: token,
+                      event_invites: commEventInvites,
+                      persona_onboarding_updates: commPersonaUpdates,
+                      product_service_announcements: commProductNews,
+                      weekly_digest: commWeeklyDigest,
+                      frequency: commFrequency,
+                      unsubscribed_all: commUnsubAll,
+                    }),
+                  });
+                  const out = await res.json();
+                  if (!res.ok) throw new Error(out.detail || 'Could not save preferences');
+                  setCommStatusMsg(out.message || 'Communication preferences updated!');
+                } catch (err) {
+                  setError(err.message || 'Failed to save communication preferences');
+                } finally {
+                  setCommSaving(false);
+                }
+              }}
+              style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #1e293b', display: 'flex', flexDirection: 'column', gap: '12px' }}
+            >
+              {commStatusMsg && (
+                <div style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid #10b981', color: '#34d399', padding: '10px 14px', borderRadius: '3px', fontSize: '13px', fontWeight: 700 }}>
+                  {commStatusMsg}
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11.5px', color: '#94a3b8', marginBottom: '4px' }}>Email Address</label>
+                  <input type="email" value={commEmail} onChange={(e) => setCommEmail(e.target.value)} required style={INPUT_STYLE} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11.5px', color: '#94a3b8', marginBottom: '4px' }}>Delivery Frequency</label>
+                  <select value={commFrequency} onChange={(e) => setCommFrequency(e.target.value)} disabled={commUnsubAll} style={INPUT_STYLE}>
+                    <option value="all">Real-Time Invites &amp; Announcements</option>
+                    <option value="important_only">Important Invites &amp; Direct Briefs Only</option>
+                    <option value="weekly_digest">Consolidated Weekly Digest</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '10px', fontSize: '13px', color: '#e2e8f0' }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={commEventInvites && !commUnsubAll} disabled={commUnsubAll} onChange={(e) => setCommEventInvites(e.target.checked)} />
+                  Live Concert &amp; Event RSVP Invitations
+                </label>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={commPersonaUpdates && !commUnsubAll} disabled={commUnsubAll} onChange={(e) => setCommPersonaUpdates(e.target.checked)} />
+                  Role, EPK &amp; Catalogue Onboarding Guides
+                </label>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={commProductNews && !commUnsubAll} disabled={commUnsubAll} onChange={(e) => setCommProductNews(e.target.checked)} />
+                  Ecosystem Product &amp; Sync Brief Alerts
+                </label>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={commWeeklyDigest && !commUnsubAll} disabled={commUnsubAll} onChange={(e) => setCommWeeklyDigest(e.target.checked)} />
+                  TuneStream Lossless Releases Digest
+                </label>
+              </div>
+
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: '#fca5a5', paddingTop: '4px' }}>
+                <input type="checkbox" checked={commUnsubAll} onChange={(e) => setCommUnsubAll(e.target.checked)} />
+                Unsubscribe me from all Smart CRM promotional reachout emails
+              </label>
+
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button
+                  type="submit"
+                  disabled={commSaving}
+                  style={{ padding: '10px 18px', background: commUnsubAll ? '#ef4444' : '#10b981', color: commUnsubAll ? '#fff' : '#060813', fontWeight: 800, border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '13px' }}
+                >
+                  {commSaving ? 'Saving...' : commUnsubAll ? 'Confirm Unsubscribe' : 'Save Communication Preferences'}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </div>
     </div>

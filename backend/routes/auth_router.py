@@ -263,7 +263,16 @@ def register(
 
 @router.post("/login", response_model=AuthResponse)
 def login(payload: LoginRequest, response: Response):
-    user = db.users.find_one({"email": payload.email})
+    import re as _re
+
+    clean_email = (payload.email or "").strip().lower()
+    user = db.users.find_one({
+        "$or": [
+            {"email": clean_email},
+            {"email": {"$regex": f"^{_re.escape(clean_email)}$", "$options": "i"}},
+            {"previous_emails": clean_email},
+        ]
+    })
     if not user or not user.get("password_hash"):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     if not verify_password(payload.password, user["password_hash"]):
@@ -292,14 +301,38 @@ def logout(response: Response, current_user: Optional[dict] = Depends(get_option
 
 
 @router.post("/demo", response_model=AuthResponse)
-def demo_login(response: Response, role: Optional[str] = Query(None)):
-    """Sandbox/demo login helper to issue a valid JWT for testing any persona."""
+def demo_login(
+    response: Response,
+    role: Optional[str] = Query(None),
+    preferred_email: Optional[str] = Query(None),
+):
+    """Sandbox/demo login helper that preserves customized user profile details across sessions."""
+    import re as _re
+
     norm_role = normalize_role(role) if role else "creator"
     profile = ROLE_DEMO_PROFILES.get(norm_role, ROLE_DEMO_PROFILES["creator"])
     target_email = profile["email"]
     target_apps = DEFAULT_APPS_BY_ROLE.get(norm_role, DEFAULT_APPS_BY_ROLE["creator"])
 
-    user = db.users.find_one({"email": target_email})
+    user = None
+    if preferred_email and "@" in preferred_email:
+        clean_pref = preferred_email.strip().lower()
+        user = db.users.find_one({
+            "$or": [
+                {"email": clean_pref},
+                {"email": {"$regex": f"^{_re.escape(clean_pref)}$", "$options": "i"}},
+                {"previous_emails": clean_pref},
+            ]
+        })
+
+    if not user:
+        user = db.users.find_one({
+            "$or": [
+                {"email": target_email},
+                {"previous_emails": target_email},
+            ]
+        })
+
     if not user:
         doc = User(
             email=target_email,
@@ -316,13 +349,16 @@ def demo_login(response: Response, role: Optional[str] = Query(None)):
         doc["_id"] = res.inserted_id
         user = doc
     else:
-        # Update user with active apps and role
+        # Preserve the user's saved name, email, brand_name, country, bio, and admin flag!
+        existing_apps = user.get("apps") or []
+        merged_apps = list(dict.fromkeys([*existing_apps, *target_apps])) if existing_apps else target_apps
+        role_to_set = user.get("role") if (preferred_email and user.get("role")) else norm_role
         db.users.update_one(
             {"_id": user["_id"]},
-            {"$set": {"role": norm_role, "apps": target_apps}}
+            {"$set": {"role": role_to_set, "apps": merged_apps}}
         )
-        user["role"] = norm_role
-        user["apps"] = target_apps
+        user["role"] = role_to_set
+        user["apps"] = merged_apps
 
     token = create_access_token(sub=str(user["_id"]))
     _set_cookie(response, token)

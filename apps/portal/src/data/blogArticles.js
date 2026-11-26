@@ -47,11 +47,12 @@ TuneMavens Smart CRM solves both with **Email-Only Target Groups** built strictl
 - **Auto-Sanitized CSV & JSON Imports**: Upload any spreadsheet via **Import CSV / JSON**—legacy phone or WhatsApp columns are automatically stripped while clean, deduplicated Name + Email contacts are imported in seconds.`
       },
       {
-        heading: "Official Event Posters, Live Email Preview & Direct In-Email RSVP / Ticket CTAs",
-        content: `When promoting a live concert, residency, or Free RSVP session, Smart CRM pulls directly from active site events:
-- **Embedded Event Flyer / Poster**: The official poster from the event page is automatically rendered at the top of the email invitation card.
-- **Direct Action Buttons**: Recipients click **RSVP Now (Reserve Spot)** or **Buy Ticket Now** straight from their inbox, landing on a personalized page pre-filled with their Name and Email.
-- **Live Render Preview**: Click **Preview Email** inside the composer to inspect the exact HTML layout, event poster, recipient interpolation, and tracking code before dispatching.`
+        heading: "Rich HTML Composer, Custom CTA Buttons, Scrollable Preview & Smart RSVP Flows",
+        content: `When composing a campaign or promoting a live concert, residency, or Free-with-RSVP session, Smart CRM adapts end-to-end:
+- **Rich HTML Editor, Image Uploads & Custom CTA Buttons**: Compose in **Visual**, **HTML**, or **Split** mode, upload and insert images directly via resilient API-backed image hosting, and drop custom-styled **CTA Buttons** (\`+ CTA Button\`) with custom links, colors, and alignment right inside the email body. All emails send cleanly from **TuneMavens <hello@tunemavens.com>** with a compliance and communication-preferences footer.
+- **Dynamic Persona × Theme Composition**: Changing **Target Email Group**, **Target Persona Voice**, **Promotion Type**, or **Event / Product Theme** dynamically updates the subject line, embedded banner/flyer, body copy, and bottom CTAs to match the audience.
+- **Smart Event Rules & Reservation Confirmation**: For **Free with RSVP** events, **Buy Ticket Now** is automatically hidden—leaving **RSVP Now (Reserve Spot)** to open a full reservation page with live Seating/Standing capacity, attendee role selection, accompanying guest names (enforcing \`+1\`/\`+2\` guest policies), Email-Only communication protocol opt-ins, and 1-tap post-RSVP onboarding.
+- **1:1 Scrollable Live Email Preview**: Click **Preview Email** to scroll through the exact rendered HTML email—matching the editor body 1:1—before dispatching.`
       },
       {
         heading: "90-Day Affiliate Attribution, RBAC Isolation & The Self-Learning Persona Engine",

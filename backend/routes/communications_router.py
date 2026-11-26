@@ -394,7 +394,7 @@ def test_email_dispatch(payload: TestEmailRequest, user=Depends(get_optional_use
   </p>
   <div style="font-size:12px;color:#64748b;font-family:monospace;">
     Timestamp: {datetime.now(timezone.utc).isoformat()} UTC<br/>
-    Sender Identity: TuneMavens &lt;hello@contact.tunemavens.com&gt;<br/>
+    Sender Identity: TuneMavens &lt;hello@tunemavens.com&gt;<br/>
     DNS Status: Verified (DKIM & SPF Authentication Active)
   </div>
 </div>

@@ -7,6 +7,7 @@ you" hero + Your-Path roadmap. See DOCUMENTATION.md §9.8.
 """
 from __future__ import annotations
 
+import re
 from datetime import datetime, timezone
 from typing import List, Optional
 
@@ -31,9 +32,6 @@ class UserProfileUpdate(BaseModel):
     artist_name: Optional[str] = None
 
 
-# Curated allow-list of dashboard apps a creator can activate. Kept here so the
-# backend is the authority on what's installable — the frontend uses the same
-# slugs but pulls richer copy (icons, descriptions) from its own catalogue.
 ALLOWED_APP_SLUGS = {
     "catalog-porting",
     "split-cascade",
@@ -53,17 +51,10 @@ ALLOWED_APP_SLUGS = {
     "tunepay-settlement",
     "tunepay-devices",
     "epk-builder",
-    # Intermaven Network — the 3 flagship native apps. Slugs mirror
-    # src/lib/nativeApps.js so the dashboard's "Native Apps" tab in the
-    # App Marketplace persists activations cleanly.
     "intermaven-tunemavens",
     "intermaven-creator-companion",
     "intermaven-mpesa-pos",
     "intermaven-tunepay",
-    # Intermaven Platform — tools from intermaven.io. Slugs mirror
-    # src/lib/intermavenPlatformApps.js. "Open" routes to the canonical
-    # app on intermaven.io; the shared Intermaven JWT cookie carries the
-    # session across the subdomain boundary.
     "intermaven-social-ai",
     "intermaven-brandkit-ai",
     "intermaven-smart-crm",
@@ -120,9 +111,6 @@ def deactivate_app(slug: str, current_user: dict = Depends(get_current_user)):
     return updated.get("apps", []) if updated else []
 
 
-# ======================================================================
-# §9.8 — Onboarding questionnaire (persists user's stated goals)
-# ======================================================================
 @router.get("/me/onboarding", response_model=Optional[OnboardingResponse])
 def get_my_onboarding(current_user: dict = Depends(get_current_user)):
     doc = db.onboarding_responses.find_one({"user_id": str(current_user["_id"])})
@@ -146,13 +134,8 @@ def save_my_onboarding(payload: OnboardingResponse, current_user: dict = Depends
     return payload
 
 
-# ======================================================================
-# §9.8 — Activity log (light behaviour signal capture)
-# ======================================================================
 @router.post("/me/activity", response_model=dict)
 def log_activity(event: ActivityEvent, current_user: dict = Depends(get_current_user)):
-    """Append-only log. Kept intentionally minimal — the recommendation
-    engine consumes an aggregated summary, not raw events."""
     data = event.model_dump()
     data["user_id"] = str(current_user["_id"])
     db.activity_events.insert_one(data)
@@ -160,8 +143,6 @@ def log_activity(event: ActivityEvent, current_user: dict = Depends(get_current_
 
 
 def _activity_summary(user_id: str) -> dict:
-    """Reduce the raw activity_events collection into the compact shape the
-    recommendation engine expects."""
     cursor = db.activity_events.find({"user_id": user_id}).sort("at", -1).limit(500)
     tab_visits: dict[str, int] = {}
     recent_deactivations: list[str] = []
@@ -182,9 +163,6 @@ def _activity_summary(user_id: str) -> dict:
     }
 
 
-# ======================================================================
-# §9.8 — Recommendations (LLM-first with rules fallback)
-# ======================================================================
 @router.get("/me/recommendations", response_model=List[Recommendation])
 async def get_my_recommendations(
     limit: int = 6,
@@ -206,9 +184,6 @@ async def get_my_recommendations(
     )
 
 
-# ======================================================================
-# Profile persistence & settings
-# ======================================================================
 @router.get("/me", response_model=UserPublic)
 def get_my_profile(current_user: dict = Depends(get_current_user)):
     from routes.auth_router import _to_public
@@ -221,30 +196,57 @@ def update_my_profile(
     current_user: dict = Depends(get_current_user),
 ):
     updates = {k: v for k, v in payload.model_dump().items() if v is not None}
+    old_email = (current_user.get("email") or "").strip().lower()
+    user_oid = ObjectId(str(current_user["_id"]))
+
     if updates:
-        if "email" in updates and updates["email"] != current_user.get("email"):
-            existing = db.users.find_one({"email": updates["email"], "_id": {"$ne": ObjectId(str(current_user["_id"]))}})
-            if existing:
-                raise HTTPException(status_code=409, detail="Email already registered to another account")
-        
+        if "email" in updates and updates["email"]:
+            clean_email = updates["email"].strip().lower()
+            updates["email"] = clean_email
+            if clean_email != old_email:
+                existing = db.users.find_one({
+                    "email": {"$regex": f"^{re.escape(clean_email)}$", "$options": "i"},
+                    "_id": {"$ne": user_oid},
+                })
+                if existing:
+                    raise HTTPException(status_code=409, detail="Email already registered to another account")
+
         if "name" in updates and updates["name"]:
-            parts = updates["name"].strip().split()
+            clean_name = updates["name"].strip()
+            updates["name"] = clean_name
+            parts = clean_name.split()
             updates["first_name"] = parts[0]
             updates["last_name"] = " ".join(parts[1:]) if len(parts) > 1 else ""
-        
-        if "brand_name" in updates:
+
+        if "brand_name" in updates and updates["brand_name"] is not None:
+            updates["brand_name"] = updates["brand_name"].strip()
             updates["company"] = updates["brand_name"]
 
         updates["updated_at"] = datetime.now(timezone.utc)
 
-        db.users.update_one(
-            {"_id": ObjectId(str(current_user["_id"]))},
-            {"$set": updates},
-        )
-        updated = db.users.find_one({"_id": ObjectId(str(current_user["_id"]))})
+        mongo_ops: dict = {"$set": updates}
+        if "email" in updates and old_email and updates["email"] != old_email:
+            mongo_ops["$addToSet"] = {"previous_emails": old_email}
+
+        db.users.update_one({"_id": user_oid}, mongo_ops)
+
+        try:
+            aff_updates = {}
+            if "name" in updates and updates["name"]:
+                aff_updates["name"] = updates["name"]
+            if "email" in updates and updates["email"]:
+                aff_updates["email"] = updates["email"]
+            if aff_updates:
+                db.affiliates.update_many(
+                    {"$or": [{"user_id": str(user_oid)}, {"email": old_email}]},
+                    {"$set": aff_updates},
+                )
+        except Exception:
+            pass
+
+        updated = db.users.find_one({"_id": user_oid})
     else:
         updated = current_user
 
     from routes.auth_router import _to_public
     return _to_public(updated)
-

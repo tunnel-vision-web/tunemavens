@@ -135,5 +135,8 @@ def delete_domain_mapping(mapping_id: str, _admin: dict = Depends(require_admin)
 # ----------------------------------------------------------------------
 @router.post("/become-admin")
 def become_admin(current_user: dict = Depends(get_current_user)):
-    db.users.update_one({"_id": ObjectId(str(current_user["_id"]))}, {"$set": {"role": "admin"}})
-    return {"ok": True, "role": "admin"}
+    db.users.update_one(
+        {"_id": ObjectId(str(current_user["_id"]))},
+        {"$set": {"role": "admin", "is_admin": True}},
+    )
+    return {"ok": True, "role": "admin", "is_admin": True}

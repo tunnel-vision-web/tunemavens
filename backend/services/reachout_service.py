@@ -525,6 +525,90 @@ def notify_affiliate_of_action(
     }
 
 
+HTML_TAG_DETECTOR = re.compile(r"<(?:p|div|br|img|h[1-6]|ul|ol|li|strong|b|em|i|u|s|span|a|blockquote|hr|table|tr|td|th)\b", re.IGNORECASE)
+
+
+def _sanitize_and_prepare_body_html(raw_body: str, is_preview: bool = False, app_url: str = "") -> str:
+    """Render plain text or rich HTML email body safely with responsive image support."""
+    if not raw_body:
+        return ""
+
+    # Strip dangerous script/iframe/object tags and inline JS event handlers
+    cleaned = re.sub(r"<\s*(script|iframe|object|embed|form)[^>]*>.*?<\s*/\s*\1\s*>", "", raw_body, flags=re.IGNORECASE | re.DOTALL)
+    cleaned = re.sub(r"<\s*(script|iframe|object|embed)\b[^>]*/?\s*>", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s+on[a-zA-Z]+\s*=\s*(\"[^\"]*\"|'[^']*'|[^\s>]+)", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"javascript\s*:", "", cleaned, flags=re.IGNORECASE)
+
+    has_html = bool(HTML_TAG_DETECTOR.search(cleaned))
+    if not has_html:
+        return cleaned.replace("\n", "<br>")
+
+    base = (app_url or PUBLIC_APP_URL).rstrip("/")
+
+    def _fix_img_tag(match: re.Match) -> str:
+        tag = match.group(0)
+        # Expand relative /uploads, /api/uploads, /api/crm/images, /headers, /heroes URLs for real external email dispatches
+        if not is_preview and base:
+            tag = re.sub(
+                r'(\bsrc\s*=\s*["\'])(/(?:api/(?:uploads|crm/images)|uploads|headers|heroes)/[^"\']+)(["\'])',
+                lambda m: f'{m.group(1)}{base}{m.group(2)}{m.group(3)}',
+                tag,
+                flags=re.IGNORECASE,
+            )
+        # Ensure responsive max-width styling so uploaded images fit email layouts cleanly
+        if re.search(r"\bstyle\s*=", tag, flags=re.IGNORECASE):
+            if "max-width" not in tag.lower():
+                tag = re.sub(
+                    r'(\bstyle\s*=\s*["\'])',
+                    r"\1max-width:100%;height:auto;border-radius:3px;",
+                    tag,
+                    count=1,
+                    flags=re.IGNORECASE,
+                )
+        else:
+            tag = tag[:-1].rstrip("/") + ' style="max-width:100%;height:auto;border-radius:3px;display:block;margin:10px 0;" />'
+        return tag
+
+    cleaned = re.sub(r"<img\b[^>]*>", _fix_img_tag, cleaned, flags=re.IGNORECASE)
+    if not is_preview and base:
+        cleaned = re.sub(
+            r'(\bhref\s*=\s*["\'])(/(?!/)[^"\']*)(["\'])',
+            lambda m: f'{m.group(1)}{base}{m.group(2)}{m.group(3)}',
+            cleaned,
+            flags=re.IGNORECASE,
+        )
+    return cleaned
+
+
+PERSONA_SECONDARY_CTAS: Dict[str, List[Tuple[str, str, str]]] = {
+    "creator": [("sync", "Explore SyncMavens Briefs", "secondary")],
+    "dj": [("dj_pool", "Browse 24-Bit DJ Pool", "secondary")],
+    "label": [("splits", "Configure Split Cascades", "secondary")],
+    "podcaster": [("ads", "View Brand Ad Sponsorships", "secondary")],
+    "supervisor": [
+        ("sync_brief", "Post Confidential Sync Brief", "emerald"),
+        ("sync_catalog", "Audition Pre-Cleared 24-Bit Stems", "secondary"),
+    ],
+    "corporate": [
+        ("ad_flight", "Launch Audio Ad Flight", "emerald"),
+        ("sync_catalog", "License Commercial Sync Music", "secondary"),
+    ],
+    "media_house": [("broadcast", "Open PRO Cue Sheet & Playout Hub", "emerald")],
+    "vc": [
+        ("vc_vault", "Explore Tour Capital Vault", "emerald"),
+        ("vc_yields", "Review Catalogue Royalty Yields", "secondary"),
+    ],
+    "affiliate": [
+        ("affiliate_matrix", "View 3%–12% Commission Matrix", "emerald"),
+        ("affiliate_crm", "Open Partner Reachout Suite", "secondary"),
+    ],
+    "consumer": [
+        ("stream", "Stream 24-Bit Lossless Audio", "emerald"),
+        ("events", "Browse Live Concerts & Passes", "secondary"),
+    ],
+}
+
+
 def build_reachout_email_html(
     recipient_name: str,
     subject: str,
@@ -533,39 +617,84 @@ def build_reachout_email_html(
     promotion_type: str = "product_service",
     event_doc: Optional[Dict[str, Any]] = None,
     event_ctas: Optional[List[str]] = None,
-    cta_label: str = "Explore Now",
+    cta_label: str = "",
+    cta_url: Optional[str] = None,
+    product_name: Optional[str] = None,
     affiliate_name: Optional[str] = None,
     affiliate_ref_code: Optional[str] = None,
     target_persona: Optional[str] = None,
     include_epk_cta: bool = True,
     include_catalog_cta: bool = True,
+    recipient_email: Optional[str] = None,
+    is_preview: bool = False,
+    app_origin: Optional[str] = None,
 ) -> Tuple[str, Dict[str, str]]:
-    """Build rich email HTML and tracked CTA URLs for a Smart CRM reachout.
+    """Build rich email HTML, bottom CTA buttons, and compliance/preferences footer for a Smart CRM reachout.
 
     Supports:
-    - `event`: Direct RSVP and/or Buy Ticket CTAs + New User Onboarding CTA
-    - `persona_intro`: Tailored Persona Introduction with Onboard, Launch EPK, and Ingest Catalogue CTAs where relevant
-    - `product_service`: Product/Service Explore CTA + New User Onboarding CTA
+    - `event`: Direct RSVP and/or Buy Ticket CTA buttons + Event Details button + Onboarding CTA button
+    - `persona_intro`: Tailored Persona CTA buttons (Onboard, Launch EPK, Ingest Catalogue, and persona-specific actions)
+    - `product_service`: Product/Service Primary CTA button + Contextual Ecosystem CTA button + Onboarding CTA button
     """
     from account_setup import _email_wrapper, _button
 
-    base_reachout = f"{PUBLIC_APP_URL}/#/reachout/{reachout_token}"
+    effective_base_url = (app_origin.rstrip("/") if (is_preview and app_origin) else PUBLIC_APP_URL)
+    base_reachout = f"{effective_base_url}/#/reachout/{reachout_token}"
     ref_qs = f"&ref={quote(affiliate_ref_code)}" if affiliate_ref_code else ""
     role_qs = f"&role={quote(target_persona)}" if target_persona else ""
+    email_qs = f"&email={quote(recipient_email)}" if recipient_email else ""
+    ev_id_val = str(event_doc.get("id") or "") if event_doc else ""
+    ev_qs = f"&event_id={quote(ev_id_val)}" if ev_id_val else ""
+    promo_qs = f"&promo={quote(promotion_type)}" if promotion_type else ""
 
     urls: Dict[str, str] = {
-        "primary": f"{base_reachout}?action=explore{ref_qs}{role_qs}",
-        "rsvp": f"{base_reachout}?action=rsvp{ref_qs}",
-        "ticket": f"{base_reachout}?action=ticket{ref_qs}",
+        "primary": f"{base_reachout}?action=explore{ref_qs}{role_qs}{promo_qs}",
+        "rsvp": f"{base_reachout}?action=rsvp{ref_qs}{ev_qs}{promo_qs}{email_qs}",
+        "ticket": f"{base_reachout}?action=ticket{ref_qs}{ev_qs}{promo_qs}{email_qs}",
+        "event_details": f"{base_reachout}?action=event{ref_qs}{ev_qs}{promo_qs}{email_qs}",
         "onboard": f"{base_reachout}?action=onboard{ref_qs}{role_qs}",
         "epk": f"{base_reachout}?action=epk{ref_qs}{role_qs}",
         "catalog": f"{base_reachout}?action=catalog{ref_qs}{role_qs}",
+        "sync": f"{base_reachout}?action=sync{ref_qs}{role_qs}",
+        "sync_brief": f"{base_reachout}?action=sync_brief{ref_qs}{role_qs}",
+        "sync_catalog": f"{base_reachout}?action=sync_catalog{ref_qs}{role_qs}",
+        "dj_pool": f"{base_reachout}?action=dj_pool{ref_qs}{role_qs}",
+        "splits": f"{base_reachout}?action=splits{ref_qs}{role_qs}",
+        "ads": f"{base_reachout}?action=ads{ref_qs}{role_qs}",
+        "ad_flight": f"{base_reachout}?action=ad_flight{ref_qs}{role_qs}",
+        "broadcast": f"{base_reachout}?action=broadcast{ref_qs}{role_qs}",
+        "vc_vault": f"{base_reachout}?action=vc_vault{ref_qs}{role_qs}",
+        "vc_yields": f"{base_reachout}?action=vc_yields{ref_qs}{role_qs}",
+        "affiliate_matrix": f"{base_reachout}?action=affiliate_matrix{ref_qs}{role_qs}",
+        "affiliate_crm": f"{base_reachout}?action=affiliate_crm{ref_qs}{role_qs}",
+        "stream": f"{base_reachout}?action=stream{ref_qs}",
+        "events": f"{base_reachout}?action=events{ref_qs}",
+        "preferences": f"{base_reachout}?action=preferences{email_qs}{ref_qs}",
+        "unsubscribe": f"{base_reachout}?action=unsubscribe{email_qs}{ref_qs}",
+        "privacy": f"{effective_base_url}/#/privacy",
+        "terms": f"{effective_base_url}/#/terms",
+        "cookies": f"{effective_base_url}/#/cookies",
+        "support": f"{effective_base_url}/#/support",
     }
 
+    body_is_rich_html = bool(HTML_TAG_DETECTOR.search(rendered_body or ""))
     promo_block = ""
-    cta_buttons_html = ""
+    cta_section_heading = "Recommended Next Steps"
+    btns: List[str] = []
+    norm_persona = (
+        {"sync_supervisor": "supervisor", "mediahouse": "media_house"}.get((target_persona or "").strip().lower(), (target_persona or "").strip().lower())
+        if target_persona
+        else ""
+    )
+    persona_key = norm_persona if (norm_persona and norm_persona in PERSONA_PLAYBOOKS) else None
+    pb_for_target = PERSONA_PLAYBOOKS.get(persona_key) if persona_key else None
 
     if promotion_type == "event" and event_doc:
+        cta_section_heading = (
+            f"Event Pass & {pb_for_target['label']} Actions"
+            if pb_for_target
+            else "Event Pass & Attendance Actions"
+        )
         ev_title = event_doc.get("title", "TuneMavens Live Event")
         ev_artist = event_doc.get("artist", "TuneMavens Featured Artist")
         ev_date = event_doc.get("date_display") or event_doc.get("date", "Upcoming")
@@ -579,104 +708,202 @@ def build_reachout_email_html(
             or event_doc.get("banner_url")
             or ""
         ).strip()
-        flyer_url = f"{PUBLIC_APP_URL}{raw_flyer}" if raw_flyer.startswith("/") else raw_flyer
-        flyer_html = (
-            f'<div style="margin-bottom: 14px;">'
-            f'<img src="{flyer_url}" alt="{ev_title} Official Event Poster" '
-            f'style="width: 100%; max-height: 300px; object-fit: cover; display: block; border-radius: 3px; border: 1px solid rgba(34,211,238,0.28);" />'
-            f'</div>'
-            if flyer_url
-            else ""
-        )
+        if raw_flyer.startswith("/"):
+            flyer_url = raw_flyer if is_preview else f"{PUBLIC_APP_URL}{raw_flyer}"
+        else:
+            flyer_url = raw_flyer
 
         chosen_ctas = [c.lower() for c in (event_ctas or [])]
-        if not chosen_ctas:
-            if ev_mode == "free_rsvp":
-                chosen_ctas = ["rsvp"]
-            elif ev_mode == "both":
+        if ev_mode == "free_rsvp":
+            chosen_ctas = ["rsvp"]
+        elif not chosen_ctas:
+            if ev_mode == "both":
                 chosen_ctas = ["rsvp", "ticket"]
             else:
                 chosen_ctas = ["ticket", "rsvp"]
 
-        promo_block = f"""
-        <div style="background: rgba(34,211,238,0.06); border: 1px solid rgba(34,211,238,0.25); border-radius: 3px; padding: 16px 18px; margin: 18px 0;">
-          {flyer_html}
-          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #22d3ee; margin-bottom: 6px;">
-            LIVE EVENT INVITATION
-          </div>
-          <div style="font-size: 17px; font-weight: 800; color: #ffffff; margin-bottom: 4px;">{ev_title}</div>
-          <div style="font-size: 13px; color: #94a3b8;">
-            Featuring <strong style="color: #e2e8f0;">{ev_artist}</strong><br>
-            {ev_date} &bull; {ev_venue}{f', {ev_city}' if ev_city else ''}
-          </div>
-        </div>
-        """
+        # Only append fallback event promo card if the message body doesn't already embed this event flyer
+        already_embeds_flyer = bool(raw_flyer and raw_flyer in (rendered_body or ""))
+        if not already_embeds_flyer:
+            flyer_html = (
+                f'<div style="margin-bottom: 14px;">'
+                f'<img src="{flyer_url}" alt="{ev_title} Official Event Poster" '
+                f'style="width: 100%; max-height: 300px; object-fit: cover; display: block; border-radius: 3px; border: 1px solid rgba(34,211,238,0.28);" />'
+                f'</div>'
+                if flyer_url
+                else ""
+            )
+            promo_block = f"""
+            <div style="background: rgba(34,211,238,0.06); border: 1px solid rgba(34,211,238,0.25); border-radius: 3px; padding: 16px 18px; margin: 18px 0;">
+              {flyer_html}
+              <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #22d3ee; margin-bottom: 6px;">
+                LIVE EVENT INVITATION
+              </div>
+              <div style="font-size: 17px; font-weight: 800; color: #ffffff; margin-bottom: 4px;">{ev_title}</div>
+              <div style="font-size: 13px; color: #94a3b8;">
+                Featuring <strong style="color: #e2e8f0;">{ev_artist}</strong><br>
+                {ev_date} &bull; {ev_venue}{f', {ev_city}' if ev_city else ''}
+              </div>
+            </div>
+            """
 
-        btns = []
         if "rsvp" in chosen_ctas:
-            btns.append(_button(urls["rsvp"], "RSVP Now (Reserve Spot)", variant="emerald"))
+            btns.append(_button(urls["rsvp"], "RSVP Now (Reserve Spot)", variant="emerald", target_blank=is_preview))
         if "ticket" in chosen_ctas:
-            btns.append(_button(urls["ticket"], "Buy Ticket Now", variant="primary"))
-        cta_buttons_html = f'<div style="margin: 20px 0; display: flex; flex-wrap: wrap; gap: 10px;">{" &nbsp; ".join(btns)}</div>'
+            btns.append(_button(urls["ticket"], "Buy Ticket Now", variant="primary", target_blank=is_preview))
+        btns.append(_button(urls["event_details"], "View Event Details & Lineup", variant="secondary", target_blank=is_preview))
+        if persona_key and PERSONA_SECONDARY_CTAS.get(persona_key):
+            u_k, s_lbl, _ = PERSONA_SECONDARY_CTAS[persona_key][0]
+            btns.append(_button(urls[u_k], s_lbl, variant="purple", target_blank=is_preview))
 
     elif promotion_type == "persona_intro":
-        pb = PERSONA_PLAYBOOKS.get(target_persona or "creator", PERSONA_PLAYBOOKS["creator"])
-        highlights_html = "".join(
-            f'<li style="margin-bottom: 4px; color: #cbd5e1;">{h}</li>'
-            for h in pb.get("highlights", [])
-        )
-        promo_block = f"""
-        <div style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.28); border-radius: 3px; padding: 16px 18px; margin: 18px 0;">
-          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #10b981; margin-bottom: 6px;">
-            PERSONALIZED INVITATION &bull; {pb['label'].upper()}
-          </div>
-          <ul style="margin: 6px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.6;">
-            {highlights_html}
-          </ul>
-        </div>
-        """
-        btns = [_button(urls["onboard"], cta_label or pb["cta_label"], variant="primary")]
+        eff_persona = persona_key or "creator"
+        pb = PERSONA_PLAYBOOKS.get(eff_persona, PERSONA_PLAYBOOKS["creator"])
+        cta_section_heading = f"Direct Actions for {pb['label']}"
+        # Only add fallback highlights card when body is plain text (rich HTML editor includes full editable layout)
+        if not body_is_rich_html:
+            highlights_html = "".join(
+                f'<li style="margin-bottom: 4px; color: #cbd5e1;">{h}</li>'
+                for h in pb.get("highlights", [])
+            )
+            promo_block = f"""
+            <div style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.28); border-radius: 3px; padding: 16px 18px; margin: 18px 0;">
+              <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #10b981; margin-bottom: 6px;">
+                PERSONALIZED INVITATION &bull; {pb['label'].upper()}
+              </div>
+              <ul style="margin: 6px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.6;">
+                {highlights_html}
+              </ul>
+            </div>
+            """
+        btns.append(_button(urls["onboard"], cta_label or pb["cta_label"], variant="primary", target_blank=is_preview))
         if pb.get("supports_epk") and include_epk_cta:
-            btns.append(_button(urls["epk"], "Launch Official EPK", variant="emerald"))
+            btns.append(_button(urls["epk"], "Launch Official EPK", variant="emerald", target_blank=is_preview))
         if pb.get("supports_catalog") and include_catalog_cta:
-            btns.append(_button(urls["catalog"], "Ingest Catalogue & Stems", variant="secondary"))
-        cta_buttons_html = f'<div style="margin: 20px 0; display: flex; flex-wrap: wrap; gap: 10px;">{" &nbsp; ".join(btns)}</div>'
+            btns.append(_button(urls["catalog"], "Ingest Catalogue & Stems", variant="purple", target_blank=is_preview))
+        for url_key, sec_label, sec_variant in PERSONA_SECONDARY_CTAS.get(eff_persona, []):
+            btns.append(_button(urls[url_key], sec_label, variant=sec_variant, target_blank=is_preview))
 
     else:
-        cta_buttons_html = f'<div style="margin: 20px 0;">{_button(urls["primary"], cta_label or "Explore Now", variant="primary")}</div>'
+        prod_display = (product_name or "").strip()
+        cta_section_heading = (
+            f"{prod_display} — Actions for {pb_for_target['label']}"
+            if (prod_display and pb_for_target)
+            else (f"Get Started with {prod_display}" if prod_display else "Explore TuneMavens Ecosystem")
+        )
+        btns.append(_button(urls["primary"], cta_label or (f"Explore {prod_display}" if prod_display else "Explore TuneMavens"), variant="primary", target_blank=is_preview))
+        if persona_key and PERSONA_SECONDARY_CTAS.get(persona_key):
+            for url_key, sec_label, sec_variant in PERSONA_SECONDARY_CTAS[persona_key]:
+                btns.append(_button(urls[url_key], sec_label, variant=sec_variant, target_blank=is_preview))
+        else:
+            hint = f"{prod_display} {cta_url or ''}".lower()
+            if "sync" in hint:
+                btns.append(_button(urls["sync"], "Browse Pre-Cleared Sync Stems", variant="emerald", target_blank=is_preview))
+            elif "dj" in hint:
+                btns.append(_button(urls["dj_pool"], "Open 24-Bit DJ Pool", variant="emerald", target_blank=is_preview))
+            elif "epk" in hint:
+                btns.append(_button(urls["epk"], "Launch Official EPK", variant="emerald", target_blank=is_preview))
+            else:
+                btns.append(_button(urls["stream"], "Stream 24-Bit Lossless Audio", variant="emerald", target_blank=is_preview))
+            btns.append(_button(urls["events"], "Browse Live Events & Passes", variant="secondary", target_blank=is_preview))
 
-    onboard_callout = f"""
-    <div style="margin-top: 22px; padding: 14px 16px; background: #0f172a; border: 1px solid #1e293b; border-radius: 3px;">
-      <div style="font-size: 13px; font-weight: 700; color: #f8fafc; margin-bottom: 4px;">
-        New to TuneMavens?
+    cta_buttons_html = f"""
+    <div style="margin: 22px 0 18px; padding: 16px 18px; background: rgba(15,23,42,0.85); border: 1px solid rgba(34,211,238,0.22); border-radius: 3px;">
+      <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: #94a3b8; margin-bottom: 10px;">
+        {cta_section_heading}
       </div>
-      <div style="font-size: 12px; color: #94a3b8; margin-bottom: 10px;">
-        Create your free TuneMavens account in seconds to save your preferences, EPK workspace, catalogue settings, and passes for instant access next time.
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+        {"".join(btns)}
       </div>
-      <a href="{urls['onboard']}" style="color: #22d3ee; font-size: 12px; font-weight: 700; text-decoration: none;">
-        Save Your Preferences &amp; Complete Onboarding &rarr;
-      </a>
     </div>
     """
 
-    sender_note = (
-        f'<div style="font-size: 11px; color: #64748b; margin-top: 14px;">Shared by {affiliate_name} via TuneMavens Partner Network</div>'
-        if affiliate_name
-        else ""
+    onboard_btn = _button(urls["onboard"], "Save Preferences & Complete Free Onboarding", variant="secondary", target_blank=is_preview)
+    onboard_callout = f"""
+    <div style="margin-top: 18px; padding: 15px 18px; background: #0b1220; border: 1px solid #1e293b; border-radius: 3px;">
+      <div style="font-size: 13px; font-weight: 800; color: #f8fafc; margin-bottom: 4px;">
+        New to TuneMavens?
+      </div>
+      <div style="font-size: 12px; color: #94a3b8; margin-bottom: 10px; line-height: 1.55;">
+        Create your free TuneMavens account in seconds to save your music preferences, EPK workspace, catalogue settings, and QR event passes for instant 1-tap access next time.
+      </div>
+      <div>{onboard_btn}</div>
+    </div>
+    """
+
+    clean_ref_upper = (affiliate_ref_code or "TM-ADMIN").strip().upper()
+    is_official_admin = clean_ref_upper == "TM-ADMIN"
+    partner_disclosure = (
+        f"Official Platform Dispatch: Sent by <strong style='color:#cbd5e1;'>TuneMavens Administration</strong> (Ref: <code style='color:#22d3ee;'>TM-ADMIN</code>)."
+        if is_official_admin
+        else (
+            f"Partner Attribution Disclosure: Shared via the TuneMavens Official Partner Network by "
+            f"<strong style='color:#cbd5e1;'>{affiliate_name or 'Authorized Partner'}</strong> "
+            f"(Partner Ref: <code style='color:#10b981;'>{clean_ref_upper}</code>). "
+            f"Links in this email include 90-day attribution tokens that may credit the referring partner at zero extra cost to you."
+        )
+    )
+
+    recipient_display = recipient_email or "your registered email address"
+    target_attr = ' target="_blank" rel="noopener noreferrer"' if is_preview else ""
+
+    reachout_footer_html = f"""
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #1e293b; font-size: 11.5px; color: #64748b; line-height: 1.6;">
+      <div style="text-align: center; margin-bottom: 14px; padding: 10px 12px; background: #090f1c; border: 1px solid rgba(255,255,255,0.06); border-radius: 3px;">
+        <div style="font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.7px; color: #94a3b8; margin-bottom: 6px;">
+          Manage Your Email &amp; Communication Preferences
+        </div>
+        <a href="{urls['preferences']}"{target_attr} style="color: #22d3ee !important; font-weight: 700; text-decoration: underline;">Set Communication Preferences</a>
+        &nbsp;&bull;&nbsp;
+        <a href="{urls['unsubscribe']}"{target_attr} style="color: #f87171 !important; font-weight: 700; text-decoration: underline;">Unsubscribe / Opt Out</a>
+        &nbsp;&bull;&nbsp;
+        <a href="{urls['privacy']}"{target_attr} style="color: #94a3b8 !important; text-decoration: underline;">Privacy Policy</a>
+        &nbsp;&bull;&nbsp;
+        <a href="{urls['terms']}"{target_attr} style="color: #94a3b8 !important; text-decoration: underline;">Terms of Service</a>
+        &nbsp;&bull;&nbsp;
+        <a href="{urls['cookies']}"{target_attr} style="color: #94a3b8 !important; text-decoration: underline;">Cookie Policy</a>
+        &nbsp;&bull;&nbsp;
+        <a href="{urls['support']}"{target_attr} style="color: #94a3b8 !important; text-decoration: underline;">Help &amp; Support</a>
+      </div>
+
+      <p style="margin: 0 0 8px 0; color: #64748b; font-size: 11px;">
+        <strong style="color: #94a3b8;">Why you received this email:</strong> This message was sent to <span style="color: #cbd5e1;">{recipient_display}</span> because you hold a registered TuneMavens account or opted into an authorized TuneMavens Smart CRM email-only reachout list.
+      </p>
+      <p style="margin: 0 0 8px 0; color: #64748b; font-size: 11px;">
+        {partner_disclosure}
+      </p>
+      <p style="margin: 0 0 10px 0; color: #64748b; font-size: 11px;">
+        <strong style="color: #94a3b8;">Compliance &amp; Legal Disclaimer:</strong> TuneMavens Smart CRM enforces a strict Email-Only outreach policy (never unsolicited SMS or WhatsApp) in compliance with the Kenya Data Protection Act (ODPC), GDPR, and CAN-SPAM regulations. Event schedules, ticket capacities, sync licensing terms, and royalty/commission rates are subject to TuneMavens Terms of Service. All artist names, masters, and publishing rights remain the property of their respective rights holders.
+      </p>
+      <p style="margin: 0; text-align: center; font-size: 11px; color: #475569;">
+        &copy; 2026 TuneMavens Global Sync, Live Events &amp; Audio Ecosystem (Intermaven Network) &bull; Westlands Commercial Center, Nairobi, Kenya &bull;
+        <a href="mailto:support@tunemavens.com" style="color: #22d3ee !important; text-decoration: none;">support@tunemavens.com</a>
+      </p>
+    </div>
+    """
+
+    prepared_body_html = _sanitize_and_prepare_body_html(
+        rendered_body,
+        is_preview=is_preview,
+        app_url=effective_base_url,
     )
 
     inner_html = f"""
     <div style="font-size: 18px; font-weight: 800; color: #22d3ee; margin-bottom: 14px;">{subject}</div>
-    <p style="color: #cbd5e1; font-size: 14px; line-height: 1.65; margin-bottom: 16px;">
-      {rendered_body.replace(chr(10), '<br>')}
-    </p>
+    <div style="color: #cbd5e1; font-size: 14px; line-height: 1.65; margin-bottom: 16px;">
+      {prepared_body_html}
+    </div>
     {promo_block}
     {cta_buttons_html}
     {onboard_callout}
-    {sender_note}
     """
 
-    wrapped_html = _email_wrapper(inner_html, subject, target_persona or "reachout")
+    wrapped_html = _email_wrapper(
+        inner_html,
+        subject,
+        target_persona or ("event" if promotion_type == "event" else "reachout"),
+        footer_html=reachout_footer_html,
+    )
     return wrapped_html, urls
 
 

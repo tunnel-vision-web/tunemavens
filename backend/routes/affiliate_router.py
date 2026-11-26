@@ -826,9 +826,43 @@ def get_admin_affiliates_overview(user=Depends(get_optional_user)):
 
 
 def sync_all_registered_affiliates() -> None:
-    """Ensure every user with role='affiliate' in db.users and demo partners exist in db.affiliates."""
+    """Ensure every user with role='affiliate' in db.users, the Admin account, and demo partners exist in db.affiliates."""
     try:
         init_affiliate_seed_data()
+        # Ensure official Admin account exists with canonical naming
+        existing_admin = db.affiliates.find_one({"ref_code": "TM-ADMIN"})
+        if not existing_admin:
+            db.affiliates.insert_one({
+                "id": "aff_tm_admin",
+                "name": "Admin Account — TuneMavens Official",
+                "email": "admin@tunemavens.com",
+                "handle": "@tunemavens_admin",
+                "ref_code": "TM-ADMIN",
+                "is_admin_account": True,
+                "website_or_social": "https://tunemavens.com/?ref=TM-ADMIN",
+                "tier": "ambassador",
+                "status": "active",
+                "payout_method": "credits",
+                "payout_details": {},
+                "clicks_count": 0,
+                "conversions_count": 0,
+                "onboardings_count": 0,
+                "rsvps_count": 0,
+                "total_gmv": 0.0,
+                "total_earnings": 0.0,
+                "pending_payout": 0.0,
+                "paid_payout": 0.0,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
+        elif existing_admin.get("name") in ("Tm-Admin", "tm-admin", "", None) or not existing_admin.get("is_admin_account"):
+            db.affiliates.update_one(
+                {"_id": existing_admin["_id"]},
+                {"$set": {
+                    "name": "Admin Account — TuneMavens Official",
+                    "is_admin_account": True,
+                }},
+            )
+
         # Ensure flagship Kenya partner exists too
         if not db.affiliates.find_one({"ref_code": "TM-KENYA-254"}):
             db.affiliates.insert_one({
@@ -893,7 +927,7 @@ def get_admin_affiliate_roster(
     limit: int = 200,
     user=Depends(get_optional_user)
 ):
-    """List registered affiliates with performance telemetry and RBAC scoping."""
+    """List registered affiliates with Admin account as first option for Admins and RBAC scoping."""
     sync_all_registered_affiliates()
 
     query = {}
@@ -923,16 +957,51 @@ def get_admin_affiliate_roster(
                 {"handle": {"$regex": s, "$options": "i"}}
             ]
 
-    affiliates = list(
+    raw_affiliates = list(
         db.affiliates.find(query, {"_id": 0})
         .sort("created_at", -1)
-        .limit(limit)
+        .limit(limit * 2)
     )
-    for aff in affiliates:
-        rc = aff.get("ref_code")
-        aff["target_groups_count"] = db.crm_target_groups.count_documents({"affiliate_ref_code": rc}) if rc else 0
 
-    return {"affiliates": affiliates, "count": len(affiliates), "is_admin_view": is_admin}
+    # Deduplicate by ref_code and email while placing Admin Account (TM-ADMIN) first for admin view
+    admin_entry = None
+    deduped: List[Dict] = []
+    seen_refs = set()
+    seen_emails = set()
+
+    for aff in raw_affiliates:
+        rc = (aff.get("ref_code") or "").strip().upper()
+        em = (aff.get("email") or "").strip().lower()
+        if not rc:
+            continue
+        aff["target_groups_count"] = db.crm_target_groups.count_documents({"affiliate_ref_code": rc})
+        if rc == "TM-ADMIN":
+            if not admin_entry:
+                admin_entry = aff
+            continue
+        if rc in seen_refs or (em and em in seen_emails):
+            continue
+        seen_refs.add(rc)
+        if em:
+            seen_emails.add(em)
+        deduped.append(aff)
+
+    if is_admin:
+        if not admin_entry and not search and (not tier or tier == "all"):
+            adm_doc = db.affiliates.find_one({"ref_code": "TM-ADMIN"}, {"_id": 0})
+            if adm_doc:
+                adm_doc["target_groups_count"] = db.crm_target_groups.count_documents({"affiliate_ref_code": "TM-ADMIN"})
+                admin_entry = adm_doc
+        affiliates = ([admin_entry] + deduped)[:limit] if admin_entry else deduped[:limit]
+    else:
+        affiliates = deduped[:1] if deduped else ([admin_entry] if admin_entry else [])
+
+    return {
+        "affiliates": affiliates,
+        "admin_account": admin_entry,
+        "count": len(affiliates),
+        "is_admin_view": is_admin,
+    }
 
 
 @router.get("/admin/ledger")

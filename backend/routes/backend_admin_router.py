@@ -275,7 +275,8 @@ The TuneMavens Wall of Fame is the authoritative hall of icons honoring trailbla
 ## Smart CRM Email Reachout
 - **Email-Only Target Groups**: Names + emails only (no SMS/WhatsApp costs or flagging). Add, edit, delete entries or import CSV/TSV/TXT/JSON.
 - **Pre-built cohorts**: `All Registered Platform Users` and 10 role cohorts auto-sync for Admins.
-- **Event campaigns**: Live site events, with the event flyer embedded and RSVP / Buy Ticket CTAs; use Preview Email before dispatch.
+- **Rich Composer & Sender Identity**: Visual/HTML/Split editor with API-backed image uploads (`/api/crm/images/...`), custom-linked `+ CTA Button` insertion, and outbound emails sent from `TuneMavens <hello@tunemavens.com>` with a legal disclaimers & preferences footer.
+- **Event campaigns & Reservation Flow**: Live site events embed the event flyer; `free_rsvp` events automatically hide `Buy Ticket Now` and route `RSVP Now (Reserve Spot)` to a full reservation page (Seating/Standing capacities, attendee role, accompanying guest names, Email-Only communication opt-ins, and post-RSVP onboarding). Use the scrollable 1:1 **Preview Email** before dispatch.
 - **Affiliate attribution**: Admins see all affiliates; affiliates see only their own data. 90-day spend attribution with in-app inbox + email notifications.
 - **Learning engine**: 10 persona introductory playbooks (EPK and catalogue CTAs) that adapt from conversion telemetry.
 - **Audit Trails**: Dispatches are stored in `db.communication_logs` and `db.email_outbox`.
@@ -799,11 +800,11 @@ def ask_ai_admin_assistant(payload: AskAiPayload):
         actions = ["Inspect RBAC Matrix", "View User Accounts", "Switch Persona"]
     elif "crm" in prompt or "reachout" in prompt or "target group" in prompt or "flyer" in prompt or "preview" in prompt or "lead" in prompt:
         reply = (
-            "Smart CRM Reachout is email-only: Target Groups hold Names + Emails (phone/SMS/WhatsApp fields are stripped on CSV/TSV/TXT/JSON import). "
+            "Smart CRM Reachout is email-only (sent from TuneMavens <hello@tunemavens.com>): Target Groups hold Names + Emails (phone/SMS/WhatsApp fields are stripped on CSV/TSV/TXT/JSON import). "
             "Admins get auto-synced 'All Registered Platform Users' plus 10 role cohorts, can act on any affiliate's groups, while affiliates only see their own data. "
-            "Event campaigns embed the event page flyer with RSVP Now / Buy Ticket Now CTAs, and 'Preview Email' renders the exact HTML before dispatch. "
-            "Clicks, onboarding and 90-day spend are attributed to the initiating affiliate, who is notified in their in-app inbox and registered email. "
-            "10 persona introductory playbooks (with EPK and catalogue CTAs) feed an adaptive learning engine that improves copy from conversions."
+            "The composer supports Visual/HTML/Split editing, image uploads, custom-linked '+ CTA Button' insertion, and dynamic persona x theme copy/banners, with a scrollable 1:1 Preview Email. "
+            "For Free-with-RSVP events, Buy Ticket Now is automatically hidden and RSVP Now opens the full reservation page (Seating/Standing capacity, guest names, role, communication opt-ins, and post-RSVP onboarding). "
+            "Clicks, onboarding and 90-day spend are attributed to the initiating affiliate, who is notified in their in-app inbox and registered email."
         )
         actions = ["Read Email Reachout Guide", "Open Smart CRM", "Inspect Communication Logs"]
     elif "split" in prompt or "cascade" in prompt or "royalty" in prompt:
