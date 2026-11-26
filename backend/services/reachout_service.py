@@ -646,12 +646,13 @@ def build_reachout_email_html(
     ev_id_val = str(event_doc.get("id") or "") if event_doc else ""
     ev_qs = f"&event_id={quote(ev_id_val)}" if ev_id_val else ""
     promo_qs = f"&promo={quote(promotion_type)}" if promotion_type else ""
+    name_qs = f"&name={quote(recipient_name)}" if (is_preview and recipient_name) else ""
 
     urls: Dict[str, str] = {
-        "primary": f"{base_reachout}?action=explore{ref_qs}{role_qs}{promo_qs}",
-        "rsvp": f"{base_reachout}?action=rsvp{ref_qs}{ev_qs}{promo_qs}{email_qs}",
-        "ticket": f"{base_reachout}?action=ticket{ref_qs}{ev_qs}{promo_qs}{email_qs}",
-        "event_details": f"{base_reachout}?action=event{ref_qs}{ev_qs}{promo_qs}{email_qs}",
+        "primary": f"{base_reachout}?action=explore{ref_qs}{role_qs}{promo_qs}{name_qs}",
+        "rsvp": f"{base_reachout}?action=rsvp{ref_qs}{ev_qs}{promo_qs}{email_qs}{name_qs}",
+        "ticket": f"{base_reachout}?action=ticket{ref_qs}{ev_qs}{promo_qs}{email_qs}{name_qs}",
+        "event_details": f"{base_reachout}?action=event{ref_qs}{ev_qs}{promo_qs}{email_qs}{name_qs}",
         "onboard": f"{base_reachout}?action=onboard{ref_qs}{role_qs}",
         "epk": f"{base_reachout}?action=epk{ref_qs}{role_qs}",
         "catalog": f"{base_reachout}?action=catalog{ref_qs}{role_qs}",

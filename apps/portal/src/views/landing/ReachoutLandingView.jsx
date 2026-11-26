@@ -114,11 +114,13 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
       setError('');
       try {
         const qsEmail = searchParams.get('email') || '';
+        const qsName = searchParams.get('name') || '';
         const qsRole = searchParams.get('role') || '';
         const qsEventId = searchParams.get('event_id') || '';
         const qsPromo = searchParams.get('promo') || '';
         const qsParams = new URLSearchParams();
         if (qsEmail) qsParams.set('email', qsEmail);
+        if (qsName) qsParams.set('name', qsName);
         if (qsRole) qsParams.set('role', qsRole);
         if (qsEventId) qsParams.set('event_id', qsEventId);
         if (qsPromo) qsParams.set('promo', qsPromo);
@@ -141,8 +143,15 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
           localStorage.setItem('tm_reachout_token', payload.token);
         }
 
-        const recName = payload.recipient?.name || '';
-        const recEmail = payload.recipient?.email || qsEmail || '';
+        const isSamplePreview = Boolean(payload.is_preview || token === 'preview_sample_token');
+        const recName =
+          (isSamplePreview && sessionUser?.name)
+            ? sessionUser.name
+            : (qsName || payload.recipient?.name || sessionUser?.name || '');
+        const recEmail =
+          (isSamplePreview && sessionUser?.email)
+            ? sessionUser.email
+            : (payload.recipient?.email || qsEmail || sessionUser?.email || '');
         setRsvpName(recName);
         setRsvpEmail(recEmail);
         setOnbName(recName);
@@ -393,6 +402,14 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
       ? 'Solo Invite Only'
       : `Up to +${maxAllowedGuests} Guests`;
 
+  const displayWelcomeName =
+    onbResult?.user?.name ||
+    (data?.is_preview && sessionUser?.name) ||
+    rsvpName.trim() ||
+    sessionUser?.name ||
+    data?.recipient?.name ||
+    '';
+
   return (
     <div style={{ minHeight: '100vh', background: '#060813', color: '#e2e8f0', padding: '108px 20px 72px' }}>
       <div style={{ maxWidth: '1040px', margin: '0 auto' }}>
@@ -403,7 +420,7 @@ export default function ReachoutLandingView({ sessionUser, onLogin }) {
               TUNEMAVENS OFFICIAL INVITATION
             </div>
             <h1 style={{ margin: '6px 0 4px', fontSize: '28px', fontWeight: 800, color: '#ffffff' }}>
-              {data?.recipient?.name ? `Welcome, ${data.recipient.name}!` : 'Welcome to TuneMavens!'}
+              {displayWelcomeName ? `Welcome, ${displayWelcomeName}!` : 'Welcome to TuneMavens!'}
             </h1>
             <div style={{ fontSize: '13px', color: '#94a3b8' }}>
               {data?.affiliate?.name && (

@@ -1711,6 +1711,7 @@ def resolve_reachout_link(
     token: str,
     response: Response,
     email: Optional[str] = None,
+    name: Optional[str] = None,
     role: Optional[str] = None,
     event_id: Optional[str] = None,
     promo: Optional[str] = None,
@@ -1724,6 +1725,7 @@ def resolve_reachout_link(
     """
     if token == "preview_sample_token":
         pb = PERSONA_PLAYBOOKS.get(role or "creator", PERSONA_PLAYBOOKS["creator"])
+        sample_name = (name or "").strip() or "Alex Mwangi"
         preview_event = None
         if event_id:
             try:
@@ -1743,7 +1745,7 @@ def resolve_reachout_link(
             "token": token,
             "is_preview": True,
             "recipient": {
-                "name": "Alex Mwangi",
+                "name": sample_name,
                 "email": (email or "alex.mwangi@example.com").strip().lower(),
             },
             "affiliate": {
@@ -1753,8 +1755,8 @@ def resolve_reachout_link(
             "campaign": {
                 "id": "preview",
                 "title": preview_event.get("title") if preview_event else "Smart CRM Email Preview",
-                "subject": pb["default_subject"].replace("{{name}}", "Alex Mwangi"),
-                "body": pb["default_body"].replace("{{name}}", "Alex Mwangi"),
+                "subject": pb["default_subject"].replace("{{name}}", sample_name),
+                "body": pb["default_body"].replace("{{name}}", sample_name),
                 "promotion_type": eff_promo,
                 "cta_label": "RSVP Now (Reserve Spot)" if preview_event else pb["cta_label"],
                 "cta_url": pb["cta_url"],
@@ -2053,6 +2055,7 @@ def get_user_inbox(
 
     # Seed fallback initial messages if completely empty
     if not messages:
+        user_role = (current_user.get("role") or "").lower() if current_user else ""
         seed_inbox = [
             {
                 "user_id": my_id,
@@ -2079,6 +2082,19 @@ def get_user_inbox(
                 "created_at": datetime.now(timezone.utc)
             }
         ]
+        if user_role in ("affiliate", "admin"):
+            seed_inbox.insert(0, {
+                "user_id": my_id,
+                "sender": "TuneMavens Partner Onboarding",
+                "subject": "Recommended Reading: Smart CRM Email Reachout & Attribution Guide",
+                "body": "Master Email-Only Target Groups, rich HTML & custom CTA buttons, Free-with-RSVP event rules, hello@tunemavens.com delivery, and 90-day affiliate commission attribution.",
+                "cta_label": "Read Reachout Guide",
+                "cta_url": "/help?article=smart-crm-email-reachout-and-target-groups",
+                "category": "announcement",
+                "read": False,
+                "replies": [],
+                "created_at": datetime.now(timezone.utc)
+            })
         res = db.user_inbox.insert_many(seed_inbox)
         messages = []
         for inserted_id, doc in zip(res.inserted_ids, seed_inbox):

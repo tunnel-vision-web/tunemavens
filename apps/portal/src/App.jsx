@@ -244,6 +244,7 @@ const PERSONA_ROLES = [
 ];
 
 function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, activeTab, onOpenCreditReload, onStartTour, onToggleSidebar, isSidebarCollapsed }) {
+  const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const notifRef = useRef(null);
@@ -514,13 +515,43 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
     } else if (sessionUser?.role === 'affiliate') {
       setNotifications([
         {
+          id: 'aff_reachout_guide',
+          title: 'Recommended Reading: Smart CRM Email Reachout',
+          body: 'How to use Email-Only Target Groups, custom CTA buttons, Free-with-RSVP rules, and 1:1 Email Preview (from hello@tunemavens.com).',
+          actionText: 'Read Reachout Guide',
+          actionType: 'route',
+          targetRoute: '/help?article=smart-crm-email-reachout-and-target-groups',
+          read: false,
+          at: 'Just now'
+        },
+        {
+          id: 'aff_attribution_guide',
+          title: 'Recommended Reading: Affiliate Attribution & Commission Engine',
+          body: 'Track clicks, RSVPs, onboarding, and 90-day downstream spend with dual In-App Inbox + Email alerts.',
+          actionText: 'Read Attribution Guide',
+          actionType: 'route',
+          targetRoute: '/help?article=smart-crm-affiliate-attribution-and-learning-engine',
+          read: false,
+          at: '1m ago'
+        },
+        {
+          id: 'aff_reachout_article',
+          title: 'Recommended Article: Inside the Intelligent Smart CRM',
+          body: 'Deep dive into Rich HTML & custom CTAs, dynamic Persona × Theme targeting, and Reservation Confirmation flows.',
+          actionText: 'Read Article',
+          actionType: 'route',
+          targetRoute: '/blog/smart-crm-email-reachout-event-flyers-and-adaptive-affiliate-attribution-2026',
+          read: false,
+          at: '2m ago'
+        },
+        {
           id: 'aff_payout',
           title: 'Partner Payout Rails & Mobile STK',
           body: 'Connect M-Pesa STK or Bank to receive weekly automatic payouts.',
           actionText: 'Settings',
           actionType: 'payout',
           read: false,
-          at: '1m ago'
+          at: '5m ago'
         },
         {
           id: 'aff_link',
@@ -529,7 +560,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
           actionText: 'Get Link',
           actionType: 'link',
           read: false,
-          at: '5m ago'
+          at: '10m ago'
         },
         {
           id: 'aff_talent',
@@ -544,7 +575,7 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
           id: 'aff_guide',
           title: 'Recommended Reading: Partner Playbook',
           body: 'Commission matrix and promotional standards (Optional reading).',
-          actionText: 'Read Guide',
+          actionText: 'Open Partner Hub',
           actionType: 'guide',
           read: false,
           at: '30m ago'
@@ -899,6 +930,8 @@ function DashboardTopbar({ sessionUser, onLogout, setActiveTab, onUpdateUser, ac
                                 window.dispatchEvent(new CustomEvent('tunemavens:open-direct-talent'));
                               } else if (n.actionType === 'guide') {
                                 if (typeof setActiveTab === 'function') setActiveTab('affiliates');
+                              } else if (n.actionType === 'route' && n.targetRoute) {
+                                navigate(n.targetRoute);
                               } else if (n.actionType === 'navigate' && n.targetTab && typeof setActiveTab === 'function') {
                                 setActiveTab(n.targetTab);
                               } else if (n.actionType === 'vc-guide') {
