@@ -18,6 +18,41 @@ from pydantic import BaseModel, EmailStr, Field
 
 from auth import get_current_user, get_optional_user
 from config import db
+
+
+def _is_admin_user(user: Optional[dict]) -> bool:
+    if not user:
+        return False
+    return bool(
+        user.get("role") == "admin"
+        or user.get("is_admin") is True
+        or user.get("original_role") == "admin"
+        or "admin" in (user.get("roles") or [])
+    )
+
+
+def _require_admin_user(user: Optional[dict]) -> None:
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required.")
+    if not _is_admin_user(user):
+        raise HTTPException(status_code=403, detail="Administrator privileges required.")
+
+
+def _assert_affiliate_ref_ownership(ref_code: str, user: Optional[dict]) -> str:
+    clean_ref = (ref_code or "").strip().upper()
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required.")
+    if _is_admin_user(user):
+        return clean_ref
+    email = (user.get("email") or "").strip().lower()
+    own_aff = db.affiliates.find_one({"email": email}) if email else None
+    own_ref = (own_aff.get("ref_code") or "").strip().upper() if own_aff else ""
+    if not own_ref or clean_ref != own_ref:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: affiliates cannot view, add, edit, or delete another affiliate's data."
+        )
+    return clean_ref
 from models import User
 from account_setup import (
     create_setup_token,
@@ -700,10 +735,13 @@ def track_affiliate_click(ref_code: str, request: Request, response: Response):
 
 @router.get("/me")
 def get_my_affiliate_status(ref: Optional[str] = None, user=Depends(get_optional_user)):
-    """Retrieve affiliate stats for authenticated user or provided ref code."""
+    """Retrieve affiliate stats for authenticated user (or public ref lookup when unauthenticated)."""
     aff = None
     if ref:
-        aff = db.affiliates.find_one({"ref_code": ref.strip().upper()}, {"_id": 0})
+        clean_ref = ref.strip().upper()
+        if user and not _is_admin_user(user):
+            _assert_affiliate_ref_ownership(clean_ref, user)
+        aff = db.affiliates.find_one({"ref_code": clean_ref}, {"_id": 0})
     elif user and user.get("email"):
         aff = db.affiliates.find_one({"email": user["email"].strip().lower()}, {"_id": 0})
 
@@ -789,8 +827,9 @@ def get_my_affiliate_status(ref: Optional[str] = None, user=Depends(get_optional
 # Admin Management Endpoints
 # ======================================================================
 @router.get("/admin/overview")
-def get_admin_affiliates_overview(user=Depends(get_optional_user)):
+def get_admin_affiliates_overview(user=Depends(get_current_user)):
     """Admin KPI overview for the Affiliate Programme."""
+    _require_admin_user(user)
     total_affiliates = db.affiliates.count_documents({})
     active_affiliates = db.affiliates.count_documents({"status": "active"})
     total_conversions = db.affiliate_conversions.count_documents({})
@@ -1009,12 +1048,22 @@ def get_admin_affiliate_ledger(
     ref: Optional[str] = None,
     type_filter: Optional[str] = None,
     limit: int = 100,
-    user=Depends(get_optional_user)
+    user=Depends(get_current_user)
 ):
-    """Audit log of all referred purchases, streams, and commissions."""
+    """Audit log of referred purchases, streams, and commissions (admin = all, affiliate = own only)."""
     query = {}
-    if ref:
-        query["ref_code"] = ref.strip().upper()
+    if _is_admin_user(user):
+        if ref:
+            query["ref_code"] = ref.strip().upper()
+    else:
+        email = (user.get("email") or "").strip().lower()
+        own_aff = db.affiliates.find_one({"email": email}) if email else None
+        own_ref = (own_aff.get("ref_code") or "").strip().upper() if own_aff else ""
+        if not own_ref:
+            return {"ledger": [], "count": 0}
+        if ref and ref.strip().upper() != own_ref:
+            raise HTTPException(status_code=403, detail="Access denied: cannot view another affiliate's ledger.")
+        query["ref_code"] = own_ref
     if type_filter and type_filter != "all":
         query["type"] = type_filter
 
@@ -1027,8 +1076,9 @@ def get_admin_affiliate_ledger(
 
 
 @router.post("/admin/payout")
-def execute_batch_payout(payload: BatchPayoutRequest, user=Depends(get_optional_user)):
+def execute_batch_payout(payload: BatchPayoutRequest, user=Depends(get_current_user)):
     """Execute payout disbursement to affiliates via Credits, M-Pesa, or Stripe."""
+    _require_admin_user(user)
     query = {"pending_payout": {"$gt": 0}}
     if payload.affiliate_ids:
         query["id"] = {"$in": payload.affiliate_ids}
@@ -1094,8 +1144,9 @@ def execute_batch_payout(payload: BatchPayoutRequest, user=Depends(get_optional_
 
 
 @router.put("/admin/matrix")
-def update_admin_matrix(payload: MatrixUpdateRequest, user=Depends(get_optional_user)):
+def update_admin_matrix(payload: MatrixUpdateRequest, user=Depends(get_current_user)):
     """Update active commission rates in the compensation matrix."""
+    _require_admin_user(user)
     db.affiliate_matrix_config.update_one(
         {"active": True},
         {
@@ -1119,9 +1170,10 @@ def update_affiliate_status(
     affiliate_id: str,
     status_val: Optional[str] = None,
     tier_val: Optional[str] = None,
-    user=Depends(get_optional_user)
+    user=Depends(get_current_user)
 ):
-    """Adjust status or tier level of a specific affiliate."""
+    """Adjust status or tier level of a specific affiliate (Admin only)."""
+    _require_admin_user(user)
     update_fields = {}
     if status_val in ["active", "pending", "suspended"]:
         update_fields["status"] = status_val
@@ -1269,9 +1321,9 @@ def simulate_affiliate_conversion(payload: ConversionSimulationRequest):
 # Linked Network & User Onboarding Endpoints
 # ======================================================================
 @router.get("/network/{ref_code}")
-def get_affiliate_network(ref_code: str):
+def get_affiliate_network(ref_code: str, user: dict = Depends(get_current_user)):
     """Retrieve all creators, labels, and partners linked to this affiliate."""
-    clean_ref = ref_code.strip().upper()
+    clean_ref = _assert_affiliate_ref_ownership(ref_code, user)
 
     # Auto-seed if empty for TM-KENYA-254 or first access
     if db.affiliate_linked_users.count_documents({"ref_code": clean_ref}) == 0:
@@ -1308,9 +1360,9 @@ def get_affiliate_network(ref_code: str):
 
 
 @router.post("/onboard-user")
-def onboard_user_by_affiliate(payload: UserOnboardingRequest):
+def onboard_user_by_affiliate(payload: UserOnboardingRequest, user: dict = Depends(get_current_user)):
     """Directly onboard a creator, label, or user linked to this affiliate."""
-    clean_ref = payload.ref_code.strip().upper()
+    clean_ref = _assert_affiliate_ref_ownership(payload.ref_code, user)
     now_iso = datetime.now(timezone.utc).isoformat()
     inv_token = f"INV-{uuid.uuid4().hex[:6].upper()}"
     new_user_id = f"usr_{payload.role[:2]}_{uuid.uuid4().hex[:6]}"
@@ -1393,11 +1445,12 @@ class UpdateLinkedPersonaRequest(BaseModel):
 
 
 @router.put("/network/user/{user_id}")
-def update_affiliate_linked_user(user_id: str, payload: UpdateLinkedPersonaRequest):
+def update_affiliate_linked_user(user_id: str, payload: UpdateLinkedPersonaRequest, user: dict = Depends(get_current_user)):
     """Edit the persona/role or profile details of a linked user under an affiliate account."""
     existing = db.affiliate_linked_users.find_one({"id": user_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Linked persona not found")
+    _assert_affiliate_ref_ownership(existing.get("ref_code") or "", user)
 
     role_labels = {
         "creator": "Recording Artist & Producer",
@@ -1451,8 +1504,12 @@ def update_affiliate_linked_user(user_id: str, payload: UpdateLinkedPersonaReque
 
 
 @router.delete("/network/user/{user_id}")
-def delete_affiliate_linked_user(user_id: str):
+def delete_affiliate_linked_user(user_id: str, user: dict = Depends(get_current_user)):
     """Remove a linked persona from an affiliate's network roster."""
+    existing = db.affiliate_linked_users.find_one({"id": user_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Linked persona not found")
+    _assert_affiliate_ref_ownership(existing.get("ref_code") or "", user)
     res = db.affiliate_linked_users.delete_one({"id": user_id})
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Linked persona not found")
@@ -1471,9 +1528,9 @@ REQUIRED_ARTICLE_IDS = [
 
 
 @router.get("/academy/{ref_code}")
-def get_affiliate_academy_status(ref_code: str):
+def get_affiliate_academy_status(ref_code: str, user: dict = Depends(get_current_user)):
     """Retrieve required reading compliance status for this affiliate."""
-    clean_ref = ref_code.strip().upper()
+    clean_ref = _assert_affiliate_ref_ownership(ref_code, user)
     aff = db.affiliates.find_one({"ref_code": clean_ref})
     completed = aff.get("completed_readings", []) if aff else []
 
@@ -1494,9 +1551,9 @@ def get_affiliate_academy_status(ref_code: str):
 
 
 @router.post("/academy/acknowledge")
-def acknowledge_required_reading(payload: AcademyAcknowledgeRequest):
+def acknowledge_required_reading(payload: AcademyAcknowledgeRequest, user: dict = Depends(get_current_user)):
     """Mark a required reading article as reviewed and acknowledged."""
-    clean_ref = payload.ref_code.strip().upper()
+    clean_ref = _assert_affiliate_ref_ownership(payload.ref_code, user)
     now_iso = datetime.now(timezone.utc).isoformat()
 
     db.affiliates.update_one(
