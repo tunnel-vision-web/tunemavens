@@ -27,6 +27,8 @@ ALLOWED_CLIENTS: Dict[str, Dict] = {
         "client_id": "intermaven",
         "name": "Intermaven Parent Platform",
         "redirect_uris": [
+            "http://localhost:3005/callback",
+            "http://127.0.0.1:3005/callback",
             "http://localhost:3000/callback",
             "https://intermaven.io/callback",
             "https://www.intermaven.io/callback",
