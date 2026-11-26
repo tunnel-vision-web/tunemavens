@@ -1588,7 +1588,7 @@ function DashboardView({
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('tunestream_active_backend') === 'true') {
       return 'consumer';
     }
-    if (initialTabQuery && !['home', 'dj-mixes', 'explore', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'radio', 'concerts', 'library', 'tips', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'settings', 'support'].includes(initialTabQuery)) {
+    if (initialTabQuery && !['home', 'dj-mixes', 'explore', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'radio', 'concerts', 'library', 'tips', 'crm', 'inbox', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'settings', 'support'].includes(initialTabQuery)) {
       if (sessionUser?.role === 'consumer') {
         return 'creator';
       }
@@ -2079,8 +2079,8 @@ function DashboardView({
       studio: ['home', 'dj-mixes', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
       supervisor: ['home', 'dj-mixes', 'sync', 'escrow', 'social-ai', 'crm', 'app-marketplace', 'profile', 'settings', 'affiliates', 'support'],
       podcaster: ['home', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'corporate-ads', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'support'],
-      consumer: ['home', 'dj-mixes', 'explore', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'radio', 'concerts', 'library', 'tips', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'settings', 'support'],
-      affiliate: ['home', 'dj-mixes', 'affiliates', 'podcasts', 'splits', 'library', 'tips', 'profile', 'settings', 'support'],
+      consumer: ['home', 'dj-mixes', 'explore', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'radio', 'concerts', 'library', 'tips', 'crm', 'inbox', 'stream-controls', 'listener-apps', 'device-sync', 'profile', 'settings', 'support'],
+      affiliate: ['home', 'dj-mixes', 'affiliates', 'crm', 'inbox', 'podcasts', 'splits', 'library', 'tips', 'profile', 'settings', 'support'],
       creator: ['home', 'dj-mixes', 'podcasts', 'podcaster-studio', 'podcaster-overview', 'podcast-studio', 'podcaster-episodes', 'podcaster-epk', 'podcaster-monetization', 'podcaster-guests', 'catalog', 'epk-builder', 'splits', 'publishing-election', 'distribution-election', 'distribution-tracker', 'djpool', 'sync', 'escrow', 'library', 'tips', 'pos-inventory', 'pos-settlement', 'pos-terminal', 'mastering', 'social-ai', 'crm', 'app-marketplace', 'domain-mappings', 'hosting-manager', 'profile', 'settings', 'affiliates', 'communications', 'communications-vault', 'support']
     };
     const allowedTabs = roleAllowed[userRole] || roleAllowed.creator;
