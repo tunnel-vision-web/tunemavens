@@ -28,6 +28,8 @@ jobs:
           cache: 'npm'
 
       - name: Install & build frontend (dry-run)
+        env:
+          VITE_API_BASE_URL: https://api.tunemavens.com
         run: |
           npm ci
           npm run build
@@ -52,6 +54,9 @@ jobs:
 
       - name: Run shared identity tests
         run: python backend/tests/test_shared_identity_tunestream.py
+
+      - name: Run CORS & config tests
+        run: python backend/tests/test_cors_and_config.py
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0

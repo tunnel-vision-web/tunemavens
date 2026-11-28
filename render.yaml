@@ -9,10 +9,23 @@ services:
         value: 3.11.9
       - key: ENV
         value: production
+      # Prefer split MONGO_* vars on Render to avoid UI paste-truncation of long MONGO_URL strings
+      - key: MONGO_USER
+        sync: false
+      - key: MONGO_PASSWORD
+        sync: false
+      - key: MONGO_HOST
+        sync: false
+      - key: MONGO_SCHEME
+        value: mongodb+srv
+      - key: MONGO_OPTIONS
+        value: retryWrites=true&w=majority
       - key: MONGO_URL
         sync: false
       - key: DB_NAME
         value: intermaven
+      - key: CORS_ORIGINS
+        value: "https://tunemavens.com,https://www.tunemavens.com,https://tunestream.co,https://www.tunestream.co,https://syncmavens.com,https://www.syncmavens.com,https://intermaven.io,https://www.intermaven.io"
       - key: JWT_SECRET
         sync: false
       - key: RESEND_API_KEY

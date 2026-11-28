@@ -23,10 +23,13 @@ from routes import (
     corporate_ads_router, role_tiers_router, support_router, blog_router,
     affiliate_router, tours_router, vc_router, events_router, podcasts_router,
     publishing_router, confidentiality_router, social_graph_router,
-    community_router, backend_admin_router, media_house_router, dj_mixes_router, dj_mixes_alias_router
+    community_router, backend_admin_router, media_house_router, dj_mixes_router, dj_mixes_alias_router,
+    admin_console_router, mother_cms_router, ai_cms_router, sentinel_router, admin_seo_router
 )
 from routes.communications_router import router as communications_router
 from routes.admin_router import seed_domain_mappings_if_empty
+from seed_cms_keys import seed_default_cms_keys
+from routes.seo import seed_default_seo
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +132,6 @@ app.mount("/heroes", StaticFiles(directory=heroes_dir), name="heroes")
 app.mount("/api/heroes", StaticFiles(directory=heroes_dir), name="api_heroes")
 
 ENV = os.environ.get("ENV", "development")
-cors_origins = list(CORS_ORIGINS) if CORS_ORIGINS != ["*"] else []
 default_production_origins = [
     "https://tunemavens.com",
     "https://www.tunemavens.com",
@@ -138,16 +140,15 @@ default_production_origins = [
     "https://tunestream.co",
     "https://www.tunestream.co",
     "https://intermaven.io",
-    "https://www.intermaven.io"
+    "https://www.intermaven.io",
 ]
-for origin in default_production_origins:
-    if origin not in cors_origins:
-        cors_origins.append(origin)
+_base_origins = list(CORS_ORIGINS) if CORS_ORIGINS != ["*"] else []
+cors_origins = list(dict.fromkeys(_base_origins + default_production_origins))
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_origin_regex=r"https://.*\.onrender\.com|https://.*\.tunemavens\.com|https://.*\.tunestream\.co|https://.*\.syncmavens\.com",
+    allow_origin_regex=r"https://.*\.onrender\.com|https://.*\.tunemavens\.com|https://.*\.tunestream\.co|https://.*\.syncmavens\.com|https://.*\.intermaven\.io|http://127\.0\.0\.1(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -170,6 +171,7 @@ app.include_router(match_router)
 app.include_router(social_ai_router)
 app.include_router(crm_router)
 app.include_router(cms_router)
+app.include_router(admin_seo_router)
 app.include_router(seo_router)
 app.include_router(djpool_router)
 app.include_router(storage_router)
@@ -193,6 +195,10 @@ app.include_router(backend_admin_router)
 app.include_router(media_house_router)
 app.include_router(dj_mixes_router)
 app.include_router(dj_mixes_alias_router)
+app.include_router(admin_console_router)
+app.include_router(mother_cms_router)
+app.include_router(ai_cms_router)
+app.include_router(sentinel_router)
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -240,8 +246,10 @@ async def validation_exception_handler(request, exc):
     )
 
 
-# Seed default domain mappings on boot
+# Seed default domain mappings, Mother-CMS keys, and SEO config on boot
 seed_domain_mappings_if_empty()
+seed_default_cms_keys()
+seed_default_seo()
 
 
 @app.get("/api/health")

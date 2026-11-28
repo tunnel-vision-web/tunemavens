@@ -32,28 +32,38 @@ fi
 echo "==> Installing frontend workspace dependencies"
 sudo -u "$APP_USER" bash -c "cd '$REPO_DIR' && npm install --silent"
 
-echo "==> Building frontend workspace bundles"
-sudo -u "$APP_USER" bash -c "cd '$REPO_DIR' && npm run build:portal && npm run build:tunestream && npm run build:syncmavens"
+echo "==> Building frontend workspace bundles (VITE_API_BASE_URL=https://api.tunemavens.com)"
+sudo -u "$APP_USER" bash -c "cd '$REPO_DIR' && VITE_API_BASE_URL='https://api.tunemavens.com' npm run build:portal && VITE_API_BASE_URL='https://api.tunemavens.com' npm run build:tunestream && VITE_API_BASE_URL='https://api.tunemavens.com' npm run build:syncmavens"
 
 echo "==> Deploying frontend static sites atomically"
 
-deploy_app_atomically() {
-  local app_name=$1
-  local src_dist=$2
-  local target_dir="$APP_DIR/dist/$app_name"
+sync_dir_atomically() {
+  local src_dist=$1
+  local target_dir=$2
   local new_dir="${target_dir}_new"
   local old_dir="${target_dir}_old"
 
-  echo "==> Atomic deploy for $app_name"
+  sudo -u "$APP_USER" mkdir -p "$(dirname "$target_dir")"
   sudo -u "$APP_USER" rm -rf "$new_dir"
   sudo -u "$APP_USER" mkdir -p "$new_dir"
   sudo -u "$APP_USER" cp -r "$src_dist/"* "$new_dir/"
-  
+
   if [ -d "$target_dir" ]; then
     sudo -u "$APP_USER" mv "$target_dir" "$old_dir"
   fi
   sudo -u "$APP_USER" mv "$new_dir" "$target_dir"
   sudo -u "$APP_USER" rm -rf "$old_dir"
+}
+
+deploy_app_atomically() {
+  local app_name=$1
+  local src_dist=$2
+
+  echo "==> Atomic deploy for $app_name"
+  # 1. Standard /opt/tunemavens/dist/<app> path
+  sync_dir_atomically "$src_dist" "$APP_DIR/dist/$app_name"
+  # 2. Live Nginx hbuilds path served by /etc/nginx/conf.d/tunemavens.conf
+  sync_dir_atomically "$src_dist" "$APP_DIR/domains/tunemavens.com/hbuilds/last-source/apps/$app_name/dist"
 }
 
 deploy_app_atomically "portal" "$REPO_DIR/apps/portal/dist"
@@ -79,12 +89,17 @@ sudo -u "$APP_USER" "$BACKEND_DIR/.venv/bin/pip" install -q -r "$BACKEND_DIR/req
 echo "==> Writing backend environment file"
 mkdir -p "$SHARED_DIR"
 cat > "$SHARED_DIR/backend.env" <<ENV
-MONGO_URL=${MONGO_URL}
+MONGO_URL=${MONGO_URL:-}
+MONGO_USER=${MONGO_USER:-}
+MONGO_PASSWORD=${MONGO_PASSWORD:-}
+MONGO_HOST=${MONGO_HOST:-}
+MONGO_SCHEME=${MONGO_SCHEME:-mongodb+srv}
+MONGO_OPTIONS=${MONGO_OPTIONS:-retryWrites=true&w=majority}
 DB_NAME=${DB_NAME:-intermaven}
 JWT_SECRET=${JWT_SECRET}
 EMERGENT_LLM_KEY=${EMERGENT_LLM_KEY:-}
 APP_DOMAIN=${APP_DOMAIN}
-CORS_ORIGINS=https://${APP_DOMAIN},https://www.${APP_DOMAIN}
+CORS_ORIGINS=https://${APP_DOMAIN},https://www.${APP_DOMAIN},https://tunestream.co,https://www.tunestream.co,https://syncmavens.com,https://www.syncmavens.com,https://intermaven.io,https://www.intermaven.io
 COOKIE_DOMAIN=.${APP_DOMAIN}
 COOKIE_SECURE=true
 COOKIE_SAMESITE=lax

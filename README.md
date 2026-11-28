@@ -216,5 +216,20 @@ npm test
 - **Matching-Width Badge Architecture**: In TuneStream (`apps/tunestream`) and Portal (`apps/portal`), explicit releases display the black (`#000000`) explicit badge directly stacked above the purple `Album` or green `Single` format pill with exact matching width (`align-items: stretch`).
 - **Backend Track-to-Release Rollup (`catalog_router.py`)**: Multi-track albums automatically evaluate track-level explicit flags, rolling up release-level explicit advisory across `/api/catalog/albums` and `/api/catalog/tracks`.
 
+---
+
+## 🌐 Production Deployment & VPS Infrastructure (`srv2178148.hstgr.cloud`)
+
+- **Port Reservation:** Port **`8001`** (`127.0.0.1:8001`) is permanently reserved for the TuneMavens FastAPI backend (`tunemavens-backend.service`). *(Intermaven runs separately on port `8005`.)*
+- **Nginx Reverse Proxy & Static Roots (`/etc/nginx/conf.d/tunemavens.conf`):**
+  - `tunemavens.com` (Portal): `/opt/tunemavens/domains/tunemavens.com/hbuilds/last-source/apps/portal/dist`
+  - `tunestream.co` (TuneStream): `/opt/tunemavens/domains/tunemavens.com/hbuilds/last-source/apps/tunestream/dist`
+  - `syncmavens.com` (SyncMavens): `/opt/tunemavens/domains/tunemavens.com/hbuilds/last-source/apps/syncmavens/dist`
+  - `api.tunemavens.com` & `/api/`: `proxy_pass http://127.0.0.1:8001;`
+- **Automated Sync on Push to `main`:** `.github/workflows/deploy.yml` runs `deploy/deploy.sh`, which builds all three Vite workspaces with `VITE_API_BASE_URL=https://api.tunemavens.com` and atomically syncs the `dist/` bundles to both `/opt/tunemavens/dist/<app>` and `/opt/tunemavens/domains/tunemavens.com/hbuilds/last-source/apps/<app>/dist`.
+- **CORS Configuration:** `backend/config.py` and `backend/server.py` allow `withCredentials: true` requests from `tunemavens.com`, `tunestream.co`, `syncmavens.com`, `intermaven.io` (and `www.*` / subdomains), local dev (`localhost:3000`, `localhost:3005`, `127.0.0.1:*`), plus any comma-separated origins in `CORS_ORIGINS`.
+- **Render / Split `MONGO_*` Support:** To avoid Render UI paste-truncation of long `MONGO_URL` strings, `backend/config.py` assembles `MONGO_URL` automatically from `MONGO_USER`, `MONGO_PASSWORD` (URL-encoded via `quote_plus`), `MONGO_HOST`, `MONGO_SCHEME` (default `mongodb+srv`), `MONGO_OPTIONS` (default `retryWrites=true&w=majority`), and `DB_NAME` whenever `MONGO_USER`, `MONGO_PASSWORD`, and `MONGO_HOST` are all set.
+
+
 
 

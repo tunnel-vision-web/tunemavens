@@ -8,20 +8,39 @@
  * - `credentials: 'include'` so the HttpOnly access_token cookie is sent
  *   automatically once cross-subdomain cookies are configured in production.
  */
+const PRODUCTION_API_URL = 'https://api.tunemavens.com';
+const LOCAL_DEV_API_URL = 'http://localhost:8001';
+
 export const getApiBase = () => {
-  const envUrl = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) || '';
-  if (envUrl && !envUrl.includes('onrender.com')) return envUrl.replace(/\/$/, '');
+  const envUrl =
+    (typeof import.meta !== 'undefined' &&
+      import.meta.env &&
+      (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL)) ||
+    '';
+
+  const isLocalHost =
+    typeof window !== 'undefined' &&
+    window.location &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+  if (envUrl && !envUrl.includes('onrender.com')) {
+    const cleanEnv = envUrl.replace(/\/$/, '');
+    const envIsLocal = cleanEnv.includes('localhost') || cleanEnv.includes('127.0.0.1');
+    if (isLocalHost || !envIsLocal) {
+      return cleanEnv;
+    }
+  }
 
   if (typeof window !== 'undefined' && window.location) {
     if (window.location.protocol === 'capacitor:' || window.location.protocol === 'file:') {
-      return 'https://api.tunemavens.com';
+      return PRODUCTION_API_URL;
     }
-    const host = (window.location.hostname || '').toLowerCase();
-    if (host.endsWith('tunemavens.com') || host.endsWith('tunestream.co') || host.endsWith('syncmavens.com') || host.endsWith('intermaven.io') || host.endsWith('.onrender.com')) {
-      return 'https://api.tunemavens.com';
+    if (isLocalHost) {
+      return LOCAL_DEV_API_URL;
     }
+    return PRODUCTION_API_URL;
   }
-  return '';
+  return PRODUCTION_API_URL;
 };
 
 export const BASE = getApiBase();
@@ -661,6 +680,92 @@ export const splitsApi = {
 };
 export const publishingElectionApi = publishingApi;
 export const distributionElectionApi = distroApi;
+
+/**
+ * Axios-compatible HTTP client wrapper around fetch + tokenStore + credentials
+ * used by AdminPanel, CMSEditor, SentinelPanel, and CmsContext.
+ */
+async function httpRequest(method, url, { body, params, responseType, headers: extraHeaders } = {}) {
+  let fullPath = url;
+  if (params && typeof params === 'object') {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') {
+        qs.append(k, String(v));
+      }
+    });
+    const qStr = qs.toString();
+    if (qStr) {
+      fullPath += (fullPath.includes('?') ? '&' : '?') + qStr;
+    }
+  }
+
+  const isAbsolute = /^https?:\/\//i.test(fullPath);
+  const targetUrl = isAbsolute ? fullPath : `${BASE}${fullPath}`;
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+
+  const headers = { ...(extraHeaders || {}) };
+  if (!isFormData && body !== undefined && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
+  if (isFormData && headers['Content-Type'] === 'multipart/form-data') {
+    // Let browser attach multipart boundary automatically
+    delete headers['Content-Type'];
+  }
+
+  const effectiveToken = tokenStore.get();
+  if (effectiveToken && !headers.Authorization) {
+    headers.Authorization = `Bearer ${effectiveToken}`;
+  }
+
+  const res = await fetch(targetUrl, {
+    method,
+    headers,
+    credentials: 'include',
+    body: body === undefined ? undefined : (isFormData ? body : JSON.stringify(body)),
+  });
+
+  if (responseType === 'blob') {
+    if (!res.ok) {
+      const err = new Error(res.statusText || `HTTP ${res.status}`);
+      err.status = res.status;
+      err.response = { status: res.status, data: { detail: res.statusText } };
+      throw err;
+    }
+    const blob = await res.blob();
+    return { data: blob, status: res.status };
+  }
+
+  const text = await res.text();
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch (_) {
+    data = text;
+  }
+
+  if (!res.ok) {
+    const detailMsg =
+      (data && typeof data === 'object' && typeof data.detail === 'string' && data.detail) ||
+      res.statusText ||
+      `HTTP ${res.status}`;
+    const err = new Error(detailMsg);
+    err.status = res.status;
+    err.data = data;
+    err.response = { status: res.status, data: data || { detail: detailMsg } };
+    throw err;
+  }
+
+  return { data, status: res.status };
+}
+
+export const api = {
+  get: (url, config = {}) => httpRequest('GET', url, config),
+  post: (url, body, config = {}) => httpRequest('POST', url, { ...config, body }),
+  put: (url, body, config = {}) => httpRequest('PUT', url, { ...config, body }),
+  patch: (url, body, config = {}) => httpRequest('PATCH', url, { ...config, body }),
+  delete: (url, config = {}) => httpRequest('DELETE', url, config),
+};
 
 if (typeof window !== 'undefined') {
   window.mediaHouseApi = mediaHouseApi;

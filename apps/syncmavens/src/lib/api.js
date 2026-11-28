@@ -8,20 +8,39 @@
  * - `credentials: 'include'` so the HttpOnly access_token cookie is sent
  *   automatically once cross-subdomain cookies are configured in production.
  */
+const PRODUCTION_API_URL = 'https://api.tunemavens.com';
+const LOCAL_DEV_API_URL = 'http://localhost:8001';
+
 export const getApiBase = () => {
-  const envUrl = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) || '';
-  if (envUrl && !envUrl.includes('onrender.com')) return envUrl.replace(/\/$/, '');
+  const envUrl =
+    (typeof import.meta !== 'undefined' &&
+      import.meta.env &&
+      (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL)) ||
+    '';
+
+  const isLocalHost =
+    typeof window !== 'undefined' &&
+    window.location &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+  if (envUrl && !envUrl.includes('onrender.com')) {
+    const cleanEnv = envUrl.replace(/\/$/, '');
+    const envIsLocal = cleanEnv.includes('localhost') || cleanEnv.includes('127.0.0.1');
+    if (isLocalHost || !envIsLocal) {
+      return cleanEnv;
+    }
+  }
 
   if (typeof window !== 'undefined' && window.location) {
     if (window.location.protocol === 'capacitor:' || window.location.protocol === 'file:') {
-      return 'https://api.tunemavens.com';
+      return PRODUCTION_API_URL;
     }
-    const host = (window.location.hostname || '').toLowerCase();
-    if (host.endsWith('tunemavens.com') || host.endsWith('tunestream.co') || host.endsWith('syncmavens.com') || host.endsWith('intermaven.io') || host.endsWith('.onrender.com')) {
-      return 'https://api.tunemavens.com';
+    if (isLocalHost) {
+      return LOCAL_DEV_API_URL;
     }
+    return PRODUCTION_API_URL;
   }
-  return '';
+  return PRODUCTION_API_URL;
 };
 
 export const BASE = getApiBase();

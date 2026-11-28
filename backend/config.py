@@ -6,6 +6,7 @@ and any JWT minted here is valid on intermaven.io (and vice versa).
 """
 import os
 from pathlib import Path
+from urllib.parse import quote_plus
 from dotenv import load_dotenv
 from pymongo import MongoClient
 
@@ -20,8 +21,22 @@ ENABLE_SANDBOX_BYPASS = os.environ.get("ENABLE_SANDBOX_BYPASS", "false").lower()
 ALLOW_SANDBOX_WEBHOOKS = os.environ.get("ALLOW_SANDBOX_WEBHOOKS", "false").lower() == "true"
 
 # --- Mongo (shared with intermaven.io) ---
-MONGO_URL = os.environ.get("MONGO_URL")
+# Support assembling MONGO_URL from separate short env vars to avoid Render UI paste-truncation.
 DB_NAME = os.environ.get("DB_NAME", "intermaven")
+MONGO_USER = os.environ.get("MONGO_USER", "").strip()
+MONGO_PASSWORD = os.environ.get("MONGO_PASSWORD", "").strip()
+MONGO_HOST = os.environ.get("MONGO_HOST", "").strip()
+MONGO_SCHEME = os.environ.get("MONGO_SCHEME", "mongodb+srv").strip() or "mongodb+srv"
+MONGO_OPTIONS = os.environ.get("MONGO_OPTIONS", "retryWrites=true&w=majority").strip()
+
+if MONGO_USER and MONGO_PASSWORD and MONGO_HOST:
+    _encoded_user = quote_plus(MONGO_USER)
+    _encoded_pass = quote_plus(MONGO_PASSWORD)
+    _query = f"?{MONGO_OPTIONS}" if MONGO_OPTIONS else ""
+    MONGO_URL = f"{MONGO_SCHEME}://{_encoded_user}:{_encoded_pass}@{MONGO_HOST}/{DB_NAME}{_query}"
+else:
+    MONGO_URL = os.environ.get("MONGO_URL")
+
 DATABASE_MODE = "mongodb"
 
 if not MONGO_URL:
@@ -75,20 +90,22 @@ _default_trusted_origins = [
     "http://localhost:3000",
     "http://localhost:3001",
     "http://localhost:3002",
+    "http://localhost:3005",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    "http://127.0.0.1:3002",
+    "http://127.0.0.1:3005",
+    "http://127.0.0.1:5173",
 ]
 _cors = os.environ.get("CORS_ORIGINS")
 if _cors and _cors != "*":
-    # Parse explicit env origins and ensure all ecosystem trusted domains are present
+    # Parse explicit env origins and ensure all ecosystem trusted domains are present (deduplicated)
     env_origins = [o.strip() for o in _cors.split(",") if o.strip()]
-    merged = list(env_origins)
-    for origin in _default_trusted_origins:
-        if origin not in merged:
-            merged.append(origin)
-    CORS_ORIGINS = merged
+    CORS_ORIGINS = list(dict.fromkeys(env_origins + _default_trusted_origins))
 elif _cors == "*":
     CORS_ORIGINS = ["*"]
 else:
-    CORS_ORIGINS = _default_trusted_origins
+    CORS_ORIGINS = list(dict.fromkeys(_default_trusted_origins))
 
 
 def validate_production_security():
