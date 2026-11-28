@@ -23,13 +23,10 @@ from routes import (
     corporate_ads_router, role_tiers_router, support_router, blog_router,
     affiliate_router, tours_router, vc_router, events_router, podcasts_router,
     publishing_router, confidentiality_router, social_graph_router,
-    community_router, backend_admin_router, media_house_router, dj_mixes_router, dj_mixes_alias_router,
-    admin_console_router, mother_cms_router, ai_cms_router, sentinel_router, admin_seo_router
+    community_router, backend_admin_router, media_house_router, dj_mixes_router, dj_mixes_alias_router
 )
 from routes.communications_router import router as communications_router
 from routes.admin_router import seed_domain_mappings_if_empty
-from seed_cms_keys import seed_default_cms_keys
-from routes.seo import seed_default_seo
 
 logger = logging.getLogger(__name__)
 
@@ -171,7 +168,6 @@ app.include_router(match_router)
 app.include_router(social_ai_router)
 app.include_router(crm_router)
 app.include_router(cms_router)
-app.include_router(admin_seo_router)
 app.include_router(seo_router)
 app.include_router(djpool_router)
 app.include_router(storage_router)
@@ -195,10 +191,6 @@ app.include_router(backend_admin_router)
 app.include_router(media_house_router)
 app.include_router(dj_mixes_router)
 app.include_router(dj_mixes_alias_router)
-app.include_router(admin_console_router)
-app.include_router(mother_cms_router)
-app.include_router(ai_cms_router)
-app.include_router(sentinel_router)
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -246,10 +238,8 @@ async def validation_exception_handler(request, exc):
     )
 
 
-# Seed default domain mappings, Mother-CMS keys, and SEO config on boot
+# Seed default domain mappings on boot
 seed_domain_mappings_if_empty()
-seed_default_cms_keys()
-seed_default_seo()
 
 
 @app.get("/api/health")
